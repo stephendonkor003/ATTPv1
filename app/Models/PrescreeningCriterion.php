@@ -5,6 +5,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class PrescreeningCriterion extends Model
 {
+    protected $table = 'prescreening_criteria';
+
     protected $fillable = [
         'prescreening_template_id',
         'name',

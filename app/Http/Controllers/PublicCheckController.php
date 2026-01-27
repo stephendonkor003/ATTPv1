@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Applicant;
 use App\Models\Evaluation;
-use App\Models\PrescreeningCriteria;
+use App\Models\PrescreeningCriterion;
 use Illuminate\Support\Facades\Mail;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Mail\ConsortiumReportMail;
@@ -89,7 +89,7 @@ class PublicCheckController extends Controller
         ]);
 
         // 🔸 Load consortium + relations
-        $consortium = Applicant::with(['prescreening', 'evaluations.evaluator'])->findOrFail($request->consortium_id);
+        $consortium = Applicant::with(['prescreeningCriteria', 'evaluations.evaluator'])->findOrFail($request->consortium_id);
 
         // 🔒 Security check — only allow original submission email
         if (strtolower(trim($consortium->email)) !== strtolower(trim($request->email))) {
@@ -97,7 +97,7 @@ class PublicCheckController extends Controller
         }
 
         // 🔸 Collect prescreening & evaluation data
-        $prescreening = $consortium->prescreening;
+        $prescreening = $consortium->prescreeningCriteria;
         $evaluations  = $consortium->evaluations;
 
         $analysis = [];

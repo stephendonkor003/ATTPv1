@@ -51,15 +51,17 @@ class Applicant extends Model
     }
 
     public function prescreeningCriteria()
-{
-    return $this->hasOne(PrescreeningCriteria::class, 'applicant_id');
-}
+    {
+        return $this->hasOne(PrescreeningCriterion::class, 'applicant_id');
+    }
 
+    public function prescreening()
+    {
+        return $this->hasOne(PrescreeningCriterion::class, 'applicant_id');
+    }
 
-public function siteVisitEvaluations()
-{
-    return $this->hasMany(SiteVisitEvaluation::class, 'consortium_id');
-}
-
-
+    public function siteVisitEvaluations()
+    {
+        return $this->hasMany(SiteVisitEvaluation::class, 'consortium_id');
+    }
 }
