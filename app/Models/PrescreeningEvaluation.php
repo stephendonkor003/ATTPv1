@@ -1,0 +1,26 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class PrescreeningEvaluation extends Model
+{
+    protected $fillable = [
+        'submission_id',
+        'prescreening_template_id',
+        'criterion_id',
+        'evaluator_id',
+        'evaluation_value',
+        'is_passed',
+        'remarks',
+        'evaluated_at',
+    ];
+
+    public $timestamps = false;
+
+    public function submission()
+    {
+        return $this->belongsTo(FormSubmission::class, 'submission_id');
+    }
+}

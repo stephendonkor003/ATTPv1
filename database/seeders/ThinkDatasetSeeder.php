@@ -1,0 +1,66 @@
+<?php
+
+use Illuminate\Database\Seeder;
+use App\Models\ThinkDataset;
+use Maatwebsite\Excel\Facades\Excel;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+
+class ThinkDatasetSeeder extends Seeder
+{
+    public function run()
+    {
+        $filePath = database_path('seeders/thindata.xlsx');
+        $spreadsheet = IOFactory::load($filePath);
+        $sheet = $spreadsheet->getActiveSheet();
+        $rows = $sheet->toArray(null, true, true, true);
+
+        $header = array_map('trim', array_values($rows[1]));
+        unset($rows[1]);
+
+        foreach ($rows as $row) {
+            $data = array_combine($header, array_values($row));
+            ThinkDataset::create([
+                'ottd_id' => $data['Ottd Id'] ?? null,
+                'tt_name_en' => $data['Tt Name En'] ?? null,
+                'country' => $data['Country'] ?? null,
+                'continent' => $data['Continent'] ?? null,
+                'sub_region' => $data['Sub Region'] ?? null,
+                'Count' => $data['Count'] ?? null,
+                'website' => $data['Website'] ?? null,
+                'g_email' => $data['G Email'] ?? null,
+                'operating_langs' => $data['Operating Langs'] ?? null,
+                'tt_init' => $data['Tt Init'] ?? null,
+                'description' => $data['Description'] ?? null,
+                'main_city' => $data['Main City'] ?? null,
+                'Region_group' => $data['Region Group'] ?? null,
+                'other_offices' => $data['Other Offices'] ?? null,
+                'address' => $data['Address'] ?? null,
+                'tt_business_model' => $data['Tt Business Model'] ?? null,
+                'Funding_sources' => $data['Funding.sources'] ?? null,
+                'Funding_Mechanism' => $data['Funding.Mechanism'] ?? null,
+                'tt_affiliations' => $data['Tt Affiliations'] ?? null,
+                'topics' => $data['Topics'] ?? null,
+                'geographies' => $data['Geographies'] ?? null,
+                'date_founded' => $data['Date Founded'] ?? null,
+                'Date_founded_groups' => $data['Date Founded Groups'] ?? null,
+                'founder' => $data['Founder'] ?? null,
+                'founder_gender' => $data['Founder Gender'] ?? null,
+                'founder_other_type' => $data['Founder Other Type'] ?? null,
+                'staff_no' => $data['Staff No'] ?? null,
+                'pc_staff_female' => $data['Pc Staff Female'] ?? null,
+                'pc_res_staff_female' => $data['Pc Res Staff Female'] ?? null,
+                'assc_no' => $data['Assc No'] ?? null,
+                'assc_female_no' => $data['Assc Female No'] ?? null,
+                'pub_no' => $data['Pub No'] ?? null,
+                'fin_usd' => $data['Fin Usd'] ?? null,
+                'twitter_handle_link' => $data['Twitter Handle Link'] ?? null,
+                'facebook_page' => $data['Facebook Page'] ?? null,
+                'youtube_page' => $data['Youtube Page'] ?? null,
+                'instagram_acc' => $data['Instagram Acc'] ?? null,
+                'linkedIn_acc' => $data['Linkedin Acc'] ?? null,
+                'created_by' => 1,
+                'is_validated' => 'Yes',
+            ]);
+        }
+    }
+}

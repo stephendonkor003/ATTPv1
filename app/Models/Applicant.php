@@ -1,0 +1,65 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Applicant extends Model
+{
+    protected $fillable = [
+        'think_tank_name',
+        'country',
+        'sub_region',
+        'focus_areas',
+        'is_partnership',
+        'email',
+        'members_names',
+        'consortium_name',
+        'lead_think_tank_name',
+        'lead_think_tank_country',
+        'consortium_region',
+        'covered_countries',
+        'application_form',
+        'legal_registration',
+        'trustees_formation',
+        'audited_reports',
+        'commitment_letter',
+        'work_plan_budget',
+        'cv_coordinator',
+        'cv_deputy',
+        'cv_team_members',
+        'past_research',
+        'code',
+    ];
+
+    /**
+     * Many-to-many: Applicants <-> Users (Evaluators/Reviewers)
+     */
+    public function evaluators()
+    {
+        return $this->belongsToMany(User::class, 'applicant_user')
+                    ->withPivot('role')
+                    ->withTimestamps();
+    }
+
+    /**
+     * One-to-many: Applicant has many Evaluations
+     */
+    public function evaluations()
+    {
+        return $this->hasMany(Evaluation::class, 'applicant_id');
+    }
+
+    public function prescreeningCriteria()
+{
+    return $this->hasOne(PrescreeningCriteria::class, 'applicant_id');
+}
+
+
+public function siteVisitEvaluations()
+{
+    return $this->hasMany(SiteVisitEvaluation::class, 'consortium_id');
+}
+
+
+}

@@ -1,0 +1,94 @@
+@extends('layouts.app')
+
+@section('content')
+    <div class="nxl-container">
+
+        {{-- ================= PAGE HEADER ================= --}}
+        <div class="page-header d-flex justify-content-between align-items-center">
+            <h4 class="fw-bold">
+                Prescreening Evaluation
+            </h4>
+
+            <a href="{{ route('prescreening.submissions.index') }}" class="btn btn-sm btn-outline-secondary">
+                ← Back
+            </a>
+        </div>
+
+        {{-- ================= INFO BANNER ================= --}}
+        @if (!$canEdit)
+            <div class="alert alert-info mt-3">
+                This evaluation is <strong>locked</strong> and can only be edited if a rework is requested.
+            </div>
+        @endif
+
+        {{-- ================= EVALUATION FORM ================= --}}
+        <form method="POST" action="{{ route('prescreening.submissions.store', $submission) }}">
+            @csrf
+
+            @foreach ($template->criteria as $criterion)
+                @php
+                    $evaluation = $evaluations[$criterion->id] ?? null;
+                @endphp
+
+                <div class="card mt-3 shadow-sm">
+                    <div class="card-body">
+
+                        <h6 class="fw-bold mb-3">
+                            {{ $criterion->name }}
+                        </h6>
+
+                        {{-- PASS / FAIL --}}
+                        <div class="mb-3">
+                            <label class="me-4">
+                                <input type="radio" name="criteria[{{ $criterion->id }}][passed]" value="1"
+                                    {{ optional($evaluation)->is_passed === 1 ? 'checked' : '' }}
+                                    {{ !$canEdit ? 'disabled' : '' }}>
+                                <strong>YES</strong>
+                            </label>
+
+                            <label>
+                                <input type="radio" name="criteria[{{ $criterion->id }}][passed]" value="0"
+                                    {{ optional($evaluation)->is_passed === 0 ? 'checked' : '' }}
+                                    {{ !$canEdit ? 'disabled' : '' }}>
+                                <strong>NO</strong>
+                            </label>
+                        </div>
+
+                        {{-- REMARKS --}}
+                        <div>
+                            <label class="form-label">Remarks</label>
+                            <textarea class="form-control" rows="3" name="criteria[{{ $criterion->id }}][remarks]"
+                                {{ !$canEdit ? 'readonly' : '' }}>{{ optional($evaluation)->remarks }}</textarea>
+                        </div>
+
+                    </div>
+                </div>
+            @endforeach
+
+
+            {{-- ================= SUBMIT BUTTON ================= --}}
+            @if ($canEdit)
+                <div class="mt-4 text-end">
+                    <button type="submit" class="btn btn-success">
+                        Save Evaluation
+                    </button>
+                </div>
+            @endif
+        </form>
+
+        {{-- ================= REQUEST REWORK ================= --}}
+        @can('prescreening.request_rework')
+            @if ($result->is_locked)
+                <div class="mt-4">
+                    <form method="POST" action="{{ route('prescreening.submissions.rework', $submission) }}">
+                        @csrf
+                        <button class="btn btn-warning">
+                            Request Rework
+                        </button>
+                    </form>
+                </div>
+            @endif
+        @endcan
+
+    </div>
+@endsection

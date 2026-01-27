@@ -1,0 +1,31 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class ResourceCategory extends Model
+{
+    protected $table = 'myb_resource_categories';
+
+    protected $fillable = [
+        'name',
+        'description',
+        'status',
+        'created_by',
+    ];
+
+    /* =========================
+        RELATIONSHIPS
+    ========================== */
+
+    public function resources()
+    {
+        return $this->hasMany(Resource::class, 'resource_category_id');
+    }
+
+    public function commitments()
+    {
+        return $this->hasMany(BudgetCommitment::class, 'resource_category_id');
+    }
+}

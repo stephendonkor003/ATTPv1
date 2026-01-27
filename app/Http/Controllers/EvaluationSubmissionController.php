@@ -1,0 +1,424 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\EvaluationAssignment;
+use App\Models\EvaluationSubmission;
+use App\Models\FormSubmission;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
+class EvaluationSubmissionController extends Controller
+{
+    /* =====================================================
+     * EVALUATION HUB
+     * ===================================================== */
+    public function myEvaluations()
+    {
+        $user = auth()->user();
+
+        $assignments = EvaluationAssignment::with(['procurement', 'evaluation'])
+            ->when(
+                !$user->can('evaluations.view_all'),
+                fn ($q) => $q->where('user_id', $user->id)
+            )
+            ->latest()
+            ->get();
+
+        $submissions = FormSubmission::with(['form', 'submitter'])
+            ->whereIn('procurement_id', $assignments->pluck('procurement_id'))
+            ->latest()
+            ->get();
+
+        return view('evaluations.my', compact('assignments', 'submissions'));
+    }
+
+    /* =====================================================
+     * START / CONTINUE EVALUATION
+     * ===================================================== */
+    public function start(EvaluationAssignment $assignment, FormSubmission $applicant)
+    {
+        abort_if(!$this->canAccessAssignment($assignment), 403);
+        abort_if($applicant->procurement_id !== $assignment->procurement_id, 404);
+
+        $submission = EvaluationSubmission::firstOrCreate([
+            'evaluation_id'      => $assignment->evaluation_id,
+            'procurement_id'     => $assignment->procurement_id,
+            'evaluator_id'       => auth()->id(),
+            'form_submission_id' => $applicant->id,
+        ]);
+
+        $applicants = FormSubmission::with('submitter')
+            ->where('procurement_id', $assignment->procurement_id)
+            ->get();
+
+        return view('evaluations.submit', compact(
+            'assignment',
+            'submission',
+            'applicant',
+            'applicants'
+        ));
+    }
+
+    /* =====================================================
+     * AUTOSAVE / DRAFT
+     * ===================================================== */
+    public function saveScores(
+        Request $request,
+        EvaluationAssignment $assignment,
+        FormSubmission $applicant
+    ) {
+        abort_if(!$this->canAccessAssignment($assignment), 403);
+        abort_if($applicant->procurement_id !== $assignment->procurement_id, 404);
+
+        DB::transaction(function () use ($request, $assignment, $applicant) {
+
+            $evaluation = $assignment->evaluation;
+
+            $submission = EvaluationSubmission::firstOrCreate([
+                'evaluation_id'      => $evaluation->id,
+                'procurement_id'     => $assignment->procurement_id,
+                'evaluator_id'       => auth()->id(),
+                'form_submission_id' => $applicant->id,
+            ]);
+
+            $criteriaLookup = $evaluation->sections
+                ->flatMap(fn ($s) => $s->criteria)
+                ->keyBy('id');
+
+            /* ---------- CRITERIA ---------- */
+            foreach ($request->input('criteria', []) as $criteriaId => $data) {
+
+                $criteria = $criteriaLookup->get($criteriaId);
+                abort_if(!$criteria, 422);
+
+                if ($evaluation->type === 'goods') {
+
+                    if (!isset($data['decision'])) {
+                        continue; // allow partial autosave
+                    }
+
+                    $submission->criteriaScores()->updateOrCreate(
+                        ['evaluation_criteria_id' => $criteriaId],
+                        [
+                            'submission_id' => $submission->id,
+                            'decision'      => (int) $data['decision'],
+                            'comment'       => $data['comment'] ?? null,
+                            'score'         => null,
+                        ]
+                    );
+
+                    continue;
+                }
+
+                // SERVICES
+                if (!is_numeric($data)) {
+                    continue;
+                }
+
+                abort_if($data > $criteria->max_score, 422);
+
+                $submission->criteriaScores()->updateOrCreate(
+                    ['evaluation_criteria_id' => $criteriaId],
+                    [
+                        'submission_id' => $submission->id,
+                        'score'         => round((float) $data, 2),
+                    ]
+                );
+            }
+
+            /* ---------- SECTIONS ---------- */
+            foreach ($request->input('sections', []) as $sectionId => $data) {
+
+                $submission->sectionScores()->updateOrCreate(
+                    ['evaluation_section_id' => $sectionId],
+                    [
+                        'submission_id' => $submission->id,
+                        'section_score' => $evaluation->type === 'services'
+                            ? round((float) ($data['score'] ?? 0), 2)
+                            : null,
+                        'strengths'  => $data['strengths'] ?? null,
+                        'weaknesses' => $data['weaknesses'] ?? null,
+                    ]
+                );
+            }
+
+            $submission->recalculateTotals();
+        });
+
+        return response()->json(['success' => true]);
+    }
+
+    /* =====================================================
+     * FINAL SUBMIT
+     * ===================================================== */
+   public function submit(
+    Request $request,
+    EvaluationAssignment $assignment,
+    FormSubmission $applicant
+) {
+    /* ===============================
+     | ACCESS CONTROL
+     =============================== */
+    abort_if(!$this->canAccessAssignment($assignment), 403);
+    abort_if(
+        $applicant->procurement_id !== $assignment->procurement_id,
+        404
+    );
+
+    $evaluation = $assignment->evaluation;
+
+    /* ===============================
+     | VALIDATION (BASE)
+     =============================== */
+    $request->validate([
+        'criteria' => 'required|array',
+        'sections' => 'required|array',
+        'video'    => 'required|file|mimes:webm,mp4|max:20480',
+    ]);
+
+    DB::transaction(function () use ($request, $assignment, $applicant, $evaluation) {
+
+        /* ===============================
+         | GET / CREATE SUBMISSION
+         =============================== */
+        $submission = EvaluationSubmission::firstOrCreate([
+            'evaluation_id'      => $evaluation->id,
+            'procurement_id'     => $assignment->procurement_id,
+            'evaluator_id'       => auth()->id(),
+            'form_submission_id' => $applicant->id,
+        ]);
+
+        abort_if($submission->isSubmitted(), 403);
+
+        /* ===============================
+         | BUILD CRITERIA LOOKUP
+         =============================== */
+        $criteriaLookup = $evaluation->sections
+            ->flatMap(fn ($section) => $section->criteria)
+            ->keyBy('id');
+
+        /* =====================================================
+         | CRITERIA SCORING
+         | GOODS → YES/NO + COMMENT
+         | SERVICES → NUMERIC SCORE
+         ===================================================== */
+        foreach ($request->criteria as $criteriaId => $data) {
+
+            $criteria = $criteriaLookup->get($criteriaId);
+            abort_if(!$criteria, 422, 'Invalid evaluation criteria.');
+
+            /* ---------- GOODS ---------- */
+            if ($evaluation->type === 'goods') {
+
+                abort_if(!is_array($data), 422, 'Invalid criteria payload.');
+
+                abort_if(
+                    !array_key_exists('decision', $data),
+                    422,
+                    'Decision is required.'
+                );
+
+                abort_if(
+                    !in_array((int) $data['decision'], [0, 1], true),
+                    422,
+                    'Invalid decision value.'
+                );
+
+                abort_if(
+                    trim($data['comment'] ?? '') === '',
+                    422,
+                    'Comment is required.'
+                );
+
+                $submission->criteriaScores()->updateOrCreate(
+                    ['evaluation_criteria_id' => $criteriaId],
+                    [
+                        'submission_id' => $submission->id,
+                        'decision'      => (int) $data['decision'],
+                        'comment'       => trim($data['comment']),
+                        'score'         => null, // ✅ goods do NOT store score
+                    ]
+                );
+
+                continue;
+            }
+
+            /* ---------- SERVICES ---------- */
+            abort_if(!is_numeric($data), 422, 'Score must be numeric.');
+
+            $score = round((float) $data, 2);
+
+            abort_if(
+                $score < 0 || $score > $criteria->max_score,
+                422,
+                'Score exceeds allowed maximum.'
+            );
+
+            $submission->criteriaScores()->updateOrCreate(
+                ['evaluation_criteria_id' => $criteriaId],
+                [
+                    'submission_id' => $submission->id,
+                    'score'         => $score,
+                    'decision'      => null,
+                    'comment'       => null,
+                ]
+            );
+        }
+
+        /* =====================================================
+         | SECTION SUMMARIES
+         | Strengths & Weaknesses always required
+         | Section score only for SERVICES
+         ===================================================== */
+        foreach ($request->sections as $sectionId => $data) {
+
+            abort_if(
+                trim($data['strengths'] ?? '') === '',
+                422,
+                'Section strengths are required.'
+            );
+
+            abort_if(
+                trim($data['weaknesses'] ?? '') === '',
+                422,
+                'Section weaknesses are required.'
+            );
+
+            $submission->sectionScores()->updateOrCreate(
+                ['evaluation_section_id' => $sectionId],
+                [
+                    'submission_id' => $submission->id,
+                    'section_score' => $evaluation->type === 'services'
+                        ? round((float) ($data['score'] ?? 0), 2)
+                        : null,
+                    'strengths'  => trim($data['strengths']),
+                    'weaknesses' => trim($data['weaknesses']),
+                ]
+            );
+        }
+
+        /* ===============================
+         | FINAL TOTALS
+         =============================== */
+        $submission->recalculateTotals();
+
+        /* ===============================
+         | VIDEO + FINALIZE
+         =============================== */
+        $submission->video_path = $request->file('video')
+            ->store("evaluation_proofs/{$submission->id}", 'public');
+
+        $submission->submitted_at = now();
+        $submission->save();
+    });
+
+    return redirect()
+        ->route('eval.assign.applicants', $assignment)
+        ->with('success', 'Evaluation submitted successfully.');
+}
+
+
+    /* =====================================================
+     * VIEW
+     * ===================================================== */
+    public function view(EvaluationAssignment $assignment, FormSubmission $applicant)
+    {
+        abort_if(!$this->canAccessAssignment($assignment), 403);
+
+        $submission = EvaluationSubmission::with([
+            'criteriaScores.criteria',
+            'sectionScores.section',
+            'evaluator',
+        ])
+        ->where([
+            'evaluation_id'      => $assignment->evaluation_id,
+            'procurement_id'     => $assignment->procurement_id,
+            'evaluator_id'       => auth()->id(),
+            'form_submission_id' => $applicant->id,
+        ])
+        ->firstOrFail();
+
+        return view('evaluations.view', compact(
+            'assignment',
+            'submission',
+            'applicant'
+        ));
+    }
+
+    /* =====================================================
+     * ACCESS CONTROL
+     * ===================================================== */
+    private function canAccessAssignment(EvaluationAssignment $assignment): bool
+    {
+        $user = auth()->user();
+
+        return $user->can('evaluations.view_all')
+            || $assignment->user_id === $user->id;
+    }
+
+
+  public function panelHub()
+{
+    $user = auth()->user();
+
+    /* ===============================
+     | LOAD ASSIGNMENTS USER CAN SEE
+     =============================== */
+    $assignments = EvaluationAssignment::with([
+            'procurement',
+            'evaluation'
+        ])
+        ->when(
+            !$user->can('evaluations.view_all'),
+            fn ($q) => $q->where('user_id', $user->id)
+        )
+        ->get();
+
+    /* ===============================
+     | UNIQUE PROCUREMENTS
+     =============================== */
+    $procurements = $assignments
+        ->pluck('procurement')
+        ->unique('id')
+        ->values();
+
+    /* ===============================
+     | FORM SUBMISSIONS (APPLICANTS)
+     =============================== */
+    $formSubmissions = FormSubmission::with('submitter')
+        ->whereIn('procurement_id', $procurements->pluck('id'))
+        ->get();
+
+    $submissions = $formSubmissions
+        ->groupBy('procurement_id')
+        ->map(fn ($items) => $items->values());
+
+    /* ===============================
+     | EVALUATION SUBMISSIONS (FULL MODELS)
+     =============================== */
+    $evaluationSubmissions = EvaluationSubmission::with([
+            'evaluator',
+            'evaluation',
+            'criteriaScores.criteria',
+            'sectionScores.section'
+        ])
+        ->whereIn('form_submission_id', $formSubmissions->pluck('id'))
+        ->whereNotNull('submitted_at')
+        ->get();
+
+    $evaluations = $evaluationSubmissions
+        ->groupBy('form_submission_id')
+        ->map(fn ($items) => $items->values());
+
+    return view('evaluations.panel.index', compact(
+        'procurements',
+        'submissions',
+        'evaluations'
+    ));
+}
+
+
+
+
+}
