@@ -142,12 +142,56 @@
         <div class="card shadow-sm">
             <div class="card-header bg-light d-flex justify-content-between align-items-center">
                 <h6 class="mb-0 fw-semibold">Attached Forms</h6>
-                <span class="badge bg-secondary">
-                    {{ $procurement->forms->count() }} Forms
-                </span>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-secondary">
+                        {{ $procurement->forms->count() }} Forms
+                    </span>
+                    @can('forms.manage')
+                        <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="collapse"
+                            data-bs-target="#attachFormDrawer" aria-expanded="false" aria-controls="attachFormDrawer">
+                            <i class="feather-link me-1"></i> Attach Form
+                        </button>
+                    @endcan
+                </div>
             </div>
 
             <div class="card-body p-0">
+                @can('forms.manage')
+                    <div class="collapse" id="attachFormDrawer">
+                        <div class="p-3 border-bottom bg-light">
+                            <form method="POST" action="{{ route('attach-form') }}" class="row g-3 align-items-end">
+                                @csrf
+                                <input type="hidden" name="procurement_id" value="{{ $procurement->id }}">
+
+                                <div class="col-md-8">
+                                    <label class="form-label fw-semibold">Select Approved Form</label>
+                                    <select name="form_id" class="form-control" required>
+                                        <option value="">-- Select Approved Form --</option>
+                                        @foreach ($availableForms as $form)
+                                            <option value="{{ $form->id }}">
+                                                {{ $form->name }} ({{ ucfirst($form->applies_to) }})
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @if ($availableForms->isEmpty())
+                                        <div class="small text-danger mt-1">
+                                            No approved, unassigned forms are available.
+                                        </div>
+                                    @endif
+                                </div>
+
+                                <div class="col-md-4 text-md-end">
+                                    <button type="submit" class="btn btn-success"
+                                        {{ $availableForms->isEmpty() ? 'disabled' : '' }}>
+                                        <i class="feather-link me-1"></i>
+                                        Attach Form
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                @endcan
+
                 <table class="table table-hover table-bordered align-middle mb-0">
                     <thead class="table-light">
                         <tr>

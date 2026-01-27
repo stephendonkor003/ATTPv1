@@ -69,7 +69,12 @@ class ProcurementController extends Controller
             'forms.creator',
         ]);
 
-        return view('procurement.show', compact('procurement'));
+        $availableForms = DynamicForm::approved()
+            ->whereNull('procurement_id')
+            ->orderBy('name')
+            ->get();
+
+        return view('procurement.show', compact('procurement', 'availableForms'));
     }
 
     /**

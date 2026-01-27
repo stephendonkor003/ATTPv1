@@ -12,7 +12,7 @@
                         Applications
                     </h4>
                     <p class="text-muted mb-0">
-                        Vacancy: <strong>{{ $vacancy->position->title }}</strong>
+                        Vacancy: <strong>{{ $vacancy->position->title ?? 'N/A' }}</strong>
                     </p>
                 </div>
 
@@ -159,10 +159,14 @@
 
                                     {{-- DOCUMENTS --}}
                                     <td>
-                                        <a href="{{ asset('storage/' . $applicant->cv_path) }}" target="_blank"
-                                            class="btn btn-sm btn-outline-primary">
-                                            CV
-                                        </a>
+                                        @if ($applicant->cv_path)
+                                            <a href="{{ asset('storage/' . $applicant->cv_path) }}" target="_blank"
+                                                class="btn btn-sm btn-outline-primary">
+                                                CV
+                                            </a>
+                                        @else
+                                            <span class="badge bg-secondary-subtle text-secondary">No CV</span>
+                                        @endif
                                         @if ($applicant->cover_letter_path)
                                             <a href="{{ asset('storage/' . $applicant->cover_letter_path) }}"
                                                 target="_blank" class="btn btn-sm btn-outline-secondary">

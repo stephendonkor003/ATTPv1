@@ -8,11 +8,17 @@
             <h4 class="fw-bold">
                 Prescreening Evaluation
             </h4>
-
-            <a href="{{ route('prescreening.submissions.index') }}" class="btn btn-sm btn-outline-secondary">
-                ← Back
-            </a>
-        </div>
+            <div class="d-flex gap-2">
+                @can('prescreening.reports.view_all')
+                    <a href="{{ route('reports.prescreening.submission.pdf', $submission) }}" class="btn btn-sm btn-success">
+                        Download PDF
+                    </a>
+                @endcan
+                <a href="{{ route('prescreening.submissions.index') }}" class="btn btn-sm btn-outline-secondary">
+                    ??? Back
+                </a>
+            </div>
+</div>
 
         {{-- ================= INFO BANNER ================= --}}
         @if (!$canEdit)
@@ -78,7 +84,7 @@
 
         {{-- ================= REQUEST REWORK ================= --}}
         @can('prescreening.request_rework')
-            @if ($result->is_locked)
+            @if ($result && $result->is_locked)
                 <div class="mt-4">
                     <form method="POST" action="{{ route('prescreening.submissions.rework', $submission) }}">
                         @csrf

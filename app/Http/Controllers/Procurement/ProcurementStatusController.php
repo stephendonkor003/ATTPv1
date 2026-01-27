@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
 use App\Models\Procurement;
+use Illuminate\Http\Request;
 
 class ProcurementStatusController extends Controller
 {
@@ -13,12 +14,13 @@ class ProcurementStatusController extends Controller
 
     public function submit(Procurement $procurement)
     {
-        if ($procurement->status !== 'draft') {
-            return back()->with('error', 'Only draft procurements can be submitted.');
+        if (!in_array($procurement->status, ['draft', 'rejected'])) {
+            return back()->with('error', 'Only draft or rejected procurements can be submitted.');
         }
 
         $procurement->update([
             'status' => 'submitted',
+            'rejection_reason' => null,
         ]);
 
         return back()->with('success', 'Procurement submitted.');
@@ -32,9 +34,28 @@ class ProcurementStatusController extends Controller
 
         $procurement->update([
             'status' => 'approved',
+            'rejection_reason' => null,
         ]);
 
         return back()->with('success', 'Procurement approved.');
+    }
+
+    public function reject(Request $request, Procurement $procurement)
+    {
+        if ($procurement->status !== 'submitted') {
+            return back()->with('error', 'Only submitted procurements can be rejected.');
+        }
+
+        $request->validate([
+            'rejection_reason' => 'required|string|min:5',
+        ]);
+
+        $procurement->update([
+            'status' => 'rejected',
+            'rejection_reason' => $request->rejection_reason,
+        ]);
+
+        return back()->with('success', 'Procurement rejected.');
     }
 
     public function publish(Procurement $procurement)

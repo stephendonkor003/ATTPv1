@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\JobApplicationReceived;
 use App\Models\HrApplicant;
 use App\Models\HrVacancy;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 
 class HrPublicController extends Controller
@@ -63,7 +65,13 @@ class HrPublicController extends Controller
             'cv_path'           => $resumePath,
             'cover_letter_path' => $coverPath,
             'status'            => 'applied',
+            'submitted_at'      => now(),
         ]);
+
+        Mail::to($validated['email'])->send(new JobApplicationReceived(
+            $validated['full_name'],
+            $validated['email']
+        ));
 
         return back()->with('success', 'Application submitted successfully.');
     }

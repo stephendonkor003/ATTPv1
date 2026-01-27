@@ -17,8 +17,8 @@
             <div>
                 <h6 class="fw-semibold mb-1">How Prescreening Assignments Work</h6>
                 <ul class="mb-0 ps-3 small">
-                    <li>Each procurement can have <strong>multiple prescreening evaluators</strong>.</li>
-                    <li>Only assigned users will be able to <strong>evaluate submissions</strong>.</li>
+                    <li>Each procurement can have <strong>one prescreening evaluator</strong>.</li>
+                    <li>Only the assigned user can <strong>evaluate submissions</strong>.</li>
                     <li>Assignments can be updated anytime <strong>before prescreening starts</strong>.</li>
                     <li>This step does <strong>not</strong> affect the prescreening template or criteria.</li>
                 </ul>
@@ -90,7 +90,7 @@
                                     </span>
 
                                     <span class="badge bg-light text-dark">
-                                        {{ $procurement->prescreeningUsers->count() }} Evaluators
+                                        {{ $procurement->prescreeningUsers->count() }} Evaluator(s)
                                     </span>
 
                                 </div>
@@ -107,7 +107,7 @@
                             {{-- ================= USERS ================= --}}
                             @if ($procurement->prescreeningUsers->count())
                                 <div class="row g-3 mb-4">
-                                    @foreach ($procurement->prescreeningUsers as $user)
+                                    @foreach ($procurement->prescreeningUsers->take(1) as $user)
                                         <div class="col-md-4 col-lg-3">
                                             <div class="border rounded p-3 bg-light d-flex gap-3">
 
@@ -126,6 +126,12 @@
                                         </div>
                                     @endforeach
                                 </div>
+                                @if ($procurement->prescreeningUsers->count() > 1)
+                                    <div class="alert alert-warning d-flex align-items-center gap-2 mb-4">
+                                        <i class="feather-alert-circle"></i>
+                                        <span>More than one prescreener is assigned. Only one should be assigned.</span>
+                                    </div>
+                                @endif
                             @else
                                 <div class="alert alert-warning d-flex align-items-center gap-2 mb-4">
                                     <i class="feather-alert-circle"></i>

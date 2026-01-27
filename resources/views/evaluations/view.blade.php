@@ -11,11 +11,17 @@
                     Read-only view of a completed evaluation. No changes are permitted.
                 </p>
             </div>
-
-            <a href="{{ route('eval.assign.hub') }}" class="btn btn-outline-secondary btn-sm">
-                <i class="feather-arrow-left me-1"></i> Back
-            </a>
-        </div>
+            <div class="d-flex gap-2">
+                @can('evaluations.view_all')
+                    <a href="{{ route('reports.evaluations.submission.pdf', $submission) }}" class="btn btn-success btn-sm">
+                        Download PDF
+                    </a>
+                @endcan
+                <a href="{{ route('eval.assign.hub') }}" class="btn btn-outline-secondary btn-sm">
+                    <i class="feather-arrow-left me-1"></i> Back
+                </a>
+            </div>
+</div>
 
         {{-- ================= STATUS ================= --}}
         <div class="alert alert-success d-flex align-items-start mb-4">

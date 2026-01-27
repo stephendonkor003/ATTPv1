@@ -11,6 +11,7 @@ class Program extends Model
     protected $fillable = [
     'program_id',
     'sector_id',
+    'department_id',
     'name',
     'description',
     'currency',

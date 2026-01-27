@@ -17,6 +17,8 @@ class RoleSeeder extends Seeder
             'Finance Officer',
             'Budget Officer',
             'Auditor',
+            'Prescreening Evaluator',
+            'Evaluation Evaluator',
         ];
 
         foreach ($roles as $role) {

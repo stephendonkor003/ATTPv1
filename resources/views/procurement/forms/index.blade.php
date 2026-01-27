@@ -12,7 +12,7 @@
                 </p>
             </div>
 
-            @can('procurement.submitforms')
+            @can('forms.manage')
                 <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#createFormModal">
                     <i class="feather-plus me-1"></i> Create Form
                 </button>

@@ -36,7 +36,7 @@
 
                                 <input type="hidden" name="procurement_id" value="{{ $procurement->id }}">
 
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <select name="evaluation_id" class="form-select" required>
                                         <option value="">Select Evaluation</option>
                                         @foreach ($evaluations as $eval)
@@ -47,7 +47,7 @@
                                     </select>
                                 </div>
 
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <select name="user_id" class="form-select" required>
                                         <option value="">Select Evaluator</option>
                                         @foreach ($evaluators as $user)
@@ -58,7 +58,26 @@
                                     </select>
                                 </div>
 
-                                <div class="col-md-4">
+                                <div class="col-md-3">
+                                    <select name="assignment_type" class="form-select assignment-type" required
+                                        data-procurement="{{ $procurement->id }}">
+                                        <option value="procurement">Entire Procurement</option>
+                                        <option value="submission">Specific Submission</option>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-3 submission-select d-none" id="submissionSelect{{ $procurement->id }}">
+                                    <select name="submission_id" class="form-select">
+                                        <option value="">Select Submission</option>
+                                        @foreach ($procurement->submissions as $submission)
+                                            <option value="{{ $submission->id }}">
+                                                {{ $submission->procurement_submission_code }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <div class="col-md-12">
                                     <button class="btn btn-primary w-100">
                                         Assign Evaluator
                                     </button>
@@ -128,6 +147,14 @@
                                                 </div>
                                             </td>
                                         </tr>
+                                        @if ($assign->form_submission_id)
+                                            <tr>
+                                                <td colspan="4" class="bg-light">
+                                                    <strong>Submission:</strong>
+                                                    {{ $assign->submission?->procurement_submission_code ?? '—' }}
+                                                </td>
+                                            </tr>
+                                        @endif
                                     @empty
                                         <tr>
                                             <td colspan="4" class="text-center text-muted">
@@ -147,4 +174,25 @@
         </div>
 
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.assignment-type').forEach(select => {
+                const procurementId = select.dataset.procurement;
+                const submissionWrap = document.getElementById(`submissionSelect${procurementId}`);
+                const submissionSelect = submissionWrap?.querySelector('select[name="submission_id"]');
+
+                const toggleSubmission = () => {
+                    const isSubmission = select.value === 'submission';
+                    submissionWrap.classList.toggle('d-none', !isSubmission);
+                    if (submissionSelect) {
+                        submissionSelect.required = isSubmission;
+                    }
+                };
+
+                select.addEventListener('change', toggleSubmission);
+                toggleSubmission();
+            });
+        });
+    </script>
 @endsection

@@ -11,6 +11,7 @@ class FormSubmission extends Model
         'procurement_submission_code',
         'form_id',
         'submitted_by',
+        'assigned_prescreener_id',
         'status',
         'submitted_at'
     ];

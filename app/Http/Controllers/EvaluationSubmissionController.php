@@ -5,8 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\EvaluationAssignment;
 use App\Models\EvaluationSubmission;
 use App\Models\FormSubmission;
+use App\Models\User;
+use App\Mail\EvaluationCompleted;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 
 class EvaluationSubmissionController extends Controller
 {
@@ -25,8 +28,25 @@ class EvaluationSubmissionController extends Controller
             ->latest()
             ->get();
 
+        $submissionIds = $assignments
+            ->whereNotNull('form_submission_id')
+            ->pluck('form_submission_id')
+            ->unique();
+
+        $procurementIds = $assignments
+            ->whereNull('form_submission_id')
+            ->pluck('procurement_id')
+            ->unique();
+
         $submissions = FormSubmission::with(['form', 'submitter'])
-            ->whereIn('procurement_id', $assignments->pluck('procurement_id'))
+            ->where(function ($q) use ($submissionIds, $procurementIds) {
+                if ($submissionIds->isNotEmpty()) {
+                    $q->orWhereIn('id', $submissionIds);
+                }
+                if ($procurementIds->isNotEmpty()) {
+                    $q->orWhereIn('procurement_id', $procurementIds);
+                }
+            })
             ->latest()
             ->get();
 
@@ -40,6 +60,9 @@ class EvaluationSubmissionController extends Controller
     {
         abort_if(!$this->canAccessAssignment($assignment), 403);
         abort_if($applicant->procurement_id !== $assignment->procurement_id, 404);
+        if ($assignment->form_submission_id) {
+            abort_if($assignment->form_submission_id !== $applicant->id, 403);
+        }
 
         $submission = EvaluationSubmission::firstOrCreate([
             'evaluation_id'      => $assignment->evaluation_id,
@@ -70,6 +93,9 @@ class EvaluationSubmissionController extends Controller
     ) {
         abort_if(!$this->canAccessAssignment($assignment), 403);
         abort_if($applicant->procurement_id !== $assignment->procurement_id, 404);
+        if ($assignment->form_submission_id) {
+            abort_if($assignment->form_submission_id !== $applicant->id, 403);
+        }
 
         DB::transaction(function () use ($request, $assignment, $applicant) {
 
@@ -165,6 +191,9 @@ class EvaluationSubmissionController extends Controller
         $applicant->procurement_id !== $assignment->procurement_id,
         404
     );
+    if ($assignment->form_submission_id) {
+        abort_if($assignment->form_submission_id !== $applicant->id, 403);
+    }
 
     $evaluation = $assignment->evaluation;
 
@@ -177,7 +206,9 @@ class EvaluationSubmissionController extends Controller
         'video'    => 'required|file|mimes:webm,mp4|max:20480',
     ]);
 
-    DB::transaction(function () use ($request, $assignment, $applicant, $evaluation) {
+    $submission = null;
+
+    DB::transaction(function () use ($request, $assignment, $applicant, $evaluation, &$submission) {
 
         /* ===============================
          | GET / CREATE SUBMISSION
@@ -313,6 +344,45 @@ class EvaluationSubmissionController extends Controller
         $submission->save();
     });
 
+    if ($submission) {
+        $submission->load([
+            'procurement',
+            'applicant.submitter',
+            'evaluation.sections.criteria',
+            'criteriaScores.criteria',
+            'sectionScores.section',
+            'evaluator',
+        ]);
+
+        $admins = User::whereHas('role', function ($q) {
+            $q->where('name', 'System Admin');
+        })->get();
+
+        $reportUsers = User::whereHas('permissions', function ($q) {
+            $q->where('name', 'prescreening.reports.view_all');
+        })->orWhereHas('role.permissions', function ($q) {
+            $q->where('name', 'prescreening.reports.view_all');
+        })->get();
+
+        $recipients = $admins->pluck('email')
+            ->merge($reportUsers->pluck('email'))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        $evaluatorEmail = $submission->evaluator?->email;
+        if ($evaluatorEmail) {
+            $recipients[] = $evaluatorEmail;
+        }
+
+        $recipients = array_values(array_unique(array_filter($recipients)));
+
+        foreach ($recipients as $email) {
+            Mail::to($email)->send(new EvaluationCompleted($submission));
+        }
+    }
+
     return redirect()
         ->route('eval.assign.applicants', $assignment)
         ->with('success', 'Evaluation submitted successfully.');
@@ -325,6 +395,9 @@ class EvaluationSubmissionController extends Controller
     public function view(EvaluationAssignment $assignment, FormSubmission $applicant)
     {
         abort_if(!$this->canAccessAssignment($assignment), 403);
+        if ($assignment->form_submission_id) {
+            abort_if($assignment->form_submission_id !== $applicant->id, 403);
+        }
 
         $submission = EvaluationSubmission::with([
             'criteriaScores.criteria',

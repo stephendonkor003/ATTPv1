@@ -5,12 +5,32 @@ namespace App\Http\Controllers;
 use App\Models\FormSubmission;
 use App\Models\PrescreeningEvaluation;
 use App\Models\PrescreeningResult;
+use App\Models\User;
+use App\Mail\PrescreeningCompleted;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Mail;
 
 class PrescreeningEvaluationController extends Controller
 {
+    private function canAccessSubmission(FormSubmission $submission): bool
+    {
+        if (Gate::allows('prescreening.view_all')) {
+            return true;
+        }
+
+        if ($submission->assigned_prescreener_id === auth()->id()) {
+            return true;
+        }
+
+        return $submission->procurement
+            ? $submission->procurement
+                ->prescreeningAssignments()
+                ->where('user_id', auth()->id())
+                ->exists()
+            : false;
+    }
     /**
      * ===============================
      * LIST PRESCREENING SUBMISSIONS
@@ -32,8 +52,11 @@ class PrescreeningEvaluationController extends Controller
 
             // ✅ FIX: filter by ASSIGNMENT, not evaluation
             $submissions = $query
-                ->whereHas('procurement.prescreeningAssignments', function ($q) {
-                    $q->where('user_id', auth()->id());
+                ->where(function ($q) {
+                    $q->whereHas('procurement.prescreeningAssignments', function ($q2) {
+                        $q2->where('user_id', auth()->id());
+                    })
+                    ->orWhere('assigned_prescreener_id', auth()->id());
                 })
                 ->latest()
                 ->get();
@@ -49,14 +72,7 @@ class PrescreeningEvaluationController extends Controller
      */
     public function show(FormSubmission $submission)
     {
-        // ✅ Authorization FIRST (assignment-based)
-        if (
-            Gate::denies('prescreening.view_all') &&
-            !$submission->procurement
-                ->prescreeningAssignments()
-                ->where('user_id', auth()->id())
-                ->exists()
-        ) {
+        if (!$this->canAccessSubmission($submission)) {
             abort(403);
         }
 
@@ -96,14 +112,7 @@ class PrescreeningEvaluationController extends Controller
      */
     public function store(Request $request, FormSubmission $submission)
     {
-        // ✅ Assignment enforcement
-        if (
-            Gate::denies('prescreening.view_all') &&
-            !$submission->procurement
-                ->prescreeningAssignments()
-                ->where('user_id', auth()->id())
-                ->exists()
-        ) {
+        if (!$this->canAccessSubmission($submission)) {
             abort(403);
         }
 
@@ -173,6 +182,27 @@ class PrescreeningEvaluationController extends Controller
                     : 'prescreen_failed',
             ]);
         });
+
+        $submission->load(['procurement', 'submitter', 'values', 'prescreeningResult.evaluator']);
+
+        $admins = User::whereHas('role', function ($q) {
+            $q->where('name', 'System Admin');
+        })->get();
+
+        $recipients = $admins->pluck('email')->filter()->all();
+
+        $evaluatorEmail = $submission->prescreeningResult?->evaluator?->email;
+        if ($evaluatorEmail) {
+            $recipients[] = $evaluatorEmail;
+        }
+
+        $recipients = array_values(array_unique($recipients));
+
+        if (!empty($recipients)) {
+            foreach ($recipients as $email) {
+                Mail::to($email)->send(new PrescreeningCompleted($submission));
+            }
+        }
 
         return redirect()
             ->route('prescreening.submissions.index')

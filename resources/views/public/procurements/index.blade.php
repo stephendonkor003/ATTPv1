@@ -175,17 +175,16 @@
     <header class="navbar">
         <div class="logo">
 
-            <img src="{{ asset('assets/images/3pap.white.bg.africa.png') }}" alt="" class="logo logo-sm">
+            <img src="{{ asset('assets/images/au.png') }}" alt="" class="logo logo-sm">
 
         </div>
         <nav class="nav-links">
             <a href="{{ route('landing.index') }}">Home</a>
-            <a href="#process">System Flow</a>
-            <a href="#customization">Customization</a>
+            <a href="#annoucements">Annoucements</a>
+            <a href="{{ route('events') }}">Events / Webinars</a>
+            {{-- <a href="#customization">Customization</a> --}}
             <a href="#contact">Contact</a>
-            <a href="{{ route('events') }}">Events</a>
             <a href="{{ route('careers.index') }}">Career</a>
-            <a href="{{ route('public.procurement.index') }}">FaQ's</a>
         </nav>
 
         <div class="nav-actions">
@@ -266,30 +265,35 @@
 
     <footer id="contact" class="footer">
         <div class="footer-content">
-            <div class="footer-logo">
-                <h3>3pap.<span>Africa</span></h3>
-                <p>Digitalizing procurement across Africa — empowering organizations with transparency and efficiency.
-                </p>
 
+            <div class="footer-logo">
+                <h3>ATTP<span> Administration</span></h3>
+                <p>
+                    African Think Tank Platform Administration ? supporting African Union
+                    institutions through centralized governance, policy coordination,
+                    and strategic oversight of programs and funded initiatives.
+                </p>
             </div>
 
             <div class="footer-links">
                 <h4>Quick Links</h4>
                 <a href="#">Home</a>
-                <a href="#process">System Flow</a>
-                <a href="#customization">Customization</a>
-                <a href="#">Contact</a>
+                <a href="#process">Institutional Process Flow</a>
+                <a href="#customization">Centralized Oversight</a>
+                <a href="#contact">Contact</a>
             </div>
 
             <div class="footer-contact">
                 <h4>Contact</h4>
-                <p>Email: info@3pap.africa</p>
-                <p>© 2025 3pap. All Rights Reserved.</p>
+                <p>Email: attpinfo@africanunion.org</p>
+                <p>? 2026 African Think Tank Platform Administration (ATTP)</p>
             </div>
 
         </div>
+
         <p style="margin-top: 10px; font-weight: 600; text-align: center;">
-            A product of NPCT ESG Global Consultancy, Pretoria, RSA.
+            Supporting African Union policy coordination, governance reform,
+            and evidence-based decision-making across the continent.
         </p>
 
     </footer>

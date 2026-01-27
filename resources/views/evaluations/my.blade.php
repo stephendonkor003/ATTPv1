@@ -44,6 +44,10 @@
 
                 $typeColor = $evalType === 'goods' ? 'warning' : 'primary';
                 $typeLabel = $evalType === 'goods' ? 'Goods (Yes / No)' : 'Services (Scored)';
+
+                $assignmentSubmissions = $assignment->form_submission_id
+                    ? $submissions->where('id', $assignment->form_submission_id)
+                    : $submissions->where('procurement_id', $assignment->procurement_id);
             @endphp
 
             <div class="card shadow-sm mb-4">
@@ -61,6 +65,12 @@
                             {{ $typeLabel }}
                         </span>
                     </div>
+
+                    @if ($assignment->form_submission_id)
+                        <span class="badge bg-info ms-2">Specific Submission</span>
+                    @else
+                        <span class="badge bg-info ms-2">Entire Procurement</span>
+                    @endif
 
                     <span class="badge bg-{{ $assignment->status === 'submitted' ? 'success' : 'warning text-dark' }}">
                         {{ ucfirst($assignment->status) }}
@@ -81,7 +91,7 @@
                         </thead>
                         <tbody>
 
-                            @forelse ($submissions->where('procurement_id', $assignment->procurement_id) as $submission)
+                            @forelse ($assignmentSubmissions as $submission)
                                 @php
                                     $evalSubmission = \App\Models\EvaluationSubmission::where([
                                         'evaluation_id' => $assignment->evaluation_id,

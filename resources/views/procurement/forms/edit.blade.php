@@ -66,12 +66,14 @@
                 <div class="mb-4 d-flex gap-2">
 
                     @if (in_array($form->status, ['draft', 'rejected']))
-                        <form method="POST" action="{{ route('forms.submit', $form->id) }}">
-                            @csrf
-                            <button class="btn btn-warning btn-sm">
-                                <i class="feather-send me-1"></i> Submit for Approval
-                            </button>
-                        </form>
+                        @can('forms.submit')
+                            <form method="POST" action="{{ route('forms.submit', $form->id) }}">
+                                @csrf
+                                <button class="btn btn-warning btn-sm">
+                                    <i class="feather-send me-1"></i> Submit for Approval
+                                </button>
+                            </form>
+                        @endcan
                     @endif
 
                     @if ($form->status === 'submitted')
@@ -83,9 +85,11 @@
                                 </button>
                             </form>
 
-                            <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#rejectModal">
-                                <i class="feather-x-circle me-1"></i> Reject
-                            </button>
+                            @can('forms.reject')
+                                <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#rejectModal">
+                                    <i class="feather-x-circle me-1"></i> Reject
+                                </button>
+                            @endcan
                         @endcan
                     @endif
 
@@ -217,27 +221,29 @@
     </div>
 
     {{-- ================= REJECT MODAL ================= --}}
-    <div class="modal fade" id="rejectModal" tabindex="-1">
-        <div class="modal-dialog">
-            <form method="POST" action="{{ route('forms.reject', $form->id) }}">
-                @csrf
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Reject Form</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    @can('forms.reject')
+        <div class="modal fade" id="rejectModal" tabindex="-1">
+            <div class="modal-dialog">
+                <form method="POST" action="{{ route('forms.reject', $form->id) }}">
+                    @csrf
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Reject Form</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <label class="form-label">Reason for rejection</label>
+                            <textarea name="rejection_reason" class="form-control" required></textarea>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button class="btn btn-danger">Reject</button>
+                        </div>
                     </div>
-                    <div class="modal-body">
-                        <label class="form-label">Reason for rejection</label>
-                        <textarea name="rejection_reason" class="form-control" required></textarea>
-                    </div>
-                    <div class="modal-footer">
-                        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button class="btn btn-danger">Reject</button>
-                    </div>
-                </div>
-            </form>
+                </form>
+            </div>
         </div>
-    </div>
+    @endcan
 
     {{-- ================= JS ================= --}}
     <script>

@@ -45,7 +45,7 @@ class RolePermissionSeeder extends Seeder
                 Permission::whereIn('name', [
                     'finance.access',
                     'finance.commitments.manage',
-                    'finance.execution.view',
+                    'finance.executions.view',
                 ])->pluck('id')
             );
 
@@ -66,11 +66,28 @@ class RolePermissionSeeder extends Seeder
             ->permissions()->sync(
                 Permission::whereIn('name', [
                     'finance.access',
-                    'finance.execution.view',
+                    'finance.executions.view',
                     'budget.access',
                     'budget.reports.view',
                     'budget.summary.view',
                     'hr.analytics.view',
+                ])->pluck('id')
+            );
+
+        // Prescreening Evaluator
+        Role::where('name', 'Prescreening Evaluator')->first()
+            ->permissions()->sync(
+                Permission::whereIn('name', [
+                    'prescreening.access',
+                    'prescreening.evaluate',
+                ])->pluck('id')
+            );
+
+        // Evaluation Evaluator
+        Role::where('name', 'Evaluation Evaluator')->first()
+            ->permissions()->sync(
+                Permission::whereIn('name', [
+                    'evaluations.evaluate',
                 ])->pluck('id')
             );
     }

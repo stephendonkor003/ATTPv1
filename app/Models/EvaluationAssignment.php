@@ -12,6 +12,7 @@ class EvaluationAssignment extends Model
     protected $fillable = [
         'evaluation_id',
         'procurement_id',
+        'form_submission_id',
         'user_id',
         'assigned_by',
         'assigned_at',
@@ -35,6 +36,11 @@ class EvaluationAssignment extends Model
     public function evaluator()
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function submission()
+    {
+        return $this->belongsTo(FormSubmission::class, 'form_submission_id');
     }
 
 

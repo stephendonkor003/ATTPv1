@@ -3,12 +3,12 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Careers at 3pap – Join Africa’s Procurement Transformation</title>
+    <title>Careers at ATTP – Join Africa’s Procurement Transformation</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     {{-- SEO --}}
     <meta name="description"
-        content="Explore career opportunities at 3pap and join Africa’s digital procurement transformation.">
+        content="Explore career opportunities at ATTP and join Africa’s digital procurement transformation.">
 
     {{-- Google Font --}}
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
@@ -67,7 +67,7 @@
         ===================================================== */
         .career-hero {
             min-height: 380px;
-            background: url('{{ asset('assets/three.webp') }}') center/cover no-repeat;
+            background: url('{{ asset('assets/images/au3.jpg') }}') center/cover no-repeat;
             position: relative;
             display: flex;
             align-items: center;
@@ -151,7 +151,7 @@
             height: 360px;
             border-radius: 18px;
             overflow: hidden;
-            background: url('{{ asset('assets/images/Aspiration5.png') }}') center/cover no-repeat;
+            background: url('{{ asset('assets/images/au3.jpg') }}') center/cover no-repeat;
             box-shadow: 0 18px 40px rgba(0, 0, 0, .18);
         }
 
@@ -302,13 +302,13 @@
     <header class="navbar">
         <div class="logo">
             {{-- 3pap<span>.africa</span> --}}
-            <img src="{{ asset('assets/images/3pap.white.bg.africa.png') }}" alt="" class="logo logo-sm">
+            <img src="{{ asset('assets/images/au.png') }}" alt="" class="logo logo-sm">
 
         </div>
         <nav class="nav-links">
             <a href="{{ route('landing.index') }}">Home</a>
             <a href="#process">System Flow</a>
-            <a href="#customization">Customization</a>
+            {{-- <a href="#customization">Customization</a> --}}
             <a href="#contact">Contact</a>
             <a href="{{ route('events') }}">Events</a>
             <a href="{{ route('careers.index') }}">Career</a>
@@ -316,7 +316,9 @@
 
         <div class="nav-actions">
             <a href="{{ route('login') }}" class="btn btn-login">Login</a>
-            <a href="{{ route('public.procurement.index') }}" class="btn btn-primary">Procurement Opportunities</a>
+            <a href="{{ route('public.procurement.index') }}" class="btn btn-primary">
+                Policy Programs & Research
+            </a>
 
         </div>
     </header>
@@ -324,7 +326,7 @@
     {{-- HERO --}}
     <section class="career-hero">
         <div class="career-hero-content">
-            <h1>Build Your Career With 3pap</h1>
+            <h1>Build Your Career With ATTP</h1>
             <p>
                 Join a mission-driven team transforming public procurement across Africa
                 through innovation and transparency.
@@ -361,7 +363,7 @@
                     @endif
 
                     @if ($vacancy->position)
-                        <button data-id="{{ $vacancy->position->id }}" data-title="{{ $vacancy->position->title }}"
+                        <button data-id="{{ $vacancy->id }}" data-title="{{ $vacancy->position->title }}"
                             data-employment="{{ ucfirst($vacancy->position->employment_type) }}"
                             data-description="{{ strip_tags($vacancy->position->description) }}"
                             onclick="openApplyModal(this)">
@@ -426,7 +428,7 @@
 
                 <form method="POST" action="{{ route('careers.apply.store') }}" enctype="multipart/form-data">
                     @csrf
-                    <input type="hidden" name="position_id" id="position_id">
+                    <input type="hidden" name="vacancy_id" id="vacancy_id">
 
                     <input type="text" name="full_name" placeholder="Full Name" required>
                     <input type="email" name="email" placeholder="Email Address" required>
@@ -435,8 +437,8 @@
                     <label>Upload CV</label>
                     <input type="file" name="resume" required>
 
-                    <label>Upload Cover Letter</label>
-                    <input type="file" name="cover_letter" required>
+                    <label>Upload Cover Letter (optional)</label>
+                    <input type="file" name="cover_letter">
 
                     <button type="submit" class="apply-btn" style="width:100%;">
                         Submit Application
@@ -452,36 +454,42 @@
     <!-- ====== FOOTER ====== -->
     <footer id="contact" class="footer">
         <div class="footer-content">
-            <div class="footer-logo">
-                <h3>3pap.<span>Africa</span></h3>
-                <p>Digitalizing procurement across Africa — empowering organizations with transparency and efficiency.
-                </p>
 
+            <div class="footer-logo">
+                <h3>ATTP<span> · Administration</span></h3>
+                <p>
+                    African Think Tank Platform Administration — supporting African Union
+                    institutions through centralized governance, policy coordination,
+                    and strategic oversight of programs and funded initiatives.
+                </p>
             </div>
 
             <div class="footer-links">
                 <h4>Quick Links</h4>
                 <a href="#">Home</a>
-                <a href="#process">System Flow</a>
-                <a href="#customization">Customization</a>
-                <a href="#">Contact</a>
+                <a href="#process">Institutional Process Flow</a>
+                <a href="#customization">Centralized Oversight</a>
+                <a href="#contact">Contact</a>
             </div>
 
             <div class="footer-contact">
                 <h4>Contact</h4>
-                <p>Email: info@3pap.africa</p>
-                <p>© 2025 3pap. All Rights Reserved.</p>
+                <p>Email: attpinfo@africanunion.org</p>
+                <p>© 2026 African Think Tank Platform Administration (ATTP)</p>
             </div>
 
         </div>
+
         <p style="margin-top: 10px; font-weight: 600; text-align: center;">
-            A product of NPCT ESG Global Consultancy, Pretoria, RSA.
+            Supporting African Union policy coordination, governance reform,
+            and evidence-based decision-making across the continent.
         </p>
 
     </footer>
 
 
     <script src="assets/script.js"></script>
+    <!--Start of Tawk.to Script-->
     <!--Start of Tawk.to Script-->
     <script type="text/javascript">
         var Tawk_API = Tawk_API || {},
@@ -490,12 +498,13 @@
             var s1 = document.createElement("script"),
                 s0 = document.getElementsByTagName("script")[0];
             s1.async = true;
-            s1.src = 'https://embed.tawk.to/69204852eba156195f5dae48/1jaj1l0r8';
+            s1.src = 'https://embed.tawk.to/6968b44f895de4198b902486/1jf0g0m8k';
             s1.charset = 'UTF-8';
             s1.setAttribute('crossorigin', '*');
             s0.parentNode.insertBefore(s1, s0);
         })();
     </script>
+    <!--End of Tawk.to Script-->
     <!--End of Tawk.to Script-->
     {{-- JS --}}
     <script>
@@ -508,7 +517,7 @@
             // ✅ Allow HTML content from DB
             document.getElementById('modalDescription').innerHTML = btn.dataset.description;
 
-            document.getElementById('position_id').value = btn.dataset.id;
+            document.getElementById('vacancy_id').value = btn.dataset.id;
         }
 
         function closeApplyModal() {

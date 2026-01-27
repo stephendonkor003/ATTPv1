@@ -19,6 +19,9 @@ use App\Http\Controllers\{
     PrescreeningEvaluationController,
     PrescreeningUserAssignmentController,
     EvaluationPanelPdfController,
+    PrescreeningReportController,
+    EvaluationReportController,
+    SystemAuditController,
 
 };
 
@@ -385,7 +388,7 @@ Route::prefix('careers')->name('careers.')->group(function () {
 
 
 
-Route::middleware(['auth'])
+Route::middleware(['auth', 'permission:finance.access'])
     ->prefix('finance')
     ->name('finance.')
     ->group(function () {
@@ -1032,6 +1035,10 @@ Route::middleware(['auth'])
             [ProcurementStatusController::class, 'approve']
         )->name('approve');
 
+        Route::post('{procurement}/reject',
+            [ProcurementStatusController::class, 'reject']
+        )->name('reject');
+
         Route::post('{procurement}/publish',
             [ProcurementStatusController::class, 'publish']
         )->name('publish');
@@ -1047,7 +1054,7 @@ Route::middleware(['auth'])
 
 
 
-Route::middleware(['auth', 'can:forms.manage'])
+Route::middleware(['auth', 'permission:forms.manage'])
     ->prefix('procurement/forms')
     ->group(function () {
 
@@ -1080,12 +1087,15 @@ Route::middleware(['auth', 'can:forms.manage'])
         )->name('forms.fields.destroy');
 
         Route::post('{form}/submit', [DynamicFormController::class, 'submit'])
+            ->middleware('permission:forms.submit')
             ->name('forms.submit');
 
         Route::post('{form}/approve', [DynamicFormController::class, 'approve'])
+            ->middleware('permission:forms.approve')
             ->name('forms.approve');
 
         Route::post('{form}/reject', [DynamicFormController::class, 'reject'])
+            ->middleware('permission:forms.reject')
             ->name('forms.reject');
 
 
@@ -1168,21 +1178,27 @@ Route::middleware(['auth'])
     ->group(function () {
 
         Route::get('/', [PrescreeningTemplateController::class, 'index'])
+            ->middleware('permission:prescreening.manage')
             ->name('index');
 
         Route::get('/create', [PrescreeningTemplateController::class, 'create'])
+            ->middleware('permission:prescreening.manage')
             ->name('create');
 
         Route::post('/', [PrescreeningTemplateController::class, 'store'])
+            ->middleware('permission:prescreening.manage')
             ->name('store');
 
         Route::get('/{template}', [PrescreeningTemplateController::class, 'show'])
+            ->middleware('permission:prescreening.manage')
             ->name('show');
 
         Route::get('/{template}/edit', [PrescreeningTemplateController::class, 'edit'])
+            ->middleware('permission:prescreening.manage')
             ->name('edit');
 
         Route::put('/{template}', [PrescreeningTemplateController::class, 'update'])
+            ->middleware('permission:prescreening.manage')
             ->name('update');
     });
 
@@ -1192,21 +1208,27 @@ Route::middleware(['auth'])
     ->group(function () {
 
         Route::get('/criteria', [PrescreeningCriterionController::class, 'index'])
+            ->middleware('permission:prescreening.manage')
             ->name('index');
 
         Route::get('/criteria/create', [PrescreeningCriterionController::class, 'create'])
+            ->middleware('permission:prescreening.manage')
             ->name('create');
 
         Route::post('/criteria', [PrescreeningCriterionController::class, 'store'])
+            ->middleware('permission:prescreening.manage')
             ->name('store');
 
         Route::get('/criteria/{criterion}', [PrescreeningCriterionController::class, 'show'])
+            ->middleware('permission:prescreening.manage')
             ->name('show');
 
         Route::get('/criteria/{criterion}/edit', [PrescreeningCriterionController::class, 'edit'])
+            ->middleware('permission:prescreening.manage')
             ->name('edit');
 
         Route::put('/criteria/{criterion}', [PrescreeningCriterionController::class, 'update'])
+            ->middleware('permission:prescreening.manage')
             ->name('update');
     });
 
@@ -1216,9 +1238,11 @@ Route::middleware(['auth'])
     ->group(function () {
 
         Route::get('/', [PrescreeningAssignmentController::class, 'edit'])
+            ->middleware('permission:prescreening.manage')
             ->name('procurements.prescreening.edit');
 
         Route::post('/', [PrescreeningAssignmentController::class, 'store'])
+            ->middleware('permission:prescreening.manage')
             ->name('procurements.prescreening.store');
     });
 
@@ -1227,49 +1251,60 @@ Route::middleware(['auth'])
 
 
 
-   Route::middleware(['auth'])
+Route::middleware(['auth'])
     ->prefix('prescreening')
     ->group(function () {
 
         Route::get(
             'submissions',
             [PrescreeningEvaluationController::class, 'index']
-        )->name('prescreening.submissions.index');
+        )->middleware('permission:prescreening.evaluate')
+         ->name('prescreening.submissions.index');
 
         Route::get(
             'submissions/{submission}',
             [PrescreeningEvaluationController::class, 'show']
-        )->name('prescreening.submissions.show');
+        )->middleware('permission:prescreening.evaluate')
+         ->name('prescreening.submissions.show');
 
         Route::post(
             'submissions/{submission}',
             [PrescreeningEvaluationController::class, 'store']
-        )->name('prescreening.submissions.store');
+        )->middleware('permission:prescreening.evaluate')
+         ->name('prescreening.submissions.store');
 
         // ✅ NEW: REQUEST REWORK
         Route::post(
             'submissions/{submission}/rework',
             [PrescreeningEvaluationController::class, 'requestRework']
-        )->name('prescreening.submissions.rework');
+        )->middleware('permission:prescreening.request_rework')
+         ->name('prescreening.submissions.rework');
     });
 
+Route::middleware(['auth', 'permission:prescreening.evaluate'])
+    ->get('prescreening/my-assignments', [PrescreeningUserAssignmentController::class, 'myAssignments'])
+    ->name('prescreening.assignments.my');
 
 
-    Route::middleware(['auth'])
+
+Route::middleware(['auth'])
     ->prefix('prescreening/assignments')
     ->group(function () {
 
         Route::get('/',
             [PrescreeningUserAssignmentController::class, 'index']
-        )->name('prescreening.assignments.index');
+        )->middleware('permission:prescreening.manage')
+         ->name('prescreening.assignments.index');
 
         Route::get('/{procurement}',
             [PrescreeningUserAssignmentController::class, 'edit']
-        )->name('prescreening.assignments.edit');
+        )->middleware('permission:prescreening.manage')
+         ->name('prescreening.assignments.edit');
 
         Route::post('/{procurement}',
             [PrescreeningUserAssignmentController::class, 'store']
-        )->name('prescreening.assignments.store');
+        )->middleware('permission:prescreening.manage')
+         ->name('prescreening.assignments.store');
     });
 
 
@@ -1316,7 +1351,7 @@ use App\Http\Controllers\EvaluationCriteriaController;
 | EVALUATION CONFIGURATION (ADMIN)
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth'])
+Route::middleware(['auth', 'permission:evaluations.manage'])
     ->prefix('evals/config')
     ->name('evals.cfg.')
     ->group(function () {
@@ -1439,7 +1474,7 @@ use App\Http\Controllers\EvaluationScoringController;
 | EVALUATOR SIDE
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth'])
+Route::middleware(['auth', 'permission:evaluations.evaluate'])
     ->prefix('my-evaluations')
     ->name('my.eval.')
     ->group(function () {
@@ -1484,7 +1519,7 @@ Route::middleware(['auth'])
 | SCORING (AJAX)
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth'])
+Route::middleware(['auth', 'permission:evaluations.evaluate'])
     ->prefix('evaluation/score')
     ->name('eval.score.')
     ->group(function () {
@@ -1505,7 +1540,7 @@ Route::middleware(['auth'])
 */
 
 
-Route::middleware(['auth'])
+Route::middleware(['auth', 'permission:evaluations.manage'])
     ->prefix('evaluation-assignments')
     ->name('eval.assign.')
     ->group(function () {
@@ -1524,9 +1559,14 @@ Route::middleware(['auth'])
         Route::delete('/{assignment}',
             [EvaluationAssignmentController::class, 'destroy']
         )->name('destroy');
+});
 
+Route::middleware(['auth', 'permission:evaluations.evaluate'])
+    ->prefix('evaluation-assignments')
+    ->name('eval.assign.')
+    ->group(function () {
         /* ===============================
-         | EXTENDED WORKFLOW (SAFE ADD)
+         | EVALUATOR WORKFLOW
          =============================== */
 
         // List applicants for this assignment
@@ -1553,16 +1593,9 @@ Route::middleware(['auth'])
         Route::get('/{assignment}/view/{applicant}',
             [EvaluationSubmissionController::class, 'view']
         )->name('view');
+    });
 
-        // Panel comparison
-        // Panel comparison
-       // Panel Evaluation Hub
-
-
-
-});
-
-Route::middleware(['auth'])
+Route::middleware(['auth', 'permission:evaluations.evaluate'])
     ->prefix('panel-evaluations')
     ->name('eval.panel.')
     ->group(function () {
@@ -1691,10 +1724,43 @@ Route::get('/create/{applicant_id}', [EvaluationController::class, 'create'])
 
 Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
 
+Route::middleware(['auth', 'permission:prescreening.reports.view_all'])
+    ->prefix('reports/prescreening')
+    ->name('reports.prescreening.')
+    ->group(function () {
+        Route::get('/', [PrescreeningReportController::class, 'index'])->name('index');
+        Route::get('/submission/{submission}', [PrescreeningReportController::class, 'submission'])->name('submission');
+        Route::get('/submission/{submission}/pdf', [PrescreeningReportController::class, 'submissionPdf'])->name('submission.pdf');
+        Route::get('/procurement/{procurement}', [PrescreeningReportController::class, 'procurement'])->name('procurement');
+        Route::get('/procurement/{procurement}/pdf', [PrescreeningReportController::class, 'procurementPdf'])->name('procurement.pdf');
+        Route::get('/consolidated', [PrescreeningReportController::class, 'consolidated'])->name('consolidated');
+        Route::get('/consolidated/pdf', [PrescreeningReportController::class, 'consolidatedPdf'])->name('consolidated.pdf');
+    });
+
+Route::middleware(['auth', 'permission:evaluations.view_all'])
+    ->prefix('reports/evaluations')
+    ->name('reports.evaluations.')
+    ->group(function () {
+        Route::get('/', [EvaluationReportController::class, 'index'])->name('index');
+        Route::get('/submission/{submission}', [EvaluationReportController::class, 'submission'])->name('submission');
+        Route::get('/submission/{submission}/pdf', [EvaluationReportController::class, 'submissionPdf'])->name('submission.pdf');
+        Route::get('/procurement/{procurement}', [EvaluationReportController::class, 'procurement'])->name('procurement');
+        Route::get('/procurement/{procurement}/pdf', [EvaluationReportController::class, 'procurementPdf'])->name('procurement.pdf');
+        Route::get('/consolidated', [EvaluationReportController::class, 'consolidated'])->name('consolidated');
+        Route::get('/consolidated/pdf', [EvaluationReportController::class, 'consolidatedPdf'])->name('consolidated.pdf');
+    });
+
 Route::get('/callforproposal', [ApplicantController::class, 'create'])->name('applicants.create');
 Route::get('/faq', [ApplicantController::class, 'faq'])->name('applicants.faq');
 Route::post('/apply', [ApplicantController::class, 'store'])->name('applicants.store');
 Route::get('/events', [ApplicantController::class, 'events'])->name('events');
+
+Route::middleware(['auth', 'permission:system.audit.view'])
+    ->prefix('system/audit')
+    ->name('system.audit.')
+    ->group(function () {
+        Route::get('/', [SystemAuditController::class, 'index'])->name('index');
+    });
 
 
 require __DIR__ . '/auth.php';

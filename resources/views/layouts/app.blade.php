@@ -9,7 +9,7 @@
     <meta name="keyword" content="">
     <meta name="author" content="WRAPCODERS">
 
-    <title>@yield('title', '3pap || Africa')</title>
+    <title>@yield('title', 'ATTP || Administration')</title>
 
     <!-- Favicon -->
     <link rel="shortcut icon" type="image/x-icon" href="{{ asset('admin/assets/images/favicon.ico') }}">
@@ -47,6 +47,27 @@
         .btn-custom:hover {
             background-color: #3e1f28 !important;
             color: #fff !important;
+        }
+
+        /* Ensure Bootstrap modals appear above custom overlays */
+        .modal {
+            z-index: 2000;
+        }
+
+        .modal-backdrop {
+            z-index: 1990;
+        }
+
+        /* Remove any blur effects applied by theme/backdrop */
+        .modal-backdrop {
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            filter: none !important;
+        }
+
+        body.modal-open,
+        body.modal-open .main-wrapper {
+            filter: none !important;
         }
     </style>
 </head>

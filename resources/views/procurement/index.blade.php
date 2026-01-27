@@ -76,6 +76,7 @@
                                         class="badge
                                         @if ($p->status === 'draft') bg-secondary
                                         @elseif ($p->status === 'submitted') bg-warning text-dark
+                                        @elseif ($p->status === 'rejected') bg-danger
                                         @elseif ($p->status === 'approved') bg-success
                                         @elseif ($p->status === 'published') bg-primary
                                         @elseif ($p->status === 'closed') bg-dark
@@ -105,6 +106,18 @@
                                         </form>
                                     @endif
 
+                                    {{-- RESUBMIT --}}
+                                    @if ($p->status === 'rejected')
+                                        <form method="POST" action="{{ route('statusProcurement.submit', $p) }}"
+                                            class="d-inline">
+                                            @csrf
+                                            <button class="btn btn-sm btn-outline-warning"
+                                                onclick="return confirm('Resubmit this procurement for approval?')">
+                                                Resubmit
+                                            </button>
+                                        </form>
+                                    @endif
+
                                     {{-- APPROVE --}}
                                     @if ($p->status === 'submitted')
                                         <form method="POST" action="{{ route('statusProcurement.approve', $p) }}"
@@ -115,6 +128,12 @@
                                                 Approve
                                             </button>
                                         </form>
+
+                                        <button class="btn btn-sm btn-outline-danger ms-1" data-bs-toggle="collapse"
+                                            data-bs-target="#rejectProcurementDrawer{{ $p->id }}" aria-expanded="false"
+                                            aria-controls="rejectProcurementDrawer{{ $p->id }}">
+                                            Reject
+                                        </button>
                                     @endif
 
                                     {{-- PUBLISH --}}
@@ -155,6 +174,25 @@
 
                                 </td>
                             </tr>
+                            @if ($p->status === 'submitted')
+                                <tr class="collapse" id="rejectProcurementDrawer{{ $p->id }}">
+                                    <td colspan="5" class="bg-light">
+                                        <form method="POST" action="{{ route('statusProcurement.reject', $p) }}"
+                                            class="row g-3 align-items-end p-3">
+                                            @csrf
+                                            <div class="col-md-8">
+                                                <label class="form-label fw-semibold">Reason for rejection</label>
+                                                <textarea name="rejection_reason" class="form-control" rows="2" required></textarea>
+                                            </div>
+                                            <div class="col-md-4 text-md-end">
+                                                <button type="submit" class="btn btn-danger">
+                                                    Reject Procurement
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </td>
+                                </tr>
+                            @endif
                         @empty
                             <tr>
                                 <td colspan="5" class="text-center text-muted py-4">

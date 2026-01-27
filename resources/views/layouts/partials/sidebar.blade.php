@@ -128,47 +128,48 @@
 
 
                 {{-- ================= BUDGET EXECUTION ================= --}}
-                <li class="nxl-item nxl-caption">
-                    <label>Budget Execution</label>
-                </li>
+                @canany(['finance.commitments.view', 'finance.resources.view', 'finance.executions.view'])
+                    <li class="nxl-item nxl-caption">
+                        <label>Budget Execution</label>
+                    </li>
 
-                <li class="nxl-item nxl-hasmenu">
-                    <a href="javascript:void(0);" class="nxl-link">
-                        <span class="nxl-micon"><i class="feather-activity"></i></span>
-                        <span class="nxl-mtext">Execution & Commitments</span>
-                        <span class="nxl-arrow"><i class="feather-chevron-right"></i></span>
-                    </a>
+                    <li class="nxl-item nxl-hasmenu">
+                        <a href="javascript:void(0);" class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-activity"></i></span>
+                            <span class="nxl-mtext">Execution & Commitments</span>
+                            <span class="nxl-arrow"><i class="feather-chevron-right"></i></span>
+                        </a>
 
-                    <ul class="nxl-submenu">
-                        @can('finance.commitments.view')
-                            <li class="nxl-item">
-                                <a href="{{ route('finance.commitments.index') }}" class="nxl-link">
-                                    <i class="feather-edit me-2"></i> Budget Commitments
-                                </a>
-                            </li>
-                        @endcan
+                        <ul class="nxl-submenu">
+                            @can('finance.commitments.view')
+                                <li class="nxl-item">
+                                    <a href="{{ route('finance.commitments.index') }}" class="nxl-link">
+                                        <i class="feather-edit me-2"></i> Budget Commitments
+                                    </a>
+                                </li>
+                            @endcan
 
+                            @can('finance.resources.view')
+                                <li class="nxl-item">
+                                    <a href="{{ route('finance.resources.categories.index') }}" class="nxl-link">
+                                        <i class="feather-folder me-2"></i> Resource Categories
+                                    </a>
+                                </li>
 
-
-                        @can('finance.resources.view')
-                            <li class="nxl-item">
-                                <a href="{{ route('finance.resources.categories.index') }}" class="nxl-link">
-                                    <i class="feather-folder me-2"></i> Resource Categories
-                                </a>
-                            </li>
-
-                            <li class="nxl-item">
-                                <a href="{{ route('finance.resources.items.index') }}" class="nxl-link">
-                                    <i class="feather-box me-2"></i> Resource Items
-                                </a>
-                            </li>
-                        @endcan
-                    </ul>
-                </li>
+                                <li class="nxl-item">
+                                    <a href="{{ route('finance.resources.items.index') }}" class="nxl-link">
+                                        <i class="feather-box me-2"></i> Resource Items
+                                    </a>
+                                </li>
+                            @endcan
+                        </ul>
+                    </li>
+                @endcanany
 
 
                 {{-- ================= REPORTING ================= --}}
-                @canany(['budget.reports.view', 'budget.summary.view', 'finance.executions.view', 'hr.analytics.view'])
+                @canany(['budget.reports.view', 'budget.summary.view', 'finance.executions.view', 'hr.analytics.view',
+                    'prescreening.reports.view_all', 'evaluations.view_all'])
                     <li class="nxl-item nxl-caption">
                         <label>Reports & Analytics Engine</label>
                     </li>
@@ -223,6 +224,25 @@
                                     <a href="{{ route('budget.summary.executive') }}" class="nxl-link">
                                         <i class="feather-clipboard me-2"></i>
                                         Allocations Reports
+                                    </a>
+                                </li>
+                            @endcan
+
+                            {{-- Prescreening Reports --}}
+                            @can('prescreening.reports.view_all')
+                                <li class="nxl-item">
+                                    <a href="{{ route('reports.prescreening.index') }}" class="nxl-link">
+                                        <i class="feather-file-text me-2"></i>
+                                        Prescreening Reports
+                                    </a>
+                                </li>
+                            @endcan
+
+                            @can('evaluations.view_all')
+                                <li class="nxl-item">
+                                    <a href="{{ route('reports.evaluations.index') }}" class="nxl-link">
+                                        <i class="feather-file-text me-2"></i>
+                                        Evaluation Reports
                                     </a>
                                 </li>
                             @endcan
@@ -304,7 +324,7 @@
                 | PROCUREMENT MANAGEMENT
                 ====================================================== --}}
                 @canany(['procurement.create', 'procurement.view', 'procurement.manage', 'forms.manage',
-                    'prescreen.evaluate', 'prescreen.finalize', 'procurement.audit'])
+                    'prescreening.evaluate', 'prescreening.manage', 'prescreening.view_all', 'procurement.audit'])
                     <li class="nxl-item nxl-caption">
                         <label>Procurement Management</label>
                     </li>
@@ -345,13 +365,14 @@
                             {{-- @endcan --}}
 
                             {{-- ================= FORMS & SETUP ================= --}}
-                            {{-- @can('forms.manage') --}}
-                            <li class="nxl-item">
-                                <a href="{{ route('forms.index') }}" class="nxl-link">
-                                    <i class="feather-file-text me-2"></i>
-                                    Forms Builder
-                                </a>
-                            </li>
+                            @can('forms.manage')
+                                <li class="nxl-item">
+                                    <a href="{{ route('forms.index') }}" class="nxl-link">
+                                        <i class="feather-file-text me-2"></i>
+                                        Forms Builder
+                                    </a>
+                                </li>
+                            @endcan
 
 
 
@@ -369,123 +390,139 @@
 
 
                 {{-- ================= PRESCREENING ================= --}}
-                {{-- ================= PRESCREENING ================= --}}
-                <li class="nxl-item nxl-hasmenu">
-                    <a href="javascript:void(0);" class="nxl-link">
-                        <span class="nxl-micon">
-                            <i class="feather-check-square"></i>
-                        </span>
-                        <span class="nxl-mtext">Prescreening</span>
-                        <span class="nxl-arrow">
-                            <i class="feather-chevron-right"></i>
-                        </span>
-                    </a>
+                @canany(['prescreening.access', 'prescreening.evaluate', 'prescreening.manage',
+                    'prescreening.view_all'])
+                    <li class="nxl-item nxl-hasmenu">
+                        <a href="javascript:void(0);" class="nxl-link">
+                            <span class="nxl-micon">
+                                <i class="feather-check-square"></i>
+                            </span>
+                            <span class="nxl-mtext">Prescreening</span>
+                            <span class="nxl-arrow">
+                                <i class="feather-chevron-right"></i>
+                            </span>
+                        </a>
 
-                    <ul class="nxl-submenu">
+                        <ul class="nxl-submenu">
 
-                        {{-- TEMPLATE CONFIGURATION --}}
-                        <li class="nxl-item">
-                            <a href="{{ route('prescreening.templates.index') }}" class="nxl-link">
-                                <i class="feather-layout me-2"></i>
-                                Prescreening Templates
-                            </a>
-                        </li>
+                            {{-- TEMPLATE CONFIGURATION --}}
+                            @can('prescreening.manage')
+                                <li class="nxl-item">
+                                    <a href="{{ route('prescreening.templates.index') }}" class="nxl-link">
+                                        <i class="feather-layout me-2"></i>
+                                        Prescreening Templates
+                                    </a>
+                                </li>
+                            @endcan
 
-                        {{-- TEMPLATE → PROCUREMENT --}}
-                        <li class="nxl-item">
-                            <a href="{{ route('procurements.index') }}" class="nxl-link">
-                                <i class="feather-link me-2"></i>
-                                Assign Template to Procurement
-                            </a>
-                        </li>
+                            {{-- TEMPLATE → PROCUREMENT --}}
+                            @can('prescreening.manage')
+                                <li class="nxl-item">
+                                    <a href="{{ route('procurements.index') }}" class="nxl-link">
+                                        <i class="feather-link me-2"></i>
+                                        Assign Template to Procurement
+                                    </a>
+                                </li>
+                            @endcan
 
-                        {{-- USER ASSIGNMENT --}}
-                        <li class="nxl-item">
-                            <a href="{{ route('prescreening.assignments.index') }}" class="nxl-link">
-                                <i class="feather-users me-2"></i>
-                                Prescreening Assignments
-                            </a>
-                        </li>
+                            {{-- USER ASSIGNMENT --}}
+                            @can('prescreening.manage')
+                                <li class="nxl-item">
+                                    <a href="{{ route('prescreening.assignments.index') }}" class="nxl-link">
+                                        <i class="feather-users me-2"></i>
+                                        Prescreening Assignments
+                                    </a>
+                                </li>
+                            @endcan
 
-                        {{-- EVALUATOR VIEW --}}
-                        <li class="nxl-item">
-                            <a href="{{ route('prescreening.submissions.index') }}" class="nxl-link">
-                                <i class="feather-inbox me-2"></i>
-                                Prescreening Submissions
-                            </a>
-                        </li>
+                            {{-- EVALUATOR VIEW --}}
+                            @canany(['prescreening.evaluate', 'prescreening.view_all'])
+                                <li class="nxl-item">
+                                    <a href="{{ route('prescreening.submissions.index') }}" class="nxl-link">
+                                        <i class="feather-inbox me-2"></i>
+                                        Prescreening Submissions
+                                    </a>
+                                </li>
+                            @endcanany
 
-                        {{-- AGGREGATION / SUPERVISION --}}
-                        <li class="nxl-item">
-                            <a href="javascript:void(0);" class="nxl-link text-muted">
-                                <i class="feather-bar-chart-2 me-2"></i>
-                                Prescreening Overview
-                                <span class="badge bg-light text-dark ms-2">Coming</span>
-                            </a>
-                        </li>
+                            @can('prescreening.evaluate')
+                                <li class="nxl-item">
+                                    <a href="{{ route('prescreening.assignments.my') }}" class="nxl-link">
+                                        <i class="feather-user-check me-2"></i>
+                                        My Assignments
+                                    </a>
+                                </li>
+                            @endcan
 
-                    </ul>
-                </li>
-
-
-
-
-                {{-- @canany(['evaluations.manage', 'evaluations.evaluate']) --}}
-                <li class="nxl-item nxl-caption">
-                    <label>Evaluation Management</label>
-                </li>
-
-                <li class="nxl-item nxl-hasmenu">
-                    <a href="javascript:void(0);" class="nxl-link">
-                        <span class="nxl-micon">
-                            <i class="feather-check-square"></i>
-                        </span>
-                        <span class="nxl-mtext">Evaluations</span>
-                        <span class="nxl-arrow">
-                            <i class="feather-chevron-right"></i>
-                        </span>
-                    </a>
-
-                    <ul class="nxl-submenu">
-
-                        {{-- ================= CONFIGURATION ================= --}}
-                        <li class="nxl-item">
-                            <a href="{{ route('evals.cfg.index') }}" class="nxl-link">
-                                <i class="feather-settings me-2"></i>
-                                Evaluation Configuration
-                            </a>
-                        </li>
-
-                        {{-- ================= ASSIGNMENTS ================= --}}
-                        <li class="nxl-item">
-                            <a href="{{ route('eval.assign.hub') }}" class="nxl-link">
-                                <i class="feather-user-plus me-2"></i>
-                                Assign Evaluators
-                            </a>
-                        </li>
-
-                        {{-- ================= MY EVALUATIONS ================= --}}
-                        <li class="nxl-item">
-                            <a href="{{ route('my.eval.index') }}" class="nxl-link">
-                                <i class="feather-edit me-2"></i>
-                                My Evaluations
-                            </a>
-                        </li>
-
-                        {{-- ================= PANEL EVALUATIONS ================= --}}
-                        <li class="nxl-item">
-                            <a href="{{ route('eval.panel.index') }}"
-                                class="nxl-link {{ request()->routeIs('eval.panel.*') ? 'active' : '' }}">
-                                <i class="feather-layers me-2"></i>
-                                Panel Evaluations
-                            </a>
-                        </li>
+                        </ul>
+                    </li>
+                @endcanany
 
 
-                    </ul>
-                </li>
 
-                {{-- @endcanany --}}
+
+                @canany(['evaluations.manage', 'evaluations.evaluate'])
+                    <li class="nxl-item nxl-caption">
+                        <label>Evaluation Management</label>
+                    </li>
+
+                    <li class="nxl-item nxl-hasmenu">
+                        <a href="javascript:void(0);" class="nxl-link">
+                            <span class="nxl-micon">
+                                <i class="feather-check-square"></i>
+                            </span>
+                            <span class="nxl-mtext">Evaluations</span>
+                            <span class="nxl-arrow">
+                                <i class="feather-chevron-right"></i>
+                            </span>
+                        </a>
+
+                        <ul class="nxl-submenu">
+
+                            {{-- ================= CONFIGURATION ================= --}}
+                            @can('evaluations.manage')
+                                <li class="nxl-item">
+                                    <a href="{{ route('evals.cfg.index') }}" class="nxl-link">
+                                        <i class="feather-settings me-2"></i>
+                                        Evaluation Configuration
+                                    </a>
+                                </li>
+                            @endcan
+
+                            {{-- ================= ASSIGNMENTS ================= --}}
+                            @can('evaluations.manage')
+                                <li class="nxl-item">
+                                    <a href="{{ route('eval.assign.hub') }}" class="nxl-link">
+                                        <i class="feather-user-plus me-2"></i>
+                                        Assign Evaluators
+                                    </a>
+                                </li>
+                            @endcan
+
+                            {{-- ================= MY EVALUATIONS ================= --}}
+                            @can('evaluations.evaluate')
+                                <li class="nxl-item">
+                                    <a href="{{ route('my.eval.index') }}" class="nxl-link">
+                                        <i class="feather-edit me-2"></i>
+                                        My Evaluations
+                                    </a>
+                                </li>
+                            @endcan
+
+                            {{-- ================= PANEL EVALUATIONS ================= --}}
+                            @can('evaluations.view_all')
+                                <li class="nxl-item">
+                                    <a href="{{ route('eval.panel.index') }}"
+                                        class="nxl-link {{ request()->routeIs('eval.panel.*') ? 'active' : '' }}">
+                                        <i class="feather-layers me-2"></i>
+                                        Panel Evaluations
+                                    </a>
+                                </li>
+                            @endcan
+
+                        </ul>
+                    </li>
+                @endcanany
 
 
                 {{-- ================= SITE VISITS ================= --}}
@@ -549,7 +586,7 @@
 
 
                 {{-- ================= SYSTEM MANAGEMENT ================= --}}
-                @canany(['users.manage', 'roles.manage', 'permissions.manage'])
+                @canany(['users.manage', 'roles.manage', 'permissions.manage', 'system.audit.view'])
                     <li class="nxl-item nxl-caption">
                         <label>Users & Security</label>
                     </li>
@@ -577,6 +614,14 @@
                             </a>
                         </li>
                     @endcan
+
+                    @can('system.audit.view')
+                        <li class="nxl-item">
+                            <a href="{{ route('system.audit.index') }}" class="nxl-link">
+                                <i class="feather-activity me-2"></i> System Audit
+                            </a>
+                        </li>
+                    @endcan
                 @endcanany
 
 
@@ -592,7 +637,7 @@
             <div class="card text-center mt-4">
                 <div class="card-body">
                     <i class="feather-clipboard fs-4 text-dark"></i>
-                    <h6 class="mt-4 text-dark fw-bolder">3pap</h6>
+                    <h6 class="mt-4 text-dark fw-bolder">ATTP</h6>
                     <p class="fs-11 my-3 text-dark">
                         Manage bidding projects, evaluation committees, and procurement reporting for Africa’s
                         development initiatives.

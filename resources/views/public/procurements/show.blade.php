@@ -3,10 +3,10 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>{{ $procurement->title }} | 3pap Africa</title>
+    <title>{{ $procurement->title }} | ATTP</title>
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Apply for {{ $procurement->title }} through the 3pap digital procurement platform.">
+    <meta name="description" content="Apply for {{ $procurement->title }} through the ATTP digital procurement platform.">
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/assets/style.css">
@@ -237,7 +237,7 @@
     <header class="navbar">
         <div class="logo">
 
-            <img src="{{ asset('assets/images/3pap.white.bg.africa.png') }}" alt="" class="logo logo-sm">
+            <img src="{{ asset('assets/images/au.png') }}" alt="" class="logo logo-sm">
 
         </div>
         <nav class="nav-links">
@@ -252,7 +252,7 @@
 
         <div class="nav-actions">
             <a href="{{ route('login') }}" class="btn btn-login">Login</a>
-            <a href="{{ route('applicants.create') }}" class="btn btn-primary">Call for Proposals</a>
+            {{-- <a href="{{ route('applicants.create') }}" class="btn btn-primary">Call for Proposals</a> --}}
 
         </div>
     </header>
@@ -260,6 +260,10 @@
     {{-- ===== HEADER ===== --}}
     <section class="page-header">
         <div class="header-content">
+            <br>
+            <br>
+            <br>
+            <br>
             <h1>{{ $procurement->title }}</h1>
             <p>Reference: {{ $procurement->reference_no ?? 'N/A' }}</p>
         </div>
@@ -472,30 +476,35 @@
     </div>
     <footer id="contact" class="footer">
         <div class="footer-content">
-            <div class="footer-logo">
-                <h3>3pap.<span>Africa</span></h3>
-                <p>Digitalizing procurement across Africa — empowering organizations with transparency and efficiency.
-                </p>
 
+            <div class="footer-logo">
+                <h3>ATTP<span> Administration</span></h3>
+                <p>
+                    African Think Tank Platform Administration ? supporting African Union
+                    institutions through centralized governance, policy coordination,
+                    and strategic oversight of programs and funded initiatives.
+                </p>
             </div>
 
             <div class="footer-links">
                 <h4>Quick Links</h4>
                 <a href="#">Home</a>
-                <a href="#process">System Flow</a>
-                <a href="#customization">Customization</a>
-                <a href="#">Contact</a>
+                <a href="#process">Institutional Process Flow</a>
+                <a href="#customization">Centralized Oversight</a>
+                <a href="#contact">Contact</a>
             </div>
 
             <div class="footer-contact">
                 <h4>Contact</h4>
-                <p>Email: info@3pap.africa</p>
-                <p>© 2025 3pap. All Rights Reserved.</p>
+                <p>Email: attpinfo@africanunion.org</p>
+                <p>? 2026 African Think Tank Platform Administration (ATTP)</p>
             </div>
 
         </div>
+
         <p style="margin-top: 10px; font-weight: 600; text-align: center;">
-            A product of NPCT ESG Global Consultancy, Pretoria, RSA.
+            Supporting African Union policy coordination, governance reform,
+            and evidence-based decision-making across the continent.
         </p>
 
     </footer>
@@ -528,7 +537,7 @@
             var s1 = document.createElement("script"),
                 s0 = document.getElementsByTagName("script")[0];
             s1.async = true;
-            s1.src = 'https://embed.tawk.to/69204852eba156195f5dae48/1jaj1l0r8';
+            s1.src = 'https://embed.tawk.to/6968b44f895de4198b902486/1jf0g0m8k';
             s1.charset = 'UTF-8';
             s1.setAttribute('crossorigin', '*');
             s0.parentNode.insertBefore(s1, s0);

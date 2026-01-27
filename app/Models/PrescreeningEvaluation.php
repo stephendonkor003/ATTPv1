@@ -23,4 +23,9 @@ class PrescreeningEvaluation extends Model
     {
         return $this->belongsTo(FormSubmission::class, 'submission_id');
     }
+
+    public function criterion()
+    {
+        return $this->belongsTo(PrescreeningCriterion::class, 'criterion_id');
+    }
 }
