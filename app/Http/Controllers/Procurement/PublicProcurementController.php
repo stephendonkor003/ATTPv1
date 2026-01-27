@@ -80,7 +80,7 @@ class PublicProcurementController extends Controller
                     break;
 
                 case 'file':
-                    $rules[$key] = "$required|file|max:10240"; // 10MB
+                    $rules[$key] = "$required|file|max:5242880"; // 5GB
                     break;
 
                 case 'checkbox':       // Select2 multi-select
