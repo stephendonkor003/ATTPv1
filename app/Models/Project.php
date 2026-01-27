@@ -118,7 +118,8 @@ class Project extends Model
 
     public function commitments()
     {
-        return $this->hasMany(ProjectCommitment::class, 'project_id');
+        return $this->hasMany(BudgetCommitment::class, 'allocation_id')
+            ->where('allocation_level', 'project');
     }
 
 
