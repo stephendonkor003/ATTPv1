@@ -124,6 +124,29 @@
                                 <label class="fw-semibold">Description</label>
                                 <input type="text" name="description" class="form-control">
                             </div>
+
+                            <div class="col-md-6">
+                                <label class="fw-semibold">Expected Outcome Type *</label>
+                                <select name="expected_outcome_type" id="expectedOutcomeType" class="form-select" required>
+                                    <option value="">-- Select Type --</option>
+                                    <option value="percentage" {{ old('expected_outcome_type') === 'percentage' ? 'selected' : '' }}>Percentage</option>
+                                    <option value="text" {{ old('expected_outcome_type') === 'text' ? 'selected' : '' }}>Text</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="fw-semibold">Expected Outcome *</label>
+                                <div id="expectedOutcomePercentage" style="display:none;">
+                                    <div class="input-group">
+                                        <input type="number" name="expected_outcome_percentage" class="form-control" min="0" max="100" step="0.01"
+                                            value="{{ old('expected_outcome_percentage') }}">
+                                        <span class="input-group-text">%</span>
+                                    </div>
+                                </div>
+                                <div id="expectedOutcomeText" style="display:none;">
+                                    <textarea name="expected_outcome_text" class="form-control" rows="2">{{ old('expected_outcome_text') }}</textarea>
+                                </div>
+                            </div>
                         </div>
 
                         <hr>
@@ -272,6 +295,21 @@
         });
 
         updateTotal();
+    </script>
+
+    <script>
+        const expectedOutcomeType = document.getElementById("expectedOutcomeType");
+        const expectedOutcomePercentage = document.getElementById("expectedOutcomePercentage");
+        const expectedOutcomeText = document.getElementById("expectedOutcomeText");
+
+        function toggleExpectedOutcome() {
+            const type = expectedOutcomeType.value;
+            expectedOutcomePercentage.style.display = type === "percentage" ? "block" : "none";
+            expectedOutcomeText.style.display = type === "text" ? "block" : "none";
+        }
+
+        expectedOutcomeType.addEventListener("change", toggleExpectedOutcome);
+        toggleExpectedOutcome();
     </script>
 
 @endsection

@@ -39,11 +39,10 @@
                         </a>
 
                         <ul class="nxl-submenu">
-
-                            @canany(['finance.departments.view', 'finance.departments.manage'])
+                            @canany(['finance.governance_structure.view', 'finance.governance_structure.manage'])
                                 <li class="nxl-item">
-                                    <a href="{{ route('finance.departments.index') }}" class="nxl-link">
-                                        <i class="feather-users me-2"></i> Departments & Units
+                                    <a href="{{ route('finance.governance.index') }}" class="nxl-link">
+                                        <i class="feather-git-branch me-2"></i> Governance Structure
                                     </a>
                                 </li>
                             @endcanany

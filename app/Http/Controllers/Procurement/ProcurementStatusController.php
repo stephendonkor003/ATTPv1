@@ -5,15 +5,19 @@ namespace App\Http\Controllers\Procurement;
 use App\Http\Controllers\Controller;
 use App\Models\Procurement;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Procurement\Concerns\GovernanceScope;
 
 class ProcurementStatusController extends Controller
 {
+    use GovernanceScope;
+
     /* ===============================
      | STATUS TRANSITIONS ONLY
      =============================== */
 
     public function submit(Procurement $procurement)
     {
+        $this->assertProcurementInScope($procurement);
         if (!in_array($procurement->status, ['draft', 'rejected'])) {
             return back()->with('error', 'Only draft or rejected procurements can be submitted.');
         }
@@ -28,6 +32,7 @@ class ProcurementStatusController extends Controller
 
     public function approve(Procurement $procurement)
     {
+        $this->assertProcurementInScope($procurement);
         if ($procurement->status !== 'submitted') {
             return back()->with('error', 'Only submitted procurements can be approved.');
         }
@@ -42,6 +47,7 @@ class ProcurementStatusController extends Controller
 
     public function reject(Request $request, Procurement $procurement)
     {
+        $this->assertProcurementInScope($procurement);
         if ($procurement->status !== 'submitted') {
             return back()->with('error', 'Only submitted procurements can be rejected.');
         }
@@ -60,6 +66,7 @@ class ProcurementStatusController extends Controller
 
     public function publish(Procurement $procurement)
     {
+        $this->assertProcurementInScope($procurement);
         if ($procurement->status !== 'approved') {
             return back()->with('error', 'Only approved procurements can be published.');
         }
@@ -73,6 +80,7 @@ class ProcurementStatusController extends Controller
 
     public function close(Procurement $procurement)
     {
+        $this->assertProcurementInScope($procurement);
         if ($procurement->status !== 'published') {
             return back()->with('error', 'Only published procurements can be closed.');
         }
@@ -86,6 +94,7 @@ class ProcurementStatusController extends Controller
 
     public function award(Procurement $procurement)
     {
+        $this->assertProcurementInScope($procurement);
         if ($procurement->status !== 'closed') {
             return back()->with('error', 'Only closed procurements can be awarded.');
         }

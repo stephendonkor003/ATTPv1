@@ -17,6 +17,10 @@
                 <form action="{{ route('budget.sectors.store') }}" method="POST">
                     @csrf
 
+                    @php
+                        $currentNodeId = optional(auth()->user())->governance_node_id;
+                    @endphp
+
                     <div class="mb-3">
                         <label class="form-label">Sector Name</label>
                         <input type="text" name="name" class="form-control" required>
@@ -25,6 +29,21 @@
                     <div class="mb-3">
                         <label class="form-label">Description (Optional)</label>
                         <textarea name="description" class="form-control"></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Governance Node</label>
+                        <select name="governance_node_id" class="form-select" required disabled>
+                            <option value="">-- Select Node --</option>
+                            @foreach ($nodes as $node)
+                                <option value="{{ $node->id }}"
+                                    @selected(old('governance_node_id', $currentNodeId) == $node->id)>
+                                    {{ $node->name }} ({{ $node->level->name ?? 'Level' }})
+                                </option>
+                            @endforeach
+                        </select>
+                        <input type="hidden" name="governance_node_id"
+                            value="{{ old('governance_node_id', $currentNodeId) }}">
                     </div>
 
                     <button class="btn btn-primary">Save Sector</button>

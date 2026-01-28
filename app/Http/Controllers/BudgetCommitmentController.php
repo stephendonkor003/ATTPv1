@@ -29,8 +29,13 @@ class BudgetCommitmentController extends Controller
      ========================================================= */
 
 
-      public function index()
+    public function index()
 {
+    $scopedNodeIds = $this->scopedNodeIds();
+    if ($scopedNodeIds !== null && empty($scopedNodeIds)) {
+        abort(403, 'You do not have access to commitments.');
+    }
+
     $commitments = BudgetCommitment::with([
         'programFunding.program',
         'resourceCategory',
@@ -39,6 +44,10 @@ class BudgetCommitmentController extends Controller
         // eager load concrete models
         'programFunding',
     ])
+    ->when($scopedNodeIds !== null, function ($query) use ($scopedNodeIds) {
+        $query->whereIn('governance_node_id', $scopedNodeIds)
+            ->whereNotNull('governance_node_id');
+    })
     ->latest()
     ->paginate(15);
 
@@ -50,8 +59,18 @@ class BudgetCommitmentController extends Controller
     public function create()
     {
         return view('finance.commitments.create', [
-            'fundings' => ProgramFunding::where('status', 'approved')->get(),
-            'resourceCategories' => ResourceCategory::where('status', 'active')->get(),
+            'fundings' => ProgramFunding::where('status', 'approved')
+                ->when($this->scopedNodeIds() !== null, function ($query) {
+                    $query->whereIn('governance_node_id', $this->scopedNodeIds())
+                        ->whereNotNull('governance_node_id');
+                })
+                ->get(),
+            'resourceCategories' => ResourceCategory::where('status', 'active')
+                ->when($this->scopedNodeIds() !== null, function ($query) {
+                    $query->whereIn('governance_node_id', $this->scopedNodeIds())
+                        ->whereNotNull('governance_node_id');
+                })
+                ->get(),
         ]);
     }
 
@@ -90,6 +109,7 @@ class BudgetCommitmentController extends Controller
                 ->withErrors(['program_funding_id' => 'Only APPROVED program funding can be committed.'])
                 ->withInput();
         }
+        $this->assertFundingInScope($funding);
 
         /* =====================================================
          * 3. ALLOCATION VALIDATION
@@ -105,6 +125,8 @@ class BudgetCommitmentController extends Controller
                 ->withErrors(['allocation_id' => 'Selected allocation record does not exist.'])
                 ->withInput();
         }
+        $this->assertAllocationInScope($validated['allocation_level'], (int) $validated['allocation_id']);
+        $this->assertResourceCategoryInScope((int) $validated['resource_category_id']);
 
         /* =====================================================
          * 4. ALLOCATED AMOUNT (SAFE)
@@ -159,6 +181,7 @@ class BudgetCommitmentController extends Controller
          * ===================================================== */
         BudgetCommitment::create([
             'program_funding_id'   => $validated['program_funding_id'],
+            'governance_node_id'   => $funding->governance_node_id,
             'allocation_level'     => $validated['allocation_level'],
             'allocation_id'        => $validated['allocation_id'],
             'resource_category_id' => $validated['resource_category_id'],
@@ -200,6 +223,7 @@ class BudgetCommitmentController extends Controller
 
     public function show(BudgetCommitment $commitment)
     {
+        $this->assertCommitmentInScope($commitment);
         $commitment->load([
             'programFunding.program',
             'resourceCategory',
@@ -211,6 +235,7 @@ class BudgetCommitmentController extends Controller
 
     public function submit(BudgetCommitment $commitment)
     {
+        $this->assertCommitmentInScope($commitment);
         if ($commitment->status !== self::STATUS_DRAFT) {
             abort(403);
         }
@@ -222,6 +247,7 @@ class BudgetCommitmentController extends Controller
 
     public function approve(BudgetCommitment $commitment)
     {
+        $this->assertCommitmentInScope($commitment);
         if ($commitment->status !== self::STATUS_SUBMITTED) {
             abort(403);
         }
@@ -237,6 +263,7 @@ class BudgetCommitmentController extends Controller
 
     public function cancel(BudgetCommitment $commitment)
     {
+        $this->assertCommitmentInScope($commitment);
         if ($commitment->status === self::STATUS_APPROVED) {
             abort(403);
         }
@@ -254,7 +281,12 @@ class BudgetCommitmentController extends Controller
     public function resourceCategories()
     {
         return view('finance.resources.categories.index', [
-            'categories' => ResourceCategory::latest()->get()
+            'categories' => ResourceCategory::latest()
+                ->when($this->scopedNodeIds() !== null, function ($query) {
+                    $query->whereIn('governance_node_id', $this->scopedNodeIds())
+                        ->whereNotNull('governance_node_id');
+                })
+                ->get()
         ]);
     }
 
@@ -264,9 +296,15 @@ class BudgetCommitmentController extends Controller
             'name' => 'required|string|max:100'
         ]);
 
+        $scopedNodeIds = $this->scopedNodeIds();
+        if ($scopedNodeIds !== null && empty($scopedNodeIds)) {
+            abort(403, 'You do not have access to create resource categories.');
+        }
+
         ResourceCategory::create([
             'name' => $request->name,
             'description' => $request->description,
+            'governance_node_id' => Auth::user()?->governance_node_id,
             'status' => 'active',
             'created_by' => Auth::id(),
         ]);
@@ -278,8 +316,19 @@ class BudgetCommitmentController extends Controller
     public function resources()
     {
         return view('finance.resources.items.index', [
-            'resources' => Resource::with('category')->latest()->get(),
-            'categories'=> ResourceCategory::where('status','active')->get()
+            'resources' => Resource::with('category')
+                ->when($this->scopedNodeIds() !== null, function ($query) {
+                    $query->whereIn('governance_node_id', $this->scopedNodeIds())
+                        ->whereNotNull('governance_node_id');
+                })
+                ->latest()
+                ->get(),
+            'categories'=> ResourceCategory::where('status','active')
+                ->when($this->scopedNodeIds() !== null, function ($query) {
+                    $query->whereIn('governance_node_id', $this->scopedNodeIds())
+                        ->whereNotNull('governance_node_id');
+                })
+                ->get()
         ]);
     }
 
@@ -312,8 +361,11 @@ class BudgetCommitmentController extends Controller
         'is_human_resource'    => 'nullable|boolean', // ✅ NEW
     ]);
 
+    $this->assertResourceCategoryInScope((int) $validated['resource_category_id']);
+
     Resource::create([
         'resource_category_id' => $validated['resource_category_id'],
+        'governance_node_id'   => ResourceCategory::find($validated['resource_category_id'])?->governance_node_id,
         'name'                 => $validated['name'],
         'reference_code'       => $validated['reference_code'] ?? null,
         'description'          => $validated['description'] ?? null,
@@ -332,23 +384,51 @@ class BudgetCommitmentController extends Controller
 
     public function projects()
     {
-        return Project::select('id','name')->orderBy('name')->get();
+        $scopedNodeIds = $this->scopedNodeIds();
+        if ($scopedNodeIds !== null && empty($scopedNodeIds)) {
+            return collect();
+        }
+
+        return Project::select('id','name')
+            ->when($scopedNodeIds !== null, function ($query) use ($scopedNodeIds) {
+                $query->whereIn('governance_node_id', $scopedNodeIds)
+                    ->whereNotNull('governance_node_id');
+            })
+            ->orderBy('name')
+            ->get();
     }
 
     public function activities($projectId)
     {
+        $project = Project::findOrFail($projectId);
+        $this->assertProjectInScope($project);
+
         return Activity::where('project_id',$projectId)
-            ->select('id','name')->orderBy('name')->get();
+            ->select('id','name')
+            ->when($this->scopedNodeIds() !== null, function ($query) {
+                $query->whereIn('governance_node_id', $this->scopedNodeIds())
+                    ->whereNotNull('governance_node_id');
+            })
+            ->orderBy('name')->get();
     }
 
     public function subActivities($activityId)
     {
+        $activity = Activity::findOrFail($activityId);
+        $this->assertActivityInScope($activity);
+
         return SubActivity::where('activity_id',$activityId)
-            ->select('id','name')->orderBy('name')->get();
+            ->select('id','name')
+            ->when($this->scopedNodeIds() !== null, function ($query) {
+                $query->whereIn('governance_node_id', $this->scopedNodeIds())
+                    ->whereNotNull('governance_node_id');
+            })
+            ->orderBy('name')->get();
     }
 
     public function allocationYears($level, $id)
     {
+        $this->assertAllocationInScope($level, (int) $id);
         $years = match ($level) {
             'project' => DB::table('myb_project_allocations')->where('project_id',$id)->pluck('year'),
             'activity' => DB::table('myb_activity_allocations')->where('activity_id',$id)->pluck('year'),
@@ -360,6 +440,7 @@ class BudgetCommitmentController extends Controller
 
     public function remainingBudget(Request $request)
     {
+        $this->assertAllocationInScope($request->allocation_level, (int) $request->allocation_id);
         $allocated = $this->allocationSum(
             $request->allocation_level,
             $request->allocation_id,
@@ -395,10 +476,15 @@ class BudgetCommitmentController extends Controller
 
 
 
- public function executionData()
+public function executionData()
 {
+    $scopedNodeIds = $this->scopedNodeIds();
     $programs = ProgramFunding::with('program.projects')
         ->where('status', 'approved')
+        ->when($scopedNodeIds !== null, function ($query) use ($scopedNodeIds) {
+            $query->whereIn('governance_node_id', $scopedNodeIds)
+                ->whereNotNull('governance_node_id');
+        })
         ->get()
         ->map(function ($funding) {
 
@@ -537,9 +623,14 @@ protected function aiSummary(array $allocated, array $committed)
  */
 public function resourcesByCategory($categoryId)
 {
+    $this->assertResourceCategoryInScope((int) $categoryId);
     return Resource::where('resource_category_id', $categoryId)
         ->where('status', 'active')
         ->select('id', 'name')
+        ->when($this->scopedNodeIds() !== null, function ($query) {
+            $query->whereIn('governance_node_id', $this->scopedNodeIds())
+                ->whereNotNull('governance_node_id');
+        })
         ->orderBy('name')
         ->get();
 }
@@ -571,6 +662,115 @@ private function getAllocatedAmount(string $level, int $id, int $year): float
         default => 0,
     };
 }
+
+    private function scopedNodeIds(): ?array
+    {
+        $currentUser = Auth::user();
+
+        if (!$currentUser || $currentUser->isAdmin()) {
+            return null;
+        }
+
+        if (!$currentUser->governance_node_id) {
+            return [];
+        }
+
+        return [$currentUser->governance_node_id];
+    }
+
+    private function assertFundingInScope(ProgramFunding $funding): void
+    {
+        $scopedNodeIds = $this->scopedNodeIds();
+        if ($scopedNodeIds === null) {
+            return;
+        }
+
+        if (!$funding->governance_node_id || !in_array($funding->governance_node_id, $scopedNodeIds, true)) {
+            abort(403, 'You do not have access to this funding.');
+        }
+    }
+
+    private function assertProjectInScope(Project $project): void
+    {
+        $scopedNodeIds = $this->scopedNodeIds();
+        if ($scopedNodeIds === null) {
+            return;
+        }
+
+        if (!$project->governance_node_id || !in_array($project->governance_node_id, $scopedNodeIds, true)) {
+            abort(403, 'You do not have access to this project.');
+        }
+    }
+
+    private function assertActivityInScope(Activity $activity): void
+    {
+        $scopedNodeIds = $this->scopedNodeIds();
+        if ($scopedNodeIds === null) {
+            return;
+        }
+
+        $nodeId = $activity->governance_node_id ?? $activity->project?->governance_node_id;
+        if (!$nodeId || !in_array($nodeId, $scopedNodeIds, true)) {
+            abort(403, 'You do not have access to this activity.');
+        }
+    }
+
+    private function assertSubActivityInScope(SubActivity $sub): void
+    {
+        $scopedNodeIds = $this->scopedNodeIds();
+        if ($scopedNodeIds === null) {
+            return;
+        }
+
+        $nodeId = $sub->governance_node_id ?? $sub->activity?->governance_node_id;
+        if (!$nodeId || !in_array($nodeId, $scopedNodeIds, true)) {
+            abort(403, 'You do not have access to this sub-activity.');
+        }
+    }
+
+    private function assertAllocationInScope(string $level, int $id): void
+    {
+        $scopedNodeIds = $this->scopedNodeIds();
+        if ($scopedNodeIds === null) {
+            return;
+        }
+
+        $nodeId = match ($level) {
+            'project' => Project::find($id)?->governance_node_id,
+            'activity' => Activity::find($id)?->governance_node_id,
+            'sub_activity' => SubActivity::find($id)?->governance_node_id,
+            default => null,
+        };
+
+        if (!$nodeId || !in_array($nodeId, $scopedNodeIds, true)) {
+            abort(403, 'You do not have access to this allocation.');
+        }
+    }
+
+    private function assertResourceCategoryInScope(int $categoryId): void
+    {
+        $scopedNodeIds = $this->scopedNodeIds();
+        if ($scopedNodeIds === null) {
+            return;
+        }
+
+        $nodeId = ResourceCategory::find($categoryId)?->governance_node_id;
+        if (!$nodeId || !in_array($nodeId, $scopedNodeIds, true)) {
+            abort(403, 'You do not have access to this resource category.');
+        }
+    }
+
+    private function assertCommitmentInScope(BudgetCommitment $commitment): void
+    {
+        $scopedNodeIds = $this->scopedNodeIds();
+        if ($scopedNodeIds === null) {
+            return;
+        }
+
+        if (!$commitment->governance_node_id || !in_array($commitment->governance_node_id, $scopedNodeIds, true)) {
+            abort(403, 'You do not have access to this commitment.');
+        }
+    }
 
 
 }

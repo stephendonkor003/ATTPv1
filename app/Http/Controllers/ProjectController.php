@@ -7,6 +7,7 @@ use App\Models\Project;
 use App\Models\ProjectAllocation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class ProjectController extends Controller
 {
@@ -15,11 +16,41 @@ class ProjectController extends Controller
      */
     public function index()
     {
+        $scopedNodeIds = $this->scopedNodeIds();
+        if ($scopedNodeIds !== null && empty($scopedNodeIds)) {
+            abort(403, 'You do not have access to projects.');
+        }
+
         $projects = Project::with('program')
+            ->when($scopedNodeIds !== null, function ($query) use ($scopedNodeIds) {
+                $query->whereIn('governance_node_id', $scopedNodeIds)
+                    ->whereNotNull('governance_node_id');
+            })
             ->orderBy('id', 'desc')
             ->paginate(15);
 
-        return view('projects.index', compact('projects'));
+        $programSummaries = Program::query()
+            ->when($scopedNodeIds !== null, function ($query) use ($scopedNodeIds) {
+                $query->whereIn('governance_node_id', $scopedNodeIds)
+                    ->whereNotNull('governance_node_id');
+            })
+            ->withSum('projects', 'total_budget')
+            ->orderBy('name')
+            ->get()
+            ->map(function ($program) {
+                $used = (float) ($program->projects_sum_total_budget ?? 0);
+                $total = (float) ($program->total_budget ?? 0);
+                return (object) [
+                    'program_id' => $program->program_id,
+                    'name' => $program->name,
+                    'currency' => $program->currency,
+                    'total_budget' => $total,
+                    'used_budget' => $used,
+                    'remaining_budget' => max($total - $used, 0),
+                ];
+            });
+
+        return view('projects.index', compact('projects', 'programSummaries'));
     }
 
     /**
@@ -27,7 +58,7 @@ class ProjectController extends Controller
      */
     public function create()
     {
-        $programs = Program::orderBy('name')->get();
+        $programs = $this->availablePrograms();
         return view('projects.create', compact('programs'));
     }
 
@@ -39,6 +70,9 @@ class ProjectController extends Controller
     $request->validate([
         'program_id'   => 'required|exists:myb_programs,id',
         'name'         => 'required|string|max:255',
+        'expected_outcome_type' => 'required|in:percentage,text',
+        'expected_outcome_percentage' => 'nullable|numeric|min:0|max:100',
+        'expected_outcome_text' => 'nullable|string|max:2000',
         'start_year'   => 'required|integer',
         'end_year'     => 'required|integer|gte:start_year',
         'total_budget' => 'required|numeric|min:0',
@@ -51,6 +85,7 @@ class ProjectController extends Controller
 
     try {
         $program = Program::findOrFail($request->program_id);
+        $this->assertProgramInScope($program);
 
         // Validate years
         if ($request->start_year < $program->start_year)
@@ -58,6 +93,21 @@ class ProjectController extends Controller
 
         if ($request->end_year > $program->end_year)
             return back()->with('error','End year cannot exceed program end year.')->withInput();
+
+        if ($program->total_budget !== null && $request->total_budget > $program->total_budget) {
+            return back()
+                ->withErrors(['total_budget' => 'This project budget is higher than the program budget. Please enter an amount within the program total.'])
+                ->withInput();
+        }
+        if ($program->total_budget !== null) {
+            $existingTotal = Project::where('program_id', $program->id)->sum('total_budget');
+            $remaining = $program->total_budget - $existingTotal;
+            if (($existingTotal + (float) $request->total_budget) > $program->total_budget) {
+                return back()
+                    ->withErrors(['total_budget' => 'This program has only ' . ($program->currency ?? '') . ' ' . number_format(max($remaining, 0), 2) . ' remaining. Please lower the project budget.'])
+                    ->withInput();
+            }
+        }
 
         $totalYears = $request->end_year - $request->start_year + 1;
 
@@ -68,11 +118,26 @@ class ProjectController extends Controller
         $projectId = $program->program_id . '-' . str_pad($next, 2, '0', STR_PAD_LEFT);
 
         // Create Project
+        $expectedOutcomeValue = $request->expected_outcome_type === 'percentage'
+            ? (string) ($request->expected_outcome_percentage ?? '')
+            : ($request->expected_outcome_text ?? '');
+
+        if ($request->expected_outcome_type === 'percentage' && $expectedOutcomeValue === '') {
+            return back()->with('error', 'Expected outcome percentage is required.')->withInput();
+        }
+
+        if ($request->expected_outcome_type === 'text' && $expectedOutcomeValue === '') {
+            return back()->with('error', 'Expected outcome description is required.')->withInput();
+        }
+
         $project = Project::create([
             'program_id'   => $program->id,
             'project_id'   => $projectId,
+            'governance_node_id' => $program->governance_node_id,
             'name'         => $request->name,
             'description'  => $request->description,
+            'expected_outcome_type' => $request->expected_outcome_type,
+            'expected_outcome_value' => $expectedOutcomeValue,
             'currency'     => $program->currency,
             'start_year'   => $request->start_year,
             'end_year'     => $request->end_year,
@@ -113,6 +178,7 @@ class ProjectController extends Controller
     public function show($id)
     {
         $project = Project::with('program', 'allocations')->findOrFail($id);
+        $this->assertProjectInScope($project);
         return view('projects.show', compact('project'));
     }
 
@@ -122,7 +188,8 @@ class ProjectController extends Controller
     public function edit($id)
     {
         $project  = Project::with('allocations')->findOrFail($id);
-        $programs = Program::orderBy('name')->get();
+        $this->assertProjectInScope($project);
+        $programs = $this->availablePrograms();
 
         return view('projects.edit', compact('project', 'programs'));
     }
@@ -130,15 +197,20 @@ class ProjectController extends Controller
     /**
      * Update project
      */
-     public function update(Request $request, $id)
+public function update(Request $request, $id)
 {
     $project = Project::findOrFail($id);
+    $this->assertProjectInScope($project);
     $program = Program::findOrFail($request->program_id);
+    $this->assertProgramInScope($program);
 
     // Validation
     $request->validate([
         'program_id'   => 'required|exists:myb_programs,id',
         'name'         => 'required|string|max:255',
+        'expected_outcome_type' => 'required|in:percentage,text',
+        'expected_outcome_percentage' => 'nullable|numeric|min:0|max:100',
+        'expected_outcome_text' => 'nullable|string|max:2000',
         'start_year'   => 'required|integer',
         'end_year'     => 'required|integer|gte:start_year',
         'total_budget' => 'required|numeric|min:0',
@@ -156,21 +228,53 @@ class ProjectController extends Controller
             ->withInput();
     }
 
+    if ($program->total_budget !== null && $request->total_budget > $program->total_budget) {
+        return back()
+            ->withErrors(['total_budget' => 'This project budget is higher than the program budget. Please enter an amount within the program total.'])
+            ->withInput();
+    }
+    if ($program->total_budget !== null) {
+        $existingTotal = Project::where('program_id', $program->id)
+            ->where('id', '!=', $project->id)
+            ->sum('total_budget');
+        $remaining = $program->total_budget - $existingTotal;
+        if (($existingTotal + (float) $request->total_budget) > $program->total_budget) {
+            return back()
+                ->withErrors(['total_budget' => 'This program has only ' . ($program->currency ?? '') . ' ' . number_format(max($remaining, 0), 2) . ' remaining. Please lower the project budget.'])
+                ->withInput();
+        }
+    }
+
     DB::beginTransaction();
 
     try {
         // Update project
         $totalYears = $request->end_year - $request->start_year + 1;
 
+        $expectedOutcomeValue = $request->expected_outcome_type === 'percentage'
+            ? (string) ($request->expected_outcome_percentage ?? '')
+            : ($request->expected_outcome_text ?? '');
+
+        if ($request->expected_outcome_type === 'percentage' && $expectedOutcomeValue === '') {
+            return back()->with('error', 'Expected outcome percentage is required.')->withInput();
+        }
+
+        if ($request->expected_outcome_type === 'text' && $expectedOutcomeValue === '') {
+            return back()->with('error', 'Expected outcome description is required.')->withInput();
+        }
+
         $project->update([
             'program_id'   => $program->id,
             'name'         => $request->name,
             'description'  => $request->description,
+            'expected_outcome_type' => $request->expected_outcome_type,
+            'expected_outcome_value' => $expectedOutcomeValue,
             'currency'     => $program->currency,
             'start_year'   => $request->start_year,
             'end_year'     => $request->end_year,
             'total_years'  => $totalYears,
             'total_budget' => $request->total_budget,
+            'governance_node_id' => $program->governance_node_id,
         ]);
 
         // Remove old allocations
@@ -204,6 +308,7 @@ class ProjectController extends Controller
     public function destroy($id)
     {
         $project = Project::findOrFail($id);
+        $this->assertProjectInScope($project);
 
         DB::beginTransaction();
 
@@ -214,7 +319,7 @@ class ProjectController extends Controller
 
             DB::commit();
 
-            return redirect()->route('projects.index')
+            return redirect()->route('budget.projects.index')
                 ->with('success', 'Project deleted successfully.');
 
         } catch (\Throwable $e) {
@@ -260,5 +365,58 @@ class ProjectController extends Controller
             'yearlyTrend',
             'topProjects'
         ));
+    }
+
+    private function scopedNodeIds(): ?array
+    {
+        $currentUser = Auth::user();
+
+        if (!$currentUser || $currentUser->isAdmin()) {
+            return null;
+        }
+
+        if (!$currentUser->governance_node_id) {
+            return [];
+        }
+
+        return [$currentUser->governance_node_id];
+    }
+
+    private function availablePrograms()
+    {
+        $scopedNodeIds = $this->scopedNodeIds();
+
+        $query = Program::orderBy('name');
+
+        if ($scopedNodeIds !== null) {
+            $query->whereIn('governance_node_id', $scopedNodeIds)
+                ->whereNotNull('governance_node_id');
+        }
+
+        return $query->get();
+    }
+
+    private function assertProjectInScope(Project $project): void
+    {
+        $scopedNodeIds = $this->scopedNodeIds();
+        if ($scopedNodeIds === null) {
+            return;
+        }
+
+        if (!$project->governance_node_id || !in_array($project->governance_node_id, $scopedNodeIds, true)) {
+            abort(403, 'You do not have access to this project.');
+        }
+    }
+
+    private function assertProgramInScope(Program $program): void
+    {
+        $scopedNodeIds = $this->scopedNodeIds();
+        if ($scopedNodeIds === null) {
+            return;
+        }
+
+        if (!$program->governance_node_id || !in_array($program->governance_node_id, $scopedNodeIds, true)) {
+            abort(403, 'You do not have access to this program.');
+        }
     }
 }

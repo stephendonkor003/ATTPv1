@@ -11,7 +11,7 @@
                     <h4 class="mb-1">Program Details</h4>
                     <p class="text-muted mb-0">Detailed information about this program and its projects.</p>
                 </div>
-                <a href="{{ route('programs.index') }}" class="btn btn-outline-secondary">
+                <a href="{{ route('budget.programs.index') }}" class="btn btn-outline-secondary">
                     <i class="bi bi-arrow-left-circle me-1"></i> Back to Programs
                 </a>
             </div>
@@ -36,6 +36,18 @@
                             <p>{{ $program->description ?? 'No description provided.' }}</p>
                         </div>
                         <div class="col-md-12">
+                            <p class="fw-semibold mb-1 text-muted">Expected Outcome</p>
+                            <p>
+                                @if ($program->expected_outcome_type === 'percentage')
+                                    {{ $program->expected_outcome_value }}%
+                                @elseif ($program->expected_outcome_type === 'text')
+                                    {{ $program->expected_outcome_value }}
+                                @else
+                                    Not set.
+                                @endif
+                            </p>
+                        </div>
+                        <div class="col-md-12">
                             <p class="fw-semibold mb-1 text-muted">Created At</p>
                             <p> {{ $program->created_at ? $program->created_at->format('d M, Y') : 'N/A' }}</p>
                         </div>
@@ -47,7 +59,7 @@
             <div class="card shadow-sm">
                 <div class="card-header bg-light d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">Projects under {{ $program->name }}</h5>
-                    <a href="{{ route('projects.create', $program->id) }}" class="btn btn-sm btn-success">
+                    <a href="{{ route('budget.projects.create', $program->id) }}" class="btn btn-sm btn-success">
                         <i class="bi bi-plus-circle me-1"></i> Add Project
                     </a>
                 </div>
@@ -76,11 +88,11 @@
                                         <td>{{ $program->created_at ? $program->created_at->format('d M, Y') : 'N/A' }}
                                         </td>
                                         <td class="text-center">
-                                            <a href="{{ route('projects.show', $project->id) }}"
+                                            <a href="{{ route('budget.projects.show', $project->id) }}"
                                                 class="btn btn-sm btn-outline-info">
                                                 <i class="bi bi-eye"></i>
                                             </a>
-                                            <a href="{{ route('projects.edit', $project->id) }}"
+                                            <a href="{{ route('budget.projects.edit', $project->id) }}"
                                                 class="btn btn-sm btn-outline-primary">
                                                 <i class="bi bi-pencil"></i>
                                             </a>

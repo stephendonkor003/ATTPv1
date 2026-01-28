@@ -29,6 +29,58 @@
                 <div class="alert alert-danger">{{ session('error') }}</div>
             @endif
 
+            {{-- PROGRAM SUMMARY CARDS --}}
+            @if (!empty($programSummaries) && $programSummaries->count())
+                <div class="row g-3 mb-4">
+                    @foreach ($programSummaries as $summary)
+                        <div class="col-md-4">
+                            @php
+                                $total = (float) $summary->total_budget;
+                                $used = (float) $summary->used_budget;
+                                $remaining = (float) $summary->remaining_budget;
+                                $percent = $total > 0 ? min(($used / $total) * 100, 100) : 0;
+                            @endphp
+                            <div class="card shadow-sm border-0 h-100 program-card">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <div class="text-muted small">Program</div>
+                                            <div class="fw-semibold">{{ $summary->program_id }} — {{ $summary->name }}</div>
+                                        </div>
+                                        <span class="badge bg-light text-dark">{{ $summary->currency ?? 'N/A' }}</span>
+                                    </div>
+                                    <div class="mt-3">
+                                        <div class="text-muted small">Total Budget</div>
+                                        <div class="fw-bold">{{ number_format($summary->total_budget, 2) }}</div>
+                                    </div>
+                                    <div class="mt-2">
+                                        <div class="text-muted small">Used / Remaining</div>
+                                        <div>
+                                            {{ number_format($summary->used_budget, 2) }}
+                                            <span class="text-muted">/</span>
+                                            <span class="text-success">{{ number_format($summary->remaining_budget, 2) }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="mt-3">
+                                        <div class="d-flex justify-content-between small text-muted mb-1">
+                                            <span>Utilized</span>
+                                            <span>{{ number_format($percent, 1) }}%</span>
+                                        </div>
+                                        <div class="progress program-progress" role="progressbar"
+                                            aria-valuenow="{{ $percent }}" aria-valuemin="0" aria-valuemax="100">
+                                            <div class="progress-bar" style="width: {{ $percent }}%"></div>
+                                        </div>
+                                        <div class="small text-muted mt-1">
+                                            {{ number_format(max($total - $used, 0), 2) }} remaining
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+
             {{-- PROJECT LIST TABLE --}}
             <div class="card shadow-sm border-0">
                 <div class="card-body table-responsive">
@@ -142,4 +194,26 @@
 
         </div>
     </main>
+
+    <style>
+        .program-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f7f9fb 100%);
+            border-radius: 14px;
+        }
+
+        .program-card .badge {
+            border-radius: 999px;
+        }
+
+        .program-progress {
+            height: 10px;
+            border-radius: 999px;
+            background-color: #eef2f6;
+            overflow: hidden;
+        }
+
+        .program-progress .progress-bar {
+            background: linear-gradient(90deg, #198754, #20c997);
+        }
+    </style>
 @endsection

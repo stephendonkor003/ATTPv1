@@ -10,8 +10,11 @@ class SubActivity extends Model
 
     protected $fillable = [
         'activity_id',
+        'governance_node_id',
         'name',
         'description',
+        'expected_outcome_type',
+        'expected_outcome_value',
         'created_by',
     ];
 

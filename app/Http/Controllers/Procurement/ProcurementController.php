@@ -7,15 +7,25 @@ use App\Models\Procurement;
 use App\Models\Resource;
 use App\Models\DynamicForm;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Procurement\Concerns\GovernanceScope;
 
 class ProcurementController extends Controller
 {
+    use GovernanceScope;
+
     /**
      * List all procurements
      */
     public function index()
 {
-    $procurements = Procurement::withCount('forms')
+    $scopedNodeIds = $this->scopedNodeIds();
+    if ($scopedNodeIds !== null && empty($scopedNodeIds)) {
+        abort(403, 'You do not have access to procurements.');
+    }
+
+    $procurements = $this->applyProcurementScope(
+        Procurement::withCount('forms')
+    )
         ->orderByDesc('created_at')
         ->paginate(10); // ✅ FIX
 
@@ -28,7 +38,17 @@ class ProcurementController extends Controller
      */
     public function create()
     {
-        $resources = Resource::orderBy('name')->get();
+        $scopedNodeIds = $this->scopedNodeIds();
+        if ($scopedNodeIds !== null && empty($scopedNodeIds)) {
+            abort(403, 'You do not have access to create procurements.');
+        }
+
+        $resources = Resource::orderBy('name')
+            ->when($this->scopedNodeIds() !== null, function ($query) {
+                $query->whereIn('governance_node_id', $this->scopedNodeIds())
+                    ->whereNotNull('governance_node_id');
+            })
+            ->get();
 
         return view('procurement.create', compact('resources'));
     }
@@ -47,8 +67,12 @@ class ProcurementController extends Controller
         'estimated_budget'  => 'nullable|numeric',
     ]);
 
+    $resource = Resource::findOrFail($data['resource_id']);
+    $this->assertResourceInScope($resource);
+
     $data['created_by'] = auth()->id();
     $data['status']     = 'draft';
+    $data['governance_node_id'] = $resource->governance_node_id;
 
     Procurement::create($data);
 
@@ -63,6 +87,7 @@ class ProcurementController extends Controller
      */
     public function show(Procurement $procurement)
     {
+        $this->assertProcurementInScope($procurement);
         $procurement->load([
             'resource',
             'forms.resource',
@@ -71,6 +96,11 @@ class ProcurementController extends Controller
 
         $availableForms = DynamicForm::approved()
             ->whereNull('procurement_id')
+            ->when($procurement->governance_node_id, function ($query) use ($procurement) {
+                $query->whereHas('resource', function ($res) use ($procurement) {
+                    $res->where('governance_node_id', $procurement->governance_node_id);
+                });
+            })
             ->orderBy('name')
             ->get();
 
@@ -89,6 +119,11 @@ class ProcurementController extends Controller
         ]);
 
         $form = DynamicForm::findOrFail($request->form_id);
+        $procurement = Procurement::findOrFail($request->procurement_id);
+        $this->assertProcurementInScope($procurement);
+        if ($procurement->governance_node_id && $form->resource?->governance_node_id !== $procurement->governance_node_id) {
+            abort(403, 'You do not have access to attach this form to the selected procurement.');
+        }
 
         // ❗ Prevent re-attaching
         if ($form->procurement_id !== null) {

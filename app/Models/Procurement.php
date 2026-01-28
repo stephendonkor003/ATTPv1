@@ -10,6 +10,7 @@ class Procurement extends Model
 {
     protected $fillable = [
         'resource_id',
+        'governance_node_id',
         'title',
         'slug',
         'reference_no',

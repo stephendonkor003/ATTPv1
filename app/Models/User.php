@@ -9,6 +9,7 @@ use Illuminate\Notifications\Notifiable;
 // ✅ ADD THESE
 use App\Models\Role;
 use App\Models\Permission;
+use App\Models\GovernanceNode;
 
 class User extends Authenticatable
 {
@@ -24,6 +25,7 @@ class User extends Authenticatable
         'user_type',
         'must_change_password',
         'role_id',
+        'governance_node_id',
     ];
 
     /**
@@ -92,6 +94,11 @@ class User extends Authenticatable
     public function role()
     {
         return $this->belongsTo(Role::class);
+    }
+
+    public function governanceNode()
+    {
+        return $this->belongsTo(GovernanceNode::class, 'governance_node_id');
     }
 
     /**

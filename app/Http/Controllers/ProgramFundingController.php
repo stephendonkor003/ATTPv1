@@ -5,8 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\ProgramFunding;
 use App\Models\ProgramFundingDocument;
 use App\Models\Department;
-use App\Models\Program;
 use App\Models\Funder;
+use App\Models\GovernanceNode;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -20,14 +20,32 @@ class ProgramFundingController extends Controller
      * ===================================================== */
     public function index()
 {
+    $scopedNodeIds = $this->scopedNodeIds();
+    if ($scopedNodeIds !== null && empty($scopedNodeIds)) {
+        abort(403, 'You do not have access to program funding records.');
+    }
+
     $fundings = ProgramFunding::with([
             'program',
             'funder',
+            'governanceNode',
         ])
+        ->when($scopedNodeIds !== null, function ($query) use ($scopedNodeIds) {
+            $query->whereIn('governance_node_id', $scopedNodeIds)
+                ->whereNotNull('governance_node_id');
+        })
         ->latest()
         ->paginate(15);
 
-    return view('finance.program-funding.index', compact('fundings'));
+    $debug = [
+        'user_id' => Auth::id(),
+        'user_name' => Auth::user()?->name,
+        'user_node_id' => Auth::user()?->governance_node_id,
+        'is_admin' => Auth::user()?->isAdmin() ?? false,
+        'visible_node_ids' => $scopedNodeIds,
+    ];
+
+    return view('finance.program-funding.index', compact('fundings', 'debug'));
 }
 
 
@@ -38,9 +56,8 @@ class ProgramFundingController extends Controller
     public function create()
     {
         return view('finance.program-funding.create', [
-            'departments' => Department::where('status', 'active')->orderBy('name')->get(),
-            'programs'    => Program::orderBy('name')->get(),
             'funders'     => Funder::orderBy('name')->get(),
+            'nodes'       => $this->availableNodes(),
         ]);
     }
 
@@ -55,9 +72,9 @@ class ProgramFundingController extends Controller
 
         /* ================= VALIDATION ================= */
         $validated = $request->validate([
-            'department_id'   => 'required|exists:myb_departments,id',
-            'program_id'      => 'required|exists:myb_programs,id',
+            'program_name'    => 'required|string|max:255',
             'funder_id'       => 'required|exists:myb_funders,id',
+            'governance_node_id' => 'required|exists:myb_governance_nodes,id',
             'funding_type'    => 'required|in:grant,allocation,capital',
             'approved_amount' => 'required|numeric|min:0',
             'currency'        => 'required|string|max:10',
@@ -66,7 +83,7 @@ class ProgramFundingController extends Controller
 
             // Documents
             'documents'        => 'nullable|array',
-            'documents.*'      => 'file|mimes:pdf,doc,docx,xls,xlsx,jpg,png|max:5120',
+            'documents.*'      => 'file|mimes:pdf,doc,docx,xls,xlsx,jpg,png|max:5242880',
             'document_types'   => 'required_with:documents|array',
             'document_types.*' => 'required|string|max:100',
             'document_names'   => 'required_with:documents|array',
@@ -74,28 +91,15 @@ class ProgramFundingController extends Controller
         ]);
 
         /* ================= PROGRAM RULES ================= */
-        $program = Program::findOrFail($validated['program_id']);
+        // Program name is stored as free text. Program validation is not enforced here.
 
-        if (
-            $validated['start_year'] < $program->start_year ||
-            $validated['end_year'] > $program->end_year
-        ) {
-            throw new \Exception(
-                "Funding period must fall within Program years ({$program->start_year} – {$program->end_year})."
-            );
-        }
-
-        if ($validated['currency'] !== $program->currency) {
-            throw new \Exception(
-                "Funding currency must match Program currency ({$program->currency})."
-            );
-        }
+        $this->assertNodeInScope((int) $validated['governance_node_id']);
 
         /* ================= CREATE FUNDING ================= */
         $funding = ProgramFunding::create([
-            'department_id'   => $validated['department_id'],
-            'program_id'      => $validated['program_id'],
+            'program_name'    => $validated['program_name'],
             'funder_id'       => $validated['funder_id'],
+            'governance_node_id' => $validated['governance_node_id'],
             'funding_type'    => $validated['funding_type'],
             'approved_amount' => $validated['approved_amount'],
             'currency'        => $validated['currency'],
@@ -176,25 +180,10 @@ class ProgramFundingController extends Controller
         'funder',
         'documents',
         'creator',
+        'governanceNode',
     ])->findOrFail($id);
 
-    /*
-     |-----------------------------------------------------------
-     | CRITICAL DATA INTEGRITY CHECKS
-     |-----------------------------------------------------------
-     | If any of these are missing, it means the record
-     | is incomplete or corrupted.
-     */
-    if (
-        !$programFunding->department ||
-        !$programFunding->program ||
-        !$programFunding->funder
-    ) {
-        abort(
-            422,
-            'Program funding record is incomplete. Department, Program, or Funder is missing.'
-        );
-    }
+    $this->assertFundingInScope($programFunding);
 
     return view('finance.program-funding.show', compact('programFunding'));
 }
@@ -218,11 +207,15 @@ class ProgramFundingController extends Controller
 
     public function submit(ProgramFunding $funding)
     {
-        abort_if($funding->status !== 'draft', 403);
+        abort_if(!in_array($funding->status, ['draft', 'rejected'], true), 403);
+        $this->assertFundingInScope($funding);
 
         $funding->update([
             'status'       => 'submitted',
             'submitted_at' => now(),
+            'rejection_reason' => null,
+            'rejected_by' => null,
+            'rejected_at' => null,
         ]);
 
         return back()->with('success', 'Funding submitted for approval.');
@@ -232,6 +225,7 @@ class ProgramFundingController extends Controller
     public function approve(ProgramFunding $funding)
     {
         abort_if($funding->status !== 'submitted', 403);
+        $this->assertFundingInScope($funding);
 
         $allocated = $funding->program
             ? $funding->program->totalAllocatedAmount()
@@ -256,9 +250,17 @@ class ProgramFundingController extends Controller
     public function reject(ProgramFunding $funding)
     {
         abort_if($funding->status !== 'submitted', 403);
+        $this->assertFundingInScope($funding);
+
+        request()->validate([
+            'rejection_reason' => 'required|string|min:5',
+        ]);
 
         $funding->update([
             'status' => 'rejected',
+            'rejection_reason' => request('rejection_reason'),
+            'rejected_by' => Auth::id(),
+            'rejected_at' => now(),
         ]);
 
         return back()->with('success', 'Funding rejected.');
@@ -272,8 +274,13 @@ class ProgramFundingController extends Controller
 public function edit(ProgramFunding $programFunding)
 {
     abort_if($programFunding->status !== 'draft', 403);
+    $this->assertFundingInScope($programFunding);
 
-    return view('finance.program-funding.edit', compact('programFunding'));
+    $nodes = $this->availableNodes();
+
+    $funders = Funder::orderBy('name')->get();
+
+    return view('finance.program-funding.edit', compact('programFunding', 'nodes', 'funders'));
 }
 
 /* =====================================================
@@ -282,13 +289,20 @@ public function edit(ProgramFunding $programFunding)
 public function update(Request $request, ProgramFunding $programFunding)
 {
     abort_if($programFunding->status !== 'draft', 403);
+    $this->assertFundingInScope($programFunding);
 
     $validated = $request->validate([
+        'program_name' => 'required|string|max:255',
+        'funder_id' => 'required|exists:myb_funders,id',
+        'governance_node_id' => 'required|exists:myb_governance_nodes,id',
+        'funding_type' => 'required|in:grant,allocation,capital',
         'approved_amount' => 'required|numeric|min:0',
         'currency'        => 'required|string|max:10',
         'start_year'      => 'required|integer|min:2000',
         'end_year'        => 'required|integer|gte:start_year',
     ]);
+
+    $this->assertNodeInScope((int) $validated['governance_node_id']);
 
     $programFunding->update($validated);
 
@@ -296,6 +310,68 @@ public function update(Request $request, ProgramFunding $programFunding)
         ->route('finance.program-funding.show', $programFunding)
         ->with('success', 'Program funding updated successfully.');
 }
+
+    public function destroy(ProgramFunding $programFunding)
+    {
+        $this->assertFundingInScope($programFunding);
+        $programFunding->delete();
+
+        return redirect()
+            ->route('finance.program-funding.index')
+            ->with('success', 'Program funding deleted successfully.');
+    }
+
+    private function scopedNodeIds(): ?array
+    {
+        $currentUser = Auth::user();
+
+        if (!$currentUser || $currentUser->isAdmin()) {
+            return null;
+        }
+
+        if (!$currentUser->governance_node_id) {
+            return [];
+        }
+
+        return [$currentUser->governance_node_id];
+    }
+
+    private function availableNodes()
+    {
+        $scopedNodeIds = $this->scopedNodeIds();
+
+        return GovernanceNode::orderBy('name')
+            ->when($scopedNodeIds !== null, function ($query) use ($scopedNodeIds) {
+                $query->whereIn('id', $scopedNodeIds);
+            })
+            ->get();
+    }
+
+    private function assertFundingInScope(ProgramFunding $funding): void
+    {
+        $scopedNodeIds = $this->scopedNodeIds();
+        if ($scopedNodeIds === null) {
+            return;
+        }
+
+        if (!$funding->governance_node_id || !in_array($funding->governance_node_id, $scopedNodeIds, true)) {
+            abort(403, 'You do not have access to this program funding record.');
+        }
+    }
+
+    private function assertNodeInScope(int $nodeId): void
+    {
+        $scopedNodeIds = $this->scopedNodeIds();
+        if ($scopedNodeIds === null) {
+            return;
+        }
+
+        if (!in_array($nodeId, $scopedNodeIds, true)) {
+            abort(403, 'You do not have access to assign this governance node.');
+        }
+    }
+
+    // Exact-node scoping only (no descendants).
 
 
 

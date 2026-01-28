@@ -101,6 +101,30 @@
                                 <textarea name="description" class="form-control" rows="3"></textarea>
                             </div>
 
+                            <!-- EXPECTED OUTCOME -->
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Expected Outcome Type <span class="text-danger">*</span></label>
+                                <select name="expected_outcome_type" id="expectedOutcomeType" class="form-select" required>
+                                    <option value="">-- Select Type --</option>
+                                    <option value="percentage" {{ old('expected_outcome_type') === 'percentage' ? 'selected' : '' }}>Percentage</option>
+                                    <option value="text" {{ old('expected_outcome_type') === 'text' ? 'selected' : '' }}>Text</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Expected Outcome <span class="text-danger">*</span></label>
+                                <div id="expectedOutcomePercentage" style="display:none;">
+                                    <div class="input-group">
+                                        <input type="number" name="expected_outcome_percentage" class="form-control" min="0" max="100" step="0.01" placeholder="e.g. 0" value="{{ old('expected_outcome_percentage') }}">
+                                        <span class="input-group-text">%</span>
+                                    </div>
+                                </div>
+                                <div id="expectedOutcomeText" style="display:none;">
+                                    <textarea name="expected_outcome_text" class="form-control" rows="2"
+                                        placeholder="e.g. By end of program, malaria rate at 0% or 10,000 learners enrolled">{{ old('expected_outcome_text') }}</textarea>
+                                </div>
+                            </div>
+
                         </div>
 
                     </div>
@@ -190,6 +214,9 @@
         const totalBudgetLabel = document.getElementById("totalBudgetLabel");
         const allocHeader = document.getElementById("allocHeader");
         const currencyLabel = document.getElementById("currencyLabel");
+        const expectedOutcomeType = document.getElementById("expectedOutcomeType");
+        const expectedOutcomePercentage = document.getElementById("expectedOutcomePercentage");
+        const expectedOutcomeText = document.getElementById("expectedOutcomeText");
 
         programSelect.addEventListener("change", function() {
             programStart = parseInt(this.selectedOptions[0].dataset.start);
@@ -207,6 +234,7 @@
         startYear.addEventListener("input", generateTable);
         endYear.addEventListener("input", generateTable);
         allocMode.addEventListener("change", generateTable);
+        expectedOutcomeType.addEventListener("change", toggleExpectedOutcome);
 
         function generateTable() {
             let s = parseInt(startYear.value);
@@ -303,6 +331,14 @@
                 remainingAlert.className = "alert alert-info";
             }
         }
+
+        function toggleExpectedOutcome() {
+            const type = expectedOutcomeType.value;
+            expectedOutcomePercentage.style.display = type === "percentage" ? "block" : "none";
+            expectedOutcomeText.style.display = type === "text" ? "block" : "none";
+        }
+
+        toggleExpectedOutcome();
     </script>
 
 @endsection

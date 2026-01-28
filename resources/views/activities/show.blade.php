@@ -77,6 +77,19 @@
                             <small class="text-muted fw-semibold">Created By</small>
                             <div class="fw-bold">{{ optional($activity->creator)->name ?? 'System' }}</div>
                         </div>
+
+                        <div class="col-md-4">
+                            <small class="text-muted fw-semibold">Expected Outcome</small>
+                            <div class="fw-bold">
+                                @if ($activity->expected_outcome_type === 'percentage')
+                                    {{ $activity->expected_outcome_value ?? 'N/A' }}%
+                                @elseif ($activity->expected_outcome_type === 'text')
+                                    {{ $activity->expected_outcome_value ?? 'N/A' }}
+                                @else
+                                    N/A
+                                @endif
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

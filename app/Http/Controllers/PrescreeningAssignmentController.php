@@ -6,14 +6,18 @@ use App\Models\Procurement;
 use App\Models\PrescreeningTemplate;
 use App\Models\PrescreeningTemplateProcurement;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Procurement\Concerns\GovernanceScope;
 
 class PrescreeningAssignmentController extends Controller
 {
+    use GovernanceScope;
+
     /**
      * Show assignment screen
      */
     public function edit(Procurement $procurement)
     {
+        $this->assertProcurementInScope($procurement);
         $templates = PrescreeningTemplate::where('is_active', true)
             ->with('criteria')
             ->get();
@@ -31,6 +35,7 @@ class PrescreeningAssignmentController extends Controller
      */
     public function store(Request $request, Procurement $procurement)
     {
+        $this->assertProcurementInScope($procurement);
         $request->validate([
             'prescreening_template_id' => 'required|exists:prescreening_templates,id',
         ]);

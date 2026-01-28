@@ -74,6 +74,16 @@
                         {{ $project->project_id ?? 'N/A' }}
                     </p>
 
+                    <p><strong>Expected Outcome:</strong>
+                        @if ($project->expected_outcome_type === 'percentage')
+                            {{ $project->expected_outcome_value ?? 'N/A' }}%
+                        @elseif ($project->expected_outcome_type === 'text')
+                            {{ $project->expected_outcome_value ?? 'N/A' }}
+                        @else
+                            N/A
+                        @endif
+                    </p>
+
                 </div>
             </div>
 

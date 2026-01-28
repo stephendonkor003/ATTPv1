@@ -11,9 +11,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Mail;
+use App\Http\Controllers\Procurement\Concerns\GovernanceScope;
 
 class PrescreeningEvaluationController extends Controller
 {
+    use GovernanceScope;
+
     private function canAccessSubmission(FormSubmission $submission): bool
     {
         if (Gate::allows('prescreening.view_all')) {
@@ -44,6 +47,18 @@ class PrescreeningEvaluationController extends Controller
             'prescreeningResult'
         );
 
+        $scopedNodeIds = $this->scopedNodeIds();
+        if ($scopedNodeIds !== null && empty($scopedNodeIds)) {
+            abort(403, 'You do not have access to prescreening submissions.');
+        }
+
+        if ($scopedNodeIds !== null) {
+            $query->whereHas('procurement', function ($proc) use ($scopedNodeIds) {
+                $proc->whereIn('governance_node_id', $scopedNodeIds)
+                    ->whereNotNull('governance_node_id');
+            });
+        }
+
         if (Gate::allows('prescreening.view_all')) {
 
             $submissions = $query->latest()->get();
@@ -72,6 +87,7 @@ class PrescreeningEvaluationController extends Controller
      */
     public function show(FormSubmission $submission)
     {
+        $this->assertSubmissionInScope($submission);
         if (!$this->canAccessSubmission($submission)) {
             abort(403);
         }
@@ -112,6 +128,7 @@ class PrescreeningEvaluationController extends Controller
      */
     public function store(Request $request, FormSubmission $submission)
     {
+        $this->assertSubmissionInScope($submission);
         if (!$this->canAccessSubmission($submission)) {
             abort(403);
         }
@@ -216,6 +233,7 @@ class PrescreeningEvaluationController extends Controller
      */
     public function requestRework(FormSubmission $submission)
     {
+        $this->assertSubmissionInScope($submission);
         abort_if(Gate::denies('prescreening.request_rework'), 403);
 
         $result = $submission->prescreeningResult;

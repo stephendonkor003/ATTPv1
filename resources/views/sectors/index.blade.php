@@ -20,6 +20,7 @@
                             <th>#</th>
                             <th>Name</th>
                             <th>Description</th>
+                            <th>Governance</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -28,6 +29,14 @@
                                 <td>{{ $sector->id }}</td>
                                 <td>{{ $sector->name }}</td>
                                 <td>{{ $sector->description }}</td>
+                                <td>
+                                    <div class="fw-semibold">
+                                        {{ $sector->governanceNode->name ?? '-' }}
+                                    </div>
+                                    <small class="text-muted">
+                                        {{ $sector->governanceNode->level->name ?? '' }}
+                                    </small>
+                                </td>
                             </tr>
                         @endforeach
                     </tbody>

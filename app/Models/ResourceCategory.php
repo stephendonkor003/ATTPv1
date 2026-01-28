@@ -11,6 +11,7 @@ class ResourceCategory extends Model
     protected $fillable = [
         'name',
         'description',
+        'governance_node_id',
         'status',
         'created_by',
     ];

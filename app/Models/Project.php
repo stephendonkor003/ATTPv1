@@ -11,8 +11,11 @@ class Project extends Model
     protected $fillable = [
         'program_id',
         'project_id',
+        'governance_node_id',
         'name',
         'description',
+        'expected_outcome_type',
+        'expected_outcome_value',
         'currency',
         'start_year',
         'end_year',

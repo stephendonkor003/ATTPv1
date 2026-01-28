@@ -35,6 +35,7 @@
                                 <th>#</th>
                                 <th>User</th>
                                 <th>Email</th>
+                                <th>Governance</th>
                                 <th>Role</th>
                                 <th>Permissions</th>
                                 <th>Created</th>
@@ -53,6 +54,15 @@
                                     </td>
 
                                     <td>{{ $user->email }}</td>
+
+                                    <td>
+                                        <div class="fw-semibold">
+                                            {{ $user->governanceNode->name ?? '-' }}
+                                        </div>
+                                        <small class="text-muted">
+                                            {{ $user->governanceNode->level->name ?? '' }}
+                                        </small>
+                                    </td>
 
                                     {{-- ROLE --}}
                                     <td>
@@ -124,6 +134,17 @@
                                                 </span>
                                             @endif
 
+                                            {{-- RESET PASSWORD --}}
+                                            @if (!$user->role || $user->role->name !== 'Super Admin')
+                                                <form action="{{ route('system.users.reset-password', $user->id) }}"
+                                                    method="POST" onsubmit="return confirm('Reset password and email user?');">
+                                                    @csrf
+                                                    <button class="btn btn-sm btn-outline-warning" title="Reset Password">
+                                                        <i class="bi bi-key"></i>
+                                                    </button>
+                                                </form>
+                                            @endif
+
                                             {{-- DELETE --}}
                                             @if (!$user->role || $user->role->name !== 'Super Admin')
                                                 <form action="{{ route('system.users.destroy', $user->id) }}"
@@ -142,7 +163,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="text-center text-muted py-4">
+                                    <td colspan="8" class="text-center text-muted py-4">
                                         No users found.
                                     </td>
                                 </tr>

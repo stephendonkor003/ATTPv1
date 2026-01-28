@@ -7,15 +7,24 @@ use App\Models\Procurement;
 use App\Models\DynamicForm;
 use App\Models\ProcurementFormAssignment;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Procurement\Concerns\GovernanceScope;
 
 class ProcurementFormAssignmentController extends Controller
 {
+    use GovernanceScope;
+
     /**
      * Show form attachment page
      */
     public function create(Procurement $procurement)
     {
+        $this->assertProcurementInScope($procurement);
         $forms = DynamicForm::approved()
+            ->when($procurement->governance_node_id, function ($query) use ($procurement) {
+                $query->whereHas('resource', function ($res) use ($procurement) {
+                    $res->where('governance_node_id', $procurement->governance_node_id);
+                });
+            })
             ->orderBy('name')
             ->get();
 
@@ -30,6 +39,7 @@ class ProcurementFormAssignmentController extends Controller
      */
     public function store(Request $request, Procurement $procurement)
     {
+        $this->assertProcurementInScope($procurement);
         $data = $request->validate([
             'form_id' => 'required|exists:dynamic_forms,id',
             'stage'   => 'required|in:submission,prescreening,technical,financial',
@@ -37,6 +47,9 @@ class ProcurementFormAssignmentController extends Controller
 
         // Ensure form is approved
         $form = DynamicForm::approved()->findOrFail($data['form_id']);
+        if ($procurement->governance_node_id && $form->resource?->governance_node_id !== $procurement->governance_node_id) {
+            abort(403, 'You do not have access to attach this form to the selected procurement.');
+        }
 
         ProcurementFormAssignment::updateOrCreate(
             [
@@ -64,6 +77,11 @@ class ProcurementFormAssignmentController extends Controller
         ]);
 
         $procurement = Procurement::findOrFail($request->procurement_id);
+        $this->assertProcurementInScope($procurement);
+        $form = DynamicForm::findOrFail($request->form_id);
+        if ($procurement->governance_node_id && $form->resource?->governance_node_id !== $procurement->governance_node_id) {
+            abort(403, 'You do not have access to attach this form to the selected procurement.');
+        }
 
         // ✅ Prevent duplicate attachment
         if ($procurement->forms()

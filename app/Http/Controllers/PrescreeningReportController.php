@@ -9,13 +9,32 @@ use App\Models\PrescreeningTemplate;
 use App\Models\Procurement;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Procurement\Concerns\GovernanceScope;
 
 class PrescreeningReportController extends Controller
 {
+    use GovernanceScope;
+
     public function index()
     {
-        $procurements = Procurement::orderBy('title')->get();
+        $scopedNodeIds = $this->scopedNodeIds();
+        if ($scopedNodeIds !== null && empty($scopedNodeIds)) {
+            abort(403, 'You do not have access to prescreening reports.');
+        }
+
+        $procurements = Procurement::orderBy('title')
+            ->when($scopedNodeIds !== null, function ($query) use ($scopedNodeIds) {
+                $query->whereIn('governance_node_id', $scopedNodeIds)
+                    ->whereNotNull('governance_node_id');
+            })
+            ->get();
         $submissions = FormSubmission::with('procurement')
+            ->when($scopedNodeIds !== null, function ($query) use ($scopedNodeIds) {
+                $query->whereHas('procurement', function ($proc) use ($scopedNodeIds) {
+                    $proc->whereIn('governance_node_id', $scopedNodeIds)
+                        ->whereNotNull('governance_node_id');
+                });
+            })
             ->orderByDesc('created_at')
             ->get();
 
@@ -24,6 +43,7 @@ class PrescreeningReportController extends Controller
 
     public function submission(FormSubmission $submission)
     {
+        $this->assertSubmissionInScope($submission);
         $submission->load(['procurement', 'submitter', 'values', 'prescreeningResult.evaluator']);
 
         $template = $this->resolveTemplate($submission);
@@ -44,6 +64,7 @@ class PrescreeningReportController extends Controller
 
     public function submissionPdf(FormSubmission $submission)
     {
+        $this->assertSubmissionInScope($submission);
         $submission->load(['procurement', 'submitter', 'values', 'prescreeningResult.evaluator']);
 
         $template = $this->resolveTemplate($submission);
@@ -65,6 +86,7 @@ class PrescreeningReportController extends Controller
 
     public function procurement(Procurement $procurement)
     {
+        $this->assertProcurementInScope($procurement);
         $procurement->load(['prescreeningTemplate', 'prescreeningTemplate.criteria']);
 
         $submissions = FormSubmission::with(['submitter', 'prescreeningResult.evaluator'])
@@ -87,6 +109,7 @@ class PrescreeningReportController extends Controller
 
     public function procurementPdf(Procurement $procurement)
     {
+        $this->assertProcurementInScope($procurement);
         $procurement->load(['prescreeningTemplate', 'prescreeningTemplate.criteria']);
 
         $submissions = FormSubmission::with(['submitter', 'prescreeningResult.evaluator'])
@@ -111,11 +134,26 @@ class PrescreeningReportController extends Controller
 
     public function consolidated()
     {
+        $scopedNodeIds = $this->scopedNodeIds();
+        if ($scopedNodeIds !== null && empty($scopedNodeIds)) {
+            abort(403, 'You do not have access to prescreening reports.');
+        }
+
         $procurements = Procurement::with('prescreeningTemplate')
             ->orderBy('title')
+            ->when($scopedNodeIds !== null, function ($query) use ($scopedNodeIds) {
+                $query->whereIn('governance_node_id', $scopedNodeIds)
+                    ->whereNotNull('governance_node_id');
+            })
             ->get();
 
         $submissions = FormSubmission::with(['procurement', 'prescreeningResult.evaluator'])
+            ->when($scopedNodeIds !== null, function ($query) use ($scopedNodeIds) {
+                $query->whereHas('procurement', function ($proc) use ($scopedNodeIds) {
+                    $proc->whereIn('governance_node_id', $scopedNodeIds)
+                        ->whereNotNull('governance_node_id');
+                });
+            })
             ->orderByDesc('created_at')
             ->get();
 
@@ -132,11 +170,26 @@ class PrescreeningReportController extends Controller
 
     public function consolidatedPdf()
     {
+        $scopedNodeIds = $this->scopedNodeIds();
+        if ($scopedNodeIds !== null && empty($scopedNodeIds)) {
+            abort(403, 'You do not have access to prescreening reports.');
+        }
+
         $procurements = Procurement::with('prescreeningTemplate')
             ->orderBy('title')
+            ->when($scopedNodeIds !== null, function ($query) use ($scopedNodeIds) {
+                $query->whereIn('governance_node_id', $scopedNodeIds)
+                    ->whereNotNull('governance_node_id');
+            })
             ->get();
 
         $submissions = FormSubmission::with(['procurement', 'prescreeningResult.evaluator'])
+            ->when($scopedNodeIds !== null, function ($query) use ($scopedNodeIds) {
+                $query->whereHas('procurement', function ($proc) use ($scopedNodeIds) {
+                    $proc->whereIn('governance_node_id', $scopedNodeIds)
+                        ->whereNotNull('governance_node_id');
+                });
+            })
             ->orderByDesc('created_at')
             ->get();
 

@@ -252,6 +252,17 @@
                                                                                 class="accordion-collapse collapse">
                                                                                 <div class="accordion-body">
 
+                                                                                    <div class="mb-3">
+                                                                                        <strong>Expected Outcome:</strong>
+                                                                                        @if ($sub->expected_outcome_type === 'percentage')
+                                                                                            {{ $sub->expected_outcome_value ?? 'N/A' }}%
+                                                                                        @elseif ($sub->expected_outcome_type === 'text')
+                                                                                            {{ $sub->expected_outcome_value ?? 'N/A' }}
+                                                                                        @else
+                                                                                            N/A
+                                                                                        @endif
+                                                                                    </div>
+
                                                                                     <!-- Allocations Table -->
                                                                                     <table
                                                                                         class="table table-bordered table-hover">

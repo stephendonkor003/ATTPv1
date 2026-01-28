@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\GovernanceNode;
 
 class Program extends Model
 {
@@ -12,12 +13,16 @@ class Program extends Model
     'program_id',
     'sector_id',
     'department_id',
+    'governance_node_id',
     'name',
     'description',
+    'expected_outcome_type',
+    'expected_outcome_value',
     'currency',
     'start_year',
     'end_year',
     'total_years',
+    'total_budget',
     'created_by',
 ];
 
@@ -43,6 +48,11 @@ class Program extends Model
 public function department()
 {
     return $this->belongsTo(Department::class, 'department_id');
+}
+
+public function governanceNode()
+{
+    return $this->belongsTo(GovernanceNode::class, 'governance_node_id');
 }
 
 // Program has many funding approvals

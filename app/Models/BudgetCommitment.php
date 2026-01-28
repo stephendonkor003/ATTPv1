@@ -13,6 +13,7 @@ class BudgetCommitment extends Model
 
     protected $fillable = [
         'program_funding_id',
+        'governance_node_id',
         'allocation_level',
         'allocation_id',
         'resource_category_id',

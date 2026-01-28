@@ -86,6 +86,30 @@
                                 <input type="number" id="endYear" name="end_year" value="{{ $project->end_year }}"
                                     class="form-control" required onchange="regenerateRows()">
                             </div>
+
+                            {{-- EXPECTED OUTCOME --}}
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Expected Outcome Type <span class="text-danger">*</span></label>
+                                <select name="expected_outcome_type" id="expectedOutcomeType" class="form-select" required>
+                                    <option value="">-- Select Type --</option>
+                                    <option value="percentage" {{ old('expected_outcome_type', $project->expected_outcome_type) === 'percentage' ? 'selected' : '' }}>Percentage</option>
+                                    <option value="text" {{ old('expected_outcome_type', $project->expected_outcome_type) === 'text' ? 'selected' : '' }}>Text</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Expected Outcome <span class="text-danger">*</span></label>
+                                <div id="expectedOutcomePercentage" style="display:none;">
+                                    <div class="input-group">
+                                        <input type="number" name="expected_outcome_percentage" class="form-control" min="0" max="100" step="0.01"
+                                            value="{{ old('expected_outcome_percentage', $project->expected_outcome_type === 'percentage' ? $project->expected_outcome_value : '') }}">
+                                        <span class="input-group-text">%</span>
+                                    </div>
+                                </div>
+                                <div id="expectedOutcomeText" style="display:none;">
+                                    <textarea name="expected_outcome_text" class="form-control" rows="2">{{ old('expected_outcome_text', $project->expected_outcome_type === 'text' ? $project->expected_outcome_value : '') }}</textarea>
+                                </div>
+                            </div>
                         </div>
 
                     </div>
@@ -167,6 +191,9 @@
         let allocTableBody = document.getElementById("allocTableBody");
         let remainingValue = document.getElementById("remainingValue");
         let remainingAlert = document.getElementById("remainingAlert");
+        let expectedOutcomeType = document.getElementById("expectedOutcomeType");
+        let expectedOutcomePercentage = document.getElementById("expectedOutcomePercentage");
+        let expectedOutcomeText = document.getElementById("expectedOutcomeText");
 
         let manual = {}; // Tracks manually edited fields
 
@@ -181,6 +208,7 @@
         });
 
         totalBudgetInput.addEventListener("input", recalcTotals);
+        expectedOutcomeType.addEventListener("change", toggleExpectedOutcome);
 
         /* ---------------------------------------------------------
            REGENERATE ROWS WHEN YEARS CHANGE
@@ -386,6 +414,14 @@
             bootstrap.Modal.getInstance(document.getElementById("percentModal")).hide();
             document.getElementById("percentModal").remove();
         }
+
+        function toggleExpectedOutcome() {
+            const type = expectedOutcomeType.value;
+            expectedOutcomePercentage.style.display = type === "percentage" ? "block" : "none";
+            expectedOutcomeText.style.display = type === "text" ? "block" : "none";
+        }
+
+        toggleExpectedOutcome();
     </script>
 
     <style>

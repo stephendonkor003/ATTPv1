@@ -42,28 +42,28 @@
                     </h6>
 
                     <div class="row mb-4">
+                        @php
+                            $currentNodeId = optional(auth()->user())->governance_node_id;
+                        @endphp
                         <div class="col-md-4">
-                            <label class="form-label fw-semibold">Department *</label>
-                            <select name="department_id" class="form-select" required>
-                                <option value="">-- Select Department --</option>
-                                @foreach ($departments as $department)
-                                    <option value="{{ $department->id }}" @selected(old('department_id') == $department->id)>
-                                        {{ $department->name }}
+                            <label class="form-label fw-semibold">Governance Node *</label>
+                            <select name="governance_node_id" class="form-select" required disabled>
+                                <option value="">-- Select Node --</option>
+                                @foreach ($nodes as $node)
+                                    <option value="{{ $node->id }}"
+                                        @selected(old('governance_node_id', $currentNodeId) == $node->id)>
+                                        {{ $node->name }} ({{ $node->level->name ?? 'Level' }})
                                     </option>
                                 @endforeach
                             </select>
+                            <input type="hidden" name="governance_node_id"
+                                value="{{ old('governance_node_id', $currentNodeId) }}">
                         </div>
 
                         <div class="col-md-4">
                             <label class="form-label fw-semibold">Program *</label>
-                            <select name="program_id" class="form-select" required>
-                                <option value="">-- Select Program --</option>
-                                @foreach ($programs as $program)
-                                    <option value="{{ $program->id }}" @selected(old('program_id') == $program->id)>
-                                        {{ $program->name }}
-                                    </option>
-                                @endforeach
-                            </select>
+                            <input type="text" name="program_name" class="form-control"
+                                value="{{ old('program_name') }}" placeholder="Enter program name" required>
                         </div>
 
                         <div class="col-md-4">
@@ -103,8 +103,19 @@
 
                         <div class="col-md-3">
                             <label class="form-label fw-semibold">Currency *</label>
-                            <input type="text" name="currency" value="{{ old('currency') }}" class="form-control"
-                                placeholder="USD, GHS, EUR" required>
+                            <input type="text" class="form-control currency-search mb-2"
+                                placeholder="Search currency">
+                            <select name="currency" class="form-select currency-select" required>
+                                @php
+                                    $currencyOptions = ['USD','EUR','GBP','GHS','KES','NGN','ZAR','UGX','TZS','RWF','XOF','XAF','EGP','MAD'];
+                                @endphp
+                                <option value="">-- Select Currency --</option>
+                                @foreach ($currencyOptions as $currency)
+                                    <option value="{{ $currency }}" @selected(old('currency') == $currency)>
+                                        {{ $currency }}
+                                    </option>
+                                @endforeach
+                            </select>
                         </div>
 
                         <div class="col-md-3">
@@ -269,6 +280,22 @@
             }
 
             toggleRemove();
+        });
+
+        document.querySelectorAll('.currency-search').forEach(input => {
+            const select = input.parentElement.querySelector('.currency-select');
+            if (!select) return;
+
+            input.addEventListener('input', () => {
+                const term = input.value.toLowerCase();
+                Array.from(select.options).forEach(option => {
+                    if (option.value === '') {
+                        option.hidden = false;
+                        return;
+                    }
+                    option.hidden = term && !option.value.toLowerCase().includes(term);
+                });
+            });
         });
     </script>
 

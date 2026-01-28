@@ -110,6 +110,7 @@ use App\Http\Controllers\{
     ProgramFundingController,
     ProgramFundingDocumentController,
     MasterDashboard,
+    GovernanceStructureController,
     EvaluationAssignmentController,
 };
 
@@ -184,6 +185,9 @@ Route::middleware(['auth', 'verified'])
          =============================== */
         Route::put('/{user}/role', [UserAccessController::class, 'updateRole'])
             ->name('role.update');
+
+        Route::post('/{user}/reset-password', [UserAccessController::class, 'resetPassword'])
+            ->name('reset-password');
 
 
             Route::get('/{user}/permissions', [UserAccessController::class, 'permissions'])
@@ -509,6 +513,50 @@ Route::middleware(['auth', 'permission:finance.access'])
         /* =====================================================
          | DEPARTMENTS
          ===================================================== */
+
+        /* =====================================================
+         | GOVERNANCE STRUCTURE
+         ===================================================== */
+
+        Route::get('governance-structure', [GovernanceStructureController::class, 'index'])
+            ->middleware('permission:finance.governance_structure.view')
+            ->name('governance.index');
+
+        Route::post('governance-structure/nodes', [GovernanceStructureController::class, 'storeNode'])
+            ->middleware('permission:finance.governance_structure.create')
+            ->name('governance.nodes.store');
+
+        Route::put('governance-structure/nodes/{node}', [GovernanceStructureController::class, 'updateNode'])
+            ->middleware('permission:finance.governance_structure.edit')
+            ->name('governance.nodes.update');
+
+        Route::delete('governance-structure/nodes/{node}', [GovernanceStructureController::class, 'destroyNode'])
+            ->middleware('permission:finance.governance_structure.delete')
+            ->name('governance.nodes.destroy');
+
+        Route::post('governance-structure/lines', [GovernanceStructureController::class, 'storeLine'])
+            ->middleware('permission:finance.governance_structure.create')
+            ->name('governance.lines.store');
+
+        Route::put('governance-structure/lines/{line}', [GovernanceStructureController::class, 'updateLine'])
+            ->middleware('permission:finance.governance_structure.edit')
+            ->name('governance.lines.update');
+
+        Route::delete('governance-structure/lines/{line}', [GovernanceStructureController::class, 'destroyLine'])
+            ->middleware('permission:finance.governance_structure.delete')
+            ->name('governance.lines.destroy');
+
+        Route::post('governance-structure/assignments', [GovernanceStructureController::class, 'storeAssignment'])
+            ->middleware('permission:finance.governance_structure.create')
+            ->name('governance.assignments.store');
+
+        Route::put('governance-structure/assignments/{assignment}', [GovernanceStructureController::class, 'updateAssignment'])
+            ->middleware('permission:finance.governance_structure.edit')
+            ->name('governance.assignments.update');
+
+        Route::delete('governance-structure/assignments/{assignment}', [GovernanceStructureController::class, 'destroyAssignment'])
+            ->middleware('permission:finance.governance_structure.delete')
+            ->name('governance.assignments.destroy');
 
          /* ===================== DEPARTMENTS ===================== */
 

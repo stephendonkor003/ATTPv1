@@ -7,9 +7,12 @@ use App\Models\DynamicForm;
 use App\Models\Resource;
 use App\Models\Procurement;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Procurement\Concerns\GovernanceScope;
 
 class DynamicFormController extends Controller
 {
+    use GovernanceScope;
+
     /**
      * List all procurement forms
      */
@@ -25,12 +28,25 @@ class DynamicFormController extends Controller
     public function index()
     {
         $forms = DynamicForm::with('resource')
+            ->when($this->scopedNodeIds() !== null, function ($query) {
+                $query->whereHas('resource', function ($res) {
+                    $res->whereIn('governance_node_id', $this->scopedNodeIds())
+                        ->whereNotNull('governance_node_id');
+                });
+            })
             ->latest()
             ->get();
 
-        $resources = Resource::orderBy('name')->get();
+        $resources = Resource::orderBy('name')
+            ->when($this->scopedNodeIds() !== null, function ($query) {
+                $query->whereIn('governance_node_id', $this->scopedNodeIds())
+                    ->whereNotNull('governance_node_id');
+            })
+            ->get();
 
-        $procurements = Procurement::orderBy('title')->get(); // 👈 REQUIRED
+        $procurements = $this->applyProcurementScope(
+            Procurement::orderBy('title')
+        )->get(); // 👈 REQUIRED
 
         return view('procurement.forms.index', compact(
             'forms',
@@ -46,7 +62,12 @@ class DynamicFormController extends Controller
      */
     public function create()
     {
-        $resources = Resource::orderBy('name')->get();
+        $resources = Resource::orderBy('name')
+            ->when($this->scopedNodeIds() !== null, function ($query) {
+                $query->whereIn('governance_node_id', $this->scopedNodeIds())
+                    ->whereNotNull('governance_node_id');
+            })
+            ->get();
 
         return view('procurement.forms.create', compact('resources'));
     }
@@ -61,6 +82,9 @@ class DynamicFormController extends Controller
             'name'        => 'required|string|max:255',
             'applies_to'  => 'required|in:submission,prescreening,technical,financial',
         ]);
+
+        $resource = Resource::findOrFail($data['resource_id']);
+        $this->assertResourceInScope($resource);
 
         $data['created_by'] = auth()->id();
         $data['status']     = 'draft';
@@ -78,8 +102,14 @@ class DynamicFormController extends Controller
      */
     public function edit(DynamicForm $form)
     {
+        $this->assertFormInScope($form);
         $form->load('fields');
-        $resources = Resource::orderBy('name')->get();
+        $resources = Resource::orderBy('name')
+            ->when($this->scopedNodeIds() !== null, function ($query) {
+                $query->whereIn('governance_node_id', $this->scopedNodeIds())
+                    ->whereNotNull('governance_node_id');
+            })
+            ->get();
 
         return view('procurement.forms.edit', compact('form', 'resources'));
     }
@@ -89,6 +119,7 @@ class DynamicFormController extends Controller
      */
     public function submit(DynamicForm $form)
     {
+        $this->assertFormInScope($form);
         if (!$form->canEdit()) {
             return back()->with('error', 'This form cannot be submitted in its current state.');
         }
@@ -110,6 +141,7 @@ class DynamicFormController extends Controller
      */
     public function approve(DynamicForm $form)
     {
+        $this->assertFormInScope($form);
         if ($form->status !== 'submitted') {
             return back()->with('error', 'Only submitted forms can be approved.');
         }
@@ -129,6 +161,7 @@ class DynamicFormController extends Controller
      */
     public function reject(Request $request, DynamicForm $form)
     {
+        $this->assertFormInScope($form);
         if ($form->status !== 'submitted') {
             return back()->with('error', 'Only submitted forms can be rejected.');
         }
@@ -157,7 +190,13 @@ class DynamicFormController extends Controller
             'procurement_id' => 'required|exists:procurements,id',
         ]);
 
+        $form = DynamicForm::findOrFail($request->form_id);
+        $this->assertFormInScope($form);
         $procurement = Procurement::findOrFail($request->procurement_id);
+        $this->assertProcurementInScope($procurement);
+        if ($procurement->governance_node_id && $form->resource?->governance_node_id !== $procurement->governance_node_id) {
+            abort(403, 'You do not have access to attach this form to the selected procurement.');
+        }
 
         // ✅ Prevent duplicate attachment
         if ($procurement->forms()
@@ -174,5 +213,18 @@ class DynamicFormController extends Controller
         ]);
 
         return back()->with('success', 'Form attached to procurement successfully.');
+    }
+
+    private function assertFormInScope(DynamicForm $form): void
+    {
+        $scopedNodeIds = $this->scopedNodeIds();
+        if ($scopedNodeIds === null) {
+            return;
+        }
+
+        $nodeId = $form->resource?->governance_node_id;
+        if (!$nodeId || !in_array($nodeId, $scopedNodeIds, true)) {
+            abort(403, 'You do not have access to this form.');
+        }
     }
 }

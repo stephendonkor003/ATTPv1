@@ -10,6 +10,7 @@ class Resource extends Model
 
     protected $fillable = [
         'resource_category_id',
+        'governance_node_id',
         'name',
         'reference_code',
         'description',

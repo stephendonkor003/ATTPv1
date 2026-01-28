@@ -26,6 +26,18 @@
             </div>
         @endif
 
+        @if (isset($debug))
+            <div class="alert alert-warning mt-3">
+                <div class="fw-semibold mb-1">Debug: Governance Scope</div>
+                <div class="small">
+                    User: {{ $debug['user_name'] ?? '—' }} (ID: {{ $debug['user_id'] ?? '—' }}) |
+                    Node ID: {{ $debug['user_node_id'] ?? '—' }} |
+                    Admin: {{ $debug['is_admin'] ? 'Yes' : 'No' }} |
+                    Visible Nodes: {{ is_array($debug['visible_node_ids']) ? implode(', ', $debug['visible_node_ids']) : 'ALL' }}
+                </div>
+            </div>
+        @endif
+
         @if ($errors->any())
             <div class="alert alert-danger mt-3">
                 {{ $errors->first() }}
@@ -59,6 +71,7 @@
                             <th>#</th>
                             <th>Program</th>
                             <th>Funder</th>
+                            <th>Governance</th>
                             {{-- <th>Currency</th> --}}
                             <th> Amount</th>
                             <th>Status</th>
@@ -74,12 +87,22 @@
 
                                 {{-- Program --}}
                                 <td class="searchable">
-                                    {{ $f->program->name ?? '—' }}
+                                    {{ $f->program_name ?? ($f->program->name ?? '—') }}
                                 </td>
 
                                 {{-- Funder --}}
                                 <td class="searchable">
                                     {{ $f->funder->name ?? '—' }}
+                                </td>
+
+                                {{-- Governance --}}
+                                <td class="searchable">
+                                    <div class="fw-semibold">
+                                        {{ $f->governanceNode->name ?? '-' }}
+                                    </div>
+                                    <div class="text-muted small">
+                                        {{ $f->governanceNode->level->name ?? '' }}
+                                    </div>
                                 </td>
 
                                 {{-- Currency --}}

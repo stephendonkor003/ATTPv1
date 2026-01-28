@@ -33,20 +33,9 @@
             <div class="col-md-3">
                 <div class="card shadow-sm border-0 h-100">
                     <div class="card-body">
-                        <small class="text-muted">Department</small>
-                        <h6 class="fw-bold mb-0">
-                            {{ optional($programFunding->department)->name ?? '—' }}
-                        </h6>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-3">
-                <div class="card shadow-sm border-0 h-100">
-                    <div class="card-body">
                         <small class="text-muted">Program</small>
                         <h6 class="fw-bold mb-0">
-                            {{ optional($programFunding->program)->name ?? '—' }}
+                            {{ $programFunding->program_name ?? (optional($programFunding->program)->name ?? '—') }}
                         </h6>
                     </div>
                 </div>
@@ -59,6 +48,20 @@
                         <h6 class="fw-bold mb-0">
                             {{ optional($programFunding->funder)->name ?? '—' }}
                         </h6>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body">
+                        <small class="text-muted">Governance Node</small>
+                        <h6 class="fw-bold mb-0">
+                            {{ optional($programFunding->governanceNode)->name ?? '-' }}
+                        </h6>
+                        <div class="small text-muted">
+                            {{ optional(optional($programFunding->governanceNode)->level)->name ?? '' }}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -112,7 +115,7 @@
                     <div class="col-md-3">
                         <small class="text-muted">Funding Period</small>
                         <div class="fw-semibold">
-                            {{ $programFunding->start_year }} – {{ $programFunding->end_year }}
+                            {{ $programFunding->start_year }} - {{ $programFunding->end_year }}
                         </div>
                     </div>
 
@@ -125,6 +128,21 @@
                 </div>
             </div>
         </div>
+
+        @if ($programFunding->status === 'rejected')
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-body">
+                    <h6 class="fw-bold mb-2 text-danger">Rejection Reason</h6>
+                    <p class="mb-2">{{ $programFunding->rejection_reason ?? 'No reason provided.' }}</p>
+                    <div class="small text-muted">
+                        Rejected by: {{ optional($programFunding->rejector)->name ?? 'System' }}
+                        @if ($programFunding->rejected_at)
+                            on {{ $programFunding->rejected_at->format('d M Y, H:i') }}
+                        @endif
+                    </div>
+                </div>
+            </div>
+        @endif
 
         {{-- ================= SUPPORTING DOCUMENTS ================= --}}
         <div class="card shadow-sm border-0 mb-4">
@@ -192,6 +210,17 @@
                         @endcan
                     @endif
 
+                    @if ($programFunding->status === 'rejected')
+                        @can('finance.program_funding.submit')
+                            <form method="POST" action="{{ route('finance.program-funding.submit', $programFunding) }}">
+                                @csrf
+                                <button class="btn btn-primary">
+                                    <i class="feather-rotate-ccw me-1"></i> Resubmit
+                                </button>
+                            </form>
+                        @endcan
+                    @endif
+
                     @if ($programFunding->status === 'submitted')
                         @can('finance.program_funding.approve')
                             <form method="POST" action="{{ route('finance.program-funding.approve', $programFunding) }}">
@@ -201,18 +230,44 @@
                                 </button>
                             </form>
 
-                            <form method="POST" action="{{ route('finance.program-funding.reject', $programFunding) }}">
-                                @csrf
-                                <button class="btn btn-danger">
-                                    <i class="feather-x me-1"></i> Reject
-                                </button>
-                            </form>
+                            <button class="btn btn-danger" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#rejectReasonForm" aria-expanded="false" aria-controls="rejectReasonForm">
+                                <i class="feather-x me-1"></i> Reject
+                            </button>
                         @endcan
                     @endif
 
                 </div>
             </div>
         </div>
+
+        @if ($programFunding->status === 'submitted')
+            @can('finance.program_funding.approve')
+                <div class="collapse mt-3" id="rejectReasonForm">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-body">
+                            <h6 class="fw-bold text-danger mb-2">Rejection Reason</h6>
+                            <form method="POST" action="{{ route('finance.program-funding.reject', $programFunding) }}">
+                                @csrf
+                                <div class="mb-3">
+                                    <textarea name="rejection_reason" class="form-control" rows="3"
+                                        placeholder="Provide a reason for rejection" required></textarea>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-danger">
+                                        <i class="feather-x me-1"></i> Confirm Rejection
+                                    </button>
+                                    <button class="btn btn-light" type="button" data-bs-toggle="collapse"
+                                        data-bs-target="#rejectReasonForm">
+                                        Cancel
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            @endcan
+        @endif
 
     </div>
 @endsection

@@ -8,16 +8,28 @@ use App\Models\User;
 use App\Models\PrescreeningAssignment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
+use App\Http\Controllers\Procurement\Concerns\GovernanceScope;
 
 class PrescreeningUserAssignmentController extends Controller
 {
+    use GovernanceScope;
+
     /**
      * INDEX
      * Accordion view: each procurement + assigned users
      */
     public function index()
     {
+        $scopedNodeIds = $this->scopedNodeIds();
+        if ($scopedNodeIds !== null && empty($scopedNodeIds)) {
+            abort(403, 'You do not have access to procurements.');
+        }
+
         $procurements = Procurement::with('prescreeningUsers')
+            ->when($scopedNodeIds !== null, function ($query) use ($scopedNodeIds) {
+                $query->whereIn('governance_node_id', $scopedNodeIds)
+                    ->whereNotNull('governance_node_id');
+            })
             ->latest()
             ->get();
 
@@ -33,6 +45,7 @@ class PrescreeningUserAssignmentController extends Controller
      */
     public function edit(Procurement $procurement)
     {
+        $this->assertProcurementInScope($procurement);
         $users = User::orderBy('name')->get();
         $submissions = $procurement->submissions()
             ->orderByDesc('created_at')
@@ -60,6 +73,7 @@ class PrescreeningUserAssignmentController extends Controller
      */
     public function store(Request $request, Procurement $procurement)
     {
+        $this->assertProcurementInScope($procurement);
         $request->validate([
             'assignment_type' => 'required|in:procurement,submission',
             'user_id' => 'required|exists:users,id',
@@ -106,8 +120,13 @@ class PrescreeningUserAssignmentController extends Controller
     {
         $userId = auth()->id();
 
+        $scopedNodeIds = $this->scopedNodeIds();
         $procurements = Procurement::whereHas('prescreeningAssignments', function ($q) use ($userId) {
                 $q->where('user_id', $userId);
+            })
+            ->when($scopedNodeIds !== null, function ($query) use ($scopedNodeIds) {
+                $query->whereIn('governance_node_id', $scopedNodeIds)
+                    ->whereNotNull('governance_node_id');
             })
             ->withCount('submissions')
             ->orderByDesc('created_at')
@@ -120,6 +139,12 @@ class PrescreeningUserAssignmentController extends Controller
 
         $submissions = FormSubmission::with(['procurement', 'prescreeningResult'])
             ->where('assigned_prescreener_id', $userId)
+            ->when($scopedNodeIds !== null, function ($query) use ($scopedNodeIds) {
+                $query->whereHas('procurement', function ($proc) use ($scopedNodeIds) {
+                    $proc->whereIn('governance_node_id', $scopedNodeIds)
+                        ->whereNotNull('governance_node_id');
+                });
+            })
             ->orderByDesc('created_at')
             ->get();
 

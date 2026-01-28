@@ -5,13 +5,17 @@ namespace App\Http\Controllers\Procurement;
 use App\Http\Controllers\Controller;
 use App\Models\Procurement;
 use App\Services\ProcurementWorkflowService;
+use App\Http\Controllers\Procurement\Concerns\GovernanceScope;
 
 class ProcurementWorkflowController extends Controller
 {
+    use GovernanceScope;
+
     public function approve(
         Procurement $procurement,
         ProcurementWorkflowService $service
     ) {
+        $this->assertProcurementInScope($procurement);
         $service->approve($procurement);
         return back()->with('success', 'Procurement approved');
     }
@@ -20,6 +24,7 @@ class ProcurementWorkflowController extends Controller
         Procurement $procurement,
         ProcurementWorkflowService $service
     ) {
+        $this->assertProcurementInScope($procurement);
         $service->publish($procurement);
         return back()->with('success', 'Procurement published');
     }
@@ -28,6 +33,7 @@ class ProcurementWorkflowController extends Controller
         Procurement $procurement,
         ProcurementWorkflowService $service
     ) {
+        $this->assertProcurementInScope($procurement);
         $service->close($procurement);
         return back()->with('success', 'Procurement closed');
     }
@@ -36,6 +42,7 @@ class ProcurementWorkflowController extends Controller
         Procurement $procurement,
         ProcurementWorkflowService $service
     ) {
+        $this->assertProcurementInScope($procurement);
         $service->award($procurement);
         return back()->with('success', 'Procurement awarded');
     }

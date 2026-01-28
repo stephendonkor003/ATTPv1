@@ -81,6 +81,25 @@
                                 </small>
                             </div>
 
+                            {{-- GOVERNANCE NODE --}}
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold">
+                                    Governance Node <span class="text-danger">*</span>
+                                </label>
+                                <select name="governance_node_id" class="form-select" required>
+                                    <option value="">-- Select Node --</option>
+                                    @foreach ($nodes as $node)
+                                        <option value="{{ $node->id }}"
+                                            {{ old('governance_node_id') == $node->id ? 'selected' : '' }}>
+                                            {{ $node->name }} ({{ $node->level->name ?? 'Level' }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <small class="text-muted">
+                                    Users can manage accounts in their node and all descendants.
+                                </small>
+                            </div>
+
                             {{-- PASSWORD INFO --}}
                             <div class="col-md-6 mb-3">
                                 <label class="form-label fw-semibold">

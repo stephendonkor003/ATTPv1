@@ -28,6 +28,7 @@
                                 <th>Program ID</th>
                                 <th>Program Name</th>
                                 <th>Sector</th>
+                                <th>Governance</th>
                                 <th>Projects Count</th>
                                 <th>Created At</th>
                                 <th class="text-center">Actions</th>
@@ -40,13 +41,33 @@
                                     <td><span class="fw-semibold text-primary">{{ $program->program_id }}</span></td>
                                     <td>{{ $program->name }}</td>
                                     <td>{{ $program->sector->name ?? '—' }}</td>
+                                    <td>
+                                        <div class="fw-semibold">
+                                            {{ $program->governanceNode->name ?? '-' }}
+                                        </div>
+                                        <small class="text-muted">
+                                            {{ $program->governanceNode->level->name ?? '' }}
+                                        </small>
+                                    </td>
                                     <td>{{ $program->projects->count() }}</td>
                                     <td>{{ $program->created_at->format('d M, Y') }}</td>
                                     <td class="text-center">
+                                        @can('program.view')
+                                            <a href="{{ route('budget.programs.show', $program->id) }}"
+                                                class="btn btn-sm btn-outline-info">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                        @endcan
+                                        @can('program.edit')
+                                            <a href="{{ route('budget.programs.edit', $program->id) }}"
+                                                class="btn btn-sm btn-outline-warning">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                        @endcan
                                         @can('projects.show')
                                             <a href="{{ route('budget.projects.index', $program->id) }}"
                                                 class="btn btn-sm btn-outline-primary">
-                                                <i class="bi bi-folder2-open me-1"></i> View Projects
+                                                <i class="bi bi-folder2-open me-1"></i> Projects
                                             </a>
                                         @endcan
                                         @can('program.delete')
@@ -68,7 +89,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="text-center text-muted py-4">
+                                    <td colspan="8" class="text-center text-muted py-4">
                                         <i class="bi bi-info-circle me-1"></i> No programs found.
                                     </td>
                                 </tr>

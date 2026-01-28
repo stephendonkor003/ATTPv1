@@ -27,6 +27,15 @@
             @if (session('error'))
                 <div class="alert alert-danger">{{ session('error') }}</div>
             @endif
+            @if ($errors->any())
+                <div class="alert alert-danger">
+                    <ul class="m-0">
+                        @foreach ($errors->all() as $e)
+                            <li>{{ $e }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
 
             {{-- FORM --}}
             <form action="{{ route('activities.update', $activity->id) }}" method="POST" id="editActivityForm">
@@ -49,6 +58,29 @@
                                 <label class="form-label fw-semibold">Description</label>
                                 <input type="text" class="form-control" name="description"
                                     value="{{ $activity->description }}">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Expected Outcome Type <span class="text-danger">*</span></label>
+                                <select name="expected_outcome_type" id="expectedOutcomeType" class="form-select" required>
+                                    <option value="">-- Select Type --</option>
+                                    <option value="percentage" {{ old('expected_outcome_type', $activity->expected_outcome_type) === 'percentage' ? 'selected' : '' }}>Percentage</option>
+                                    <option value="text" {{ old('expected_outcome_type', $activity->expected_outcome_type) === 'text' ? 'selected' : '' }}>Text</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Expected Outcome <span class="text-danger">*</span></label>
+                                <div id="expectedOutcomePercentage" style="display:none;">
+                                    <div class="input-group">
+                                        <input type="number" name="expected_outcome_percentage" class="form-control" min="0" max="100" step="0.01"
+                                            value="{{ old('expected_outcome_percentage', $activity->expected_outcome_type === 'percentage' ? $activity->expected_outcome_value : '') }}">
+                                        <span class="input-group-text">%</span>
+                                    </div>
+                                </div>
+                                <div id="expectedOutcomeText" style="display:none;">
+                                    <textarea name="expected_outcome_text" class="form-control" rows="2">{{ old('expected_outcome_text', $activity->expected_outcome_type === 'text' ? $activity->expected_outcome_value : '') }}</textarea>
+                                </div>
                             </div>
 
                         </div>
@@ -140,6 +172,9 @@
         const modeSelect = document.getElementById('allocationMode');
         const remainingValue = document.getElementById('remainingValue');
         const remainingBox = document.getElementById('remainingBox');
+        const expectedOutcomeType = document.getElementById("expectedOutcomeType");
+        const expectedOutcomePercentage = document.getElementById("expectedOutcomePercentage");
+        const expectedOutcomeText = document.getElementById("expectedOutcomeText");
 
         function recalc() {
             let total = 0;
@@ -190,6 +225,15 @@
         });
 
         recalc();
+
+        function toggleExpectedOutcome() {
+            const type = expectedOutcomeType.value;
+            expectedOutcomePercentage.style.display = type === "percentage" ? "block" : "none";
+            expectedOutcomeText.style.display = type === "text" ? "block" : "none";
+        }
+
+        expectedOutcomeType.addEventListener("change", toggleExpectedOutcome);
+        toggleExpectedOutcome();
     </script>
 
     <style>
