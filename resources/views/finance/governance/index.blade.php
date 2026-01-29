@@ -103,30 +103,30 @@
                 </div>
 
                 <div class="card shadow-sm border-0 mt-3">
-                    <div class="card-body table-responsive">
-                        <table class="table table-bordered align-middle">
-                            <thead class="table-light">
+                    <div class="card-body">
+                        <table id="governanceNodesTable" class="table table-striped table-hover data-table" style="width: 100%;">
+                            <thead>
                                 <tr>
-                                    <th>Level</th>
+                                    <th style="width: 120px;">Level</th>
                                     <th>Name</th>
-                                    <th>Code</th>
-                                    <th>Status</th>
-                                    <th>Effective Start</th>
-                                    <th width="140" class="text-center">Actions</th>
+                                    <th style="width: 100px;">Code</th>
+                                    <th style="width: 100px;" class="text-center">Status</th>
+                                    <th style="width: 130px;">Effective Start</th>
+                                    <th style="width: 140px;" class="text-center no-sort no-export">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @forelse ($nodes as $node)
                                     <tr>
-                                        <td>{{ $node->level->name ?? '-' }}</td>
+                                        <td><span class="badge bg-primary">{{ $node->level->name ?? '-' }}</span></td>
                                         <td>
                                             <div class="fw-semibold">{{ $node->name }}</div>
                                             <div class="text-muted small">
                                                 {{ $node->description ?? '-' }}
                                             </div>
                                         </td>
-                                        <td>{{ $node->code ?? '-' }}</td>
-                                        <td>
+                                        <td><code>{{ $node->code ?? '-' }}</code></td>
+                                        <td class="text-center">
                                             <span
                                                 class="badge {{ $node->status === 'active' ? 'bg-success' : 'bg-secondary' }}">
                                                 {{ ucfirst($node->status) }}
@@ -137,93 +137,29 @@
                                                 {{ $node->effective_start?->format('d M Y') ?? '-' }}
                                             </div>
                                         </td>
-                                        <td class="text-center">
+                                        <td class="text-center no-export">
                                             <div class="d-flex justify-content-center gap-2">
                                                 @canany(['finance.governance_structure.edit', 'finance.governance_structure.manage'])
                                                     <button class="btn btn-sm btn-outline-warning" type="button"
-                                                        data-bs-toggle="collapse"
-                                                        data-bs-target="#editNodeRow{{ $node->id }}"
-                                                        aria-expanded="false" aria-controls="editNodeRow{{ $node->id }}">
-                                                        Edit
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#editNodeModal{{ $node->id }}">
+                                                        <i class="feather-edit"></i>
                                                     </button>
                                                 @endcanany
                                                 @canany(['finance.governance_structure.delete', 'finance.governance_structure.manage'])
                                                     <form method="POST"
-                                                        action="{{ route('finance.governance.nodes.destroy', $node) }}">
+                                                        action="{{ route('finance.governance.nodes.destroy', $node) }}" class="d-inline">
                                                         @csrf
                                                         @method('DELETE')
                                                         <button class="btn btn-sm btn-outline-danger"
                                                             onclick="return confirm('Delete this node?')">
-                                                            Delete
+                                                            <i class="feather-trash-2"></i>
                                                         </button>
                                                     </form>
                                                 @endcanany
                                             </div>
                                         </td>
                                     </tr>
-                                    @canany(['finance.governance_structure.edit', 'finance.governance_structure.manage'])
-                                        <tr class="collapse" id="editNodeRow{{ $node->id }}">
-                                            <td colspan="6">
-                                                <div class="border rounded p-3 bg-light">
-                                                    <form method="POST"
-                                                        action="{{ route('finance.governance.nodes.update', $node) }}"
-                                                        class="row g-3">
-                                                        @csrf
-                                                        @method('PUT')
-                                                        <div class="col-md-4">
-                                                            <label class="form-label fw-semibold">Level</label>
-                                                            <select name="level_id" class="form-select" required>
-                                                                @foreach ($levels as $level)
-                                                                    <option value="{{ $level->id }}"
-                                                                        @selected($node->level_id == $level->id)>
-                                                                        {{ $level->name }}
-                                                                    </option>
-                                                                @endforeach
-                                                            </select>
-                                                        </div>
-                                                        <div class="col-md-4">
-                                                            <label class="form-label fw-semibold">Name</label>
-                                                            <input type="text" name="name" class="form-control"
-                                                                value="{{ $node->name }}" required>
-                                                        </div>
-                                                        <div class="col-md-4">
-                                                            <label class="form-label fw-semibold">Code</label>
-                                                            <input type="text" name="code" class="form-control"
-                                                                value="{{ $node->code }}">
-                                                        </div>
-                                                        <div class="col-md-6">
-                                                            <label class="form-label fw-semibold">Effective Start</label>
-                                                            <input type="date" name="effective_start"
-                                                                class="form-control"
-                                                                value="{{ optional($node->effective_start)->format('Y-m-d') }}">
-                                                        </div>
-                                                        <div class="col-md-6">
-                                                            <label class="form-label fw-semibold">Status</label>
-                                                            <select name="status" class="form-select" required>
-                                                                <option value="active"
-                                                                    @selected($node->status === 'active')>Active</option>
-                                                                <option value="inactive"
-                                                                    @selected($node->status === 'inactive')>Inactive</option>
-                                                            </select>
-                                                        </div>
-                                                        <div class="col-md-12">
-                                                            <label class="form-label fw-semibold">Description</label>
-                                                            <input type="text" name="description" class="form-control"
-                                                                value="{{ $node->description }}">
-                                                        </div>
-                                                        <div class="col-12 d-flex gap-2">
-                                                            <button class="btn btn-primary">Save Changes</button>
-                                                            <button class="btn btn-light" type="button"
-                                                                data-bs-toggle="collapse"
-                                                                data-bs-target="#editNodeRow{{ $node->id }}">
-                                                                Cancel
-                                                            </button>
-                                                        </div>
-                                                    </form>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    @endcanany
                                 @empty
                                     <tr>
                                         <td colspan="6" class="text-center text-muted py-4">No nodes created yet.</td>
@@ -233,6 +169,68 @@
                         </table>
                     </div>
                 </div>
+
+                <!-- Edit Node Modals -->
+                @foreach ($nodes as $node)
+                    @canany(['finance.governance_structure.edit', 'finance.governance_structure.manage'])
+                        <div class="modal fade" id="editNodeModal{{ $node->id }}" tabindex="-1">
+                            <div class="modal-dialog modal-lg">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Edit Node: {{ $node->name }}</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <form method="POST" action="{{ route('finance.governance.nodes.update', $node) }}">
+                                        @csrf
+                                        @method('PUT')
+                                        <div class="modal-body">
+                                            <div class="row g-3">
+                                                <div class="col-md-6">
+                                                    <label class="form-label fw-semibold">Level</label>
+                                                    <select name="level_id" class="form-select" required>
+                                                        @foreach ($levels as $level)
+                                                            <option value="{{ $level->id }}" @selected($node->level_id == $level->id)>
+                                                                {{ $level->name }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="form-label fw-semibold">Status</label>
+                                                    <select name="status" class="form-select" required>
+                                                        <option value="active" @selected($node->status === 'active')>Active</option>
+                                                        <option value="inactive" @selected($node->status === 'inactive')>Inactive</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="form-label fw-semibold">Name</label>
+                                                    <input type="text" name="name" class="form-control" value="{{ $node->name }}" required>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="form-label fw-semibold">Code</label>
+                                                    <input type="text" name="code" class="form-control" value="{{ $node->code }}">
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="form-label fw-semibold">Effective Start</label>
+                                                    <input type="date" name="effective_start" class="form-control"
+                                                        value="{{ optional($node->effective_start)->format('Y-m-d') }}">
+                                                </div>
+                                                <div class="col-md-12">
+                                                    <label class="form-label fw-semibold">Description</label>
+                                                    <textarea name="description" class="form-control" rows="3">{{ $node->description }}</textarea>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    @endcanany
+                @endforeach
             </div>
 
             <div class="tab-pane fade" id="linesTab" role="tabpanel" aria-labelledby="lines-tab">
@@ -305,129 +303,67 @@
                 </div>
 
                 <div class="card shadow-sm border-0 mt-3">
-                    <div class="card-body table-responsive">
-                        <table class="table table-bordered align-middle">
-                            <thead class="table-light">
+                    <div class="card-body">
+                        <table id="governanceLinesTable" class="table table-striped table-hover data-table" style="width: 100%;">
+                            <thead>
                                 <tr>
                                     <th>Child Node</th>
                                     <th>Parent Node</th>
-                                    <th>Type</th>
-                                    <th>Effective</th>
-                                    <th width="140" class="text-center">Actions</th>
+                                    <th style="width: 130px;" class="text-center">Type</th>
+                                    <th style="width: 180px;">Effective</th>
+                                    <th style="width: 140px;" class="text-center no-sort no-export">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @forelse ($lines as $line)
                                     <tr>
                                         <td>
-                                            {{ $line->child->name ?? '-' }}
-                                            <div class="text-muted small">{{ $line->child->level->name ?? '' }}</div>
+                                            <strong>{{ $line->child->name ?? '-' }}</strong>
+                                            <div class="text-muted small"><i class="feather-tag me-1"></i>{{ $line->child->level->name ?? '' }}</div>
                                         </td>
                                         <td>
-                                            {{ $line->parent->name ?? '-' }}
-                                            <div class="text-muted small">{{ $line->parent->level->name ?? '' }}</div>
+                                            <strong>{{ $line->parent->name ?? '-' }}</strong>
+                                            <div class="text-muted small"><i class="feather-tag me-1"></i>{{ $line->parent->level->name ?? '' }}</div>
                                         </td>
-                                        <td>
-                                            <span class="badge bg-light text-dark">{{ ucfirst($line->line_type) }}</span>
+                                        <td class="text-center">
+                                            @if($line->line_type === 'primary')
+                                                <span class="badge bg-success">{{ ucfirst($line->line_type) }}</span>
+                                            @elseif($line->line_type === 'dotted')
+                                                <span class="badge bg-info">{{ ucfirst($line->line_type) }}</span>
+                                            @else
+                                                <span class="badge bg-warning">{{ ucfirst($line->line_type) }}</span>
+                                            @endif
                                         </td>
                                         <td>
                                             <div class="small">
-                                                {{ $line->effective_start?->format('d M Y') ?? '-' }}
+                                                <i class="feather-calendar me-1"></i>{{ $line->effective_start?->format('d M Y') ?? '-' }}
                                                 &rarr;
                                                 {{ $line->effective_end?->format('d M Y') ?? 'Open' }}
                                             </div>
                                         </td>
-                                        <td class="text-center">
+                                        <td class="text-center no-export">
                                             <div class="d-flex justify-content-center gap-2">
                                                 @canany(['finance.governance_structure.edit', 'finance.governance_structure.manage'])
                                                     <button class="btn btn-sm btn-outline-warning" type="button"
-                                                        data-bs-toggle="collapse"
-                                                        data-bs-target="#editLineRow{{ $line->id }}"
-                                                        aria-expanded="false" aria-controls="editLineRow{{ $line->id }}">
-                                                        Edit
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#editLineModal{{ $line->id }}">
+                                                        <i class="feather-edit"></i>
                                                     </button>
                                                 @endcanany
                                                 @canany(['finance.governance_structure.delete', 'finance.governance_structure.manage'])
                                                     <form method="POST"
-                                                        action="{{ route('finance.governance.lines.destroy', $line) }}">
+                                                        action="{{ route('finance.governance.lines.destroy', $line) }}" class="d-inline">
                                                         @csrf
                                                         @method('DELETE')
                                                         <button class="btn btn-sm btn-outline-danger"
                                                             onclick="return confirm('Delete this reporting line?')">
-                                                            Delete
+                                                            <i class="feather-trash-2"></i>
                                                         </button>
                                                     </form>
                                                 @endcanany
                                             </div>
                                         </td>
                                     </tr>
-                                    @canany(['finance.governance_structure.edit', 'finance.governance_structure.manage'])
-                                        <tr class="collapse" id="editLineRow{{ $line->id }}">
-                                            <td colspan="5">
-                                                <div class="border rounded p-3 bg-light">
-                                                    <form method="POST"
-                                                        action="{{ route('finance.governance.lines.update', $line) }}"
-                                                        class="row g-3">
-                                                        @csrf
-                                                        @method('PUT')
-                                                        <div class="col-md-6">
-                                                            <label class="form-label fw-semibold">Child Node</label>
-                                                            <select name="child_node_id" class="form-select" required>
-                                                                @foreach ($nodes as $node)
-                                                                    <option value="{{ $node->id }}"
-                                                                        @selected($line->child_node_id == $node->id)>
-                                                                        {{ $node->name }} ({{ $node->level->name ?? 'Level' }})
-                                                                    </option>
-                                                                @endforeach
-                                                            </select>
-                                                        </div>
-                                                        <div class="col-md-6">
-                                                            <label class="form-label fw-semibold">Parent Node</label>
-                                                            <select name="parent_node_id" class="form-select" required>
-                                                                @foreach ($nodes as $node)
-                                                                    <option value="{{ $node->id }}"
-                                                                        @selected($line->parent_node_id == $node->id)>
-                                                                        {{ $node->name }} ({{ $node->level->name ?? 'Level' }})
-                                                                    </option>
-                                                                @endforeach
-                                                            </select>
-                                                        </div>
-                                                        <div class="col-md-4">
-                                                            <label class="form-label fw-semibold">Line Type</label>
-                                                            <select name="line_type" class="form-select" required>
-                                                                <option value="primary"
-                                                                    @selected($line->line_type === 'primary')>Primary (Hierarchy)</option>
-                                                                <option value="dotted"
-                                                                    @selected($line->line_type === 'dotted')>Dotted (Matrix)</option>
-                                                                <option value="advisory"
-                                                                    @selected($line->line_type === 'advisory')>Advisory</option>
-                                                            </select>
-                                                        </div>
-                                                        <div class="col-md-4">
-                                                            <label class="form-label fw-semibold">Effective Start</label>
-                                                            <input type="date" name="effective_start"
-                                                                class="form-control"
-                                                                value="{{ optional($line->effective_start)->format('Y-m-d') }}">
-                                                        </div>
-                                                        <div class="col-md-4">
-                                                            <label class="form-label fw-semibold">Effective End</label>
-                                                            <input type="date" name="effective_end"
-                                                                class="form-control"
-                                                                value="{{ optional($line->effective_end)->format('Y-m-d') }}">
-                                                        </div>
-                                                        <div class="col-12 d-flex gap-2">
-                                                            <button class="btn btn-primary">Save Changes</button>
-                                                            <button class="btn btn-light" type="button"
-                                                                data-bs-toggle="collapse"
-                                                                data-bs-target="#editLineRow{{ $line->id }}">
-                                                                Cancel
-                                                            </button>
-                                                        </div>
-                                                    </form>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    @endcanany
                                 @empty
                                     <tr>
                                         <td colspan="5" class="text-center text-muted py-4">No reporting lines created yet.
@@ -438,6 +374,72 @@
                         </table>
                     </div>
                 </div>
+
+                <!-- Edit Line Modals -->
+                @foreach ($lines as $line)
+                    @canany(['finance.governance_structure.edit', 'finance.governance_structure.manage'])
+                        <div class="modal fade" id="editLineModal{{ $line->id }}" tabindex="-1">
+                            <div class="modal-dialog modal-lg">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Edit Reporting Line</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <form method="POST" action="{{ route('finance.governance.lines.update', $line) }}">
+                                        @csrf
+                                        @method('PUT')
+                                        <div class="modal-body">
+                                            <div class="row g-3">
+                                                <div class="col-md-6">
+                                                    <label class="form-label fw-semibold">Child Node</label>
+                                                    <select name="child_node_id" class="form-select" required>
+                                                        @foreach ($nodes as $node)
+                                                            <option value="{{ $node->id }}" @selected($line->child_node_id == $node->id)>
+                                                                {{ $node->name }} ({{ $node->level->name ?? 'Level' }})
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="form-label fw-semibold">Parent Node</label>
+                                                    <select name="parent_node_id" class="form-select" required>
+                                                        @foreach ($nodes as $node)
+                                                            <option value="{{ $node->id }}" @selected($line->parent_node_id == $node->id)>
+                                                                {{ $node->name }} ({{ $node->level->name ?? 'Level' }})
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label class="form-label fw-semibold">Line Type</label>
+                                                    <select name="line_type" class="form-select" required>
+                                                        <option value="primary" @selected($line->line_type === 'primary')>Primary (Hierarchy)</option>
+                                                        <option value="dotted" @selected($line->line_type === 'dotted')>Dotted (Matrix)</option>
+                                                        <option value="advisory" @selected($line->line_type === 'advisory')>Advisory</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label class="form-label fw-semibold">Effective Start</label>
+                                                    <input type="date" name="effective_start" class="form-control"
+                                                        value="{{ optional($line->effective_start)->format('Y-m-d') }}">
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label class="form-label fw-semibold">Effective End</label>
+                                                    <input type="date" name="effective_end" class="form-control"
+                                                        value="{{ optional($line->effective_end)->format('Y-m-d') }}">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    @endcanany
+                @endforeach
             </div>
 
             <div class="tab-pane fade" id="assignmentsTab" role="tabpanel" aria-labelledby="assignments-tab">
@@ -520,31 +522,31 @@
                 </div>
 
                 <div class="card shadow-sm border-0 mt-3">
-                    <div class="card-body table-responsive">
-                        <table class="table table-bordered align-middle">
-                            <thead class="table-light">
+                    <div class="card-body">
+                        <table id="governanceAssignmentsTable" class="table table-striped table-hover data-table" style="width: 100%;">
+                            <thead>
                                 <tr>
                                     <th>Node</th>
                                     <th>Employee</th>
-                                    <th>Role</th>
-                                    <th>Primary</th>
-                                    <th>Effective</th>
-                                    <th width="140" class="text-center">Actions</th>
+                                    <th style="width: 150px;">Role</th>
+                                    <th style="width: 100px;" class="text-center">Primary</th>
+                                    <th style="width: 180px;">Effective</th>
+                                    <th style="width: 140px;" class="text-center no-sort no-export">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @forelse ($assignments as $assignment)
                                     <tr>
                                         <td>
-                                            {{ $assignment->node->name ?? '-' }}
-                                            <div class="text-muted small">{{ $assignment->node->level->name ?? '' }}</div>
+                                            <strong>{{ $assignment->node->name ?? '-' }}</strong>
+                                            <div class="text-muted small"><i class="feather-tag me-1"></i>{{ $assignment->node->level->name ?? '' }}</div>
                                         </td>
                                         <td>
-                                            {{ $assignment->user->name ?? '-' }}
-                                            <div class="text-muted small">{{ $assignment->user->email ?? '' }}</div>
+                                            <div><strong>{{ $assignment->user->name ?? '-' }}</strong></div>
+                                            <div class="text-muted small"><i class="feather-mail me-1"></i>{{ $assignment->user->email ?? '' }}</div>
                                         </td>
-                                        <td>{{ $assignment->role_title ?? '-' }}</td>
-                                        <td>
+                                        <td><span class="badge bg-info">{{ $assignment->role_title ?? '-' }}</span></td>
+                                        <td class="text-center">
                                             <span
                                                 class="badge {{ $assignment->is_primary ? 'bg-success' : 'bg-secondary' }}">
                                                 {{ $assignment->is_primary ? 'Yes' : 'No' }}
@@ -552,122 +554,34 @@
                                         </td>
                                         <td>
                                             <div class="small">
-                                                {{ $assignment->effective_start?->format('d M Y') ?? '-' }}
+                                                <i class="feather-calendar me-1"></i>{{ $assignment->effective_start?->format('d M Y') ?? '-' }}
                                                 &rarr;
                                                 {{ $assignment->effective_end?->format('d M Y') ?? 'Open' }}
                                             </div>
                                         </td>
-                                        <td class="text-center">
+                                        <td class="text-center no-export">
                                             <div class="d-flex justify-content-center gap-2">
                                                 @canany(['finance.governance_structure.edit', 'finance.governance_structure.manage'])
                                                     <button class="btn btn-sm btn-outline-warning" type="button"
-                                                        data-bs-toggle="collapse"
-                                                        data-bs-target="#editAssignmentRow{{ $assignment->id }}"
-                                                        aria-expanded="false"
-                                                        aria-controls="editAssignmentRow{{ $assignment->id }}">
-                                                        Edit
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#editAssignmentModal{{ $assignment->id }}">
+                                                        <i class="feather-edit"></i>
                                                     </button>
                                                 @endcanany
                                                 @canany(['finance.governance_structure.delete', 'finance.governance_structure.manage'])
                                                     <form method="POST"
-                                                        action="{{ route('finance.governance.assignments.destroy', $assignment) }}">
+                                                        action="{{ route('finance.governance.assignments.destroy', $assignment) }}" class="d-inline">
                                                         @csrf
                                                         @method('DELETE')
                                                         <button class="btn btn-sm btn-outline-danger"
                                                             onclick="return confirm('Delete this assignment?')">
-                                                            Delete
+                                                            <i class="feather-trash-2"></i>
                                                         </button>
                                                     </form>
                                                 @endcanany
                                             </div>
                                         </td>
                                     </tr>
-                                    @canany(['finance.governance_structure.edit', 'finance.governance_structure.manage'])
-                                        <tr class="collapse" id="editAssignmentRow{{ $assignment->id }}">
-                                            <td colspan="6">
-                                                <div class="border rounded p-3 bg-light">
-                                                    <form method="POST"
-                                                        action="{{ route('finance.governance.assignments.update', $assignment) }}"
-                                                        class="row g-3">
-                                                        @csrf
-                                                        @method('PUT')
-                                                        <div class="col-md-6">
-                                                            <label class="form-label fw-semibold">Node</label>
-                                                            <select name="node_id" class="form-select" required>
-                                                                @foreach ($nodes as $node)
-                                                                    <option value="{{ $node->id }}"
-                                                                        @selected($assignment->node_id == $node->id)>
-                                                                        {{ $node->name }} ({{ $node->level->name ?? 'Level' }})
-                                                                    </option>
-                                                                @endforeach
-                                                            </select>
-                                                        </div>
-                                                        <div class="col-md-6">
-                                                            <label class="form-label fw-semibold">Employee</label>
-                                                            <input type="text" class="form-control user-search mb-2"
-                                                                placeholder="Search employee name or email">
-                                                            <select name="user_id" class="form-select" required>
-                                                                @foreach ($users as $user)
-                                                                    <option value="{{ $user->id }}"
-                                                                        @selected($assignment->user_id == $user->id)>
-                                                                        {{ $user->name }} - {{ $user->email }}
-                                                                    </option>
-                                                                @endforeach
-                                                            </select>
-                                                        </div>
-                                                        <div class="col-md-6">
-                                                            <label class="form-label fw-semibold">Role Title</label>
-                                                            <input type="text" name="role_title" class="form-control"
-                                                                value="{{ $assignment->role_title }}">
-                                                        </div>
-                                                        <div class="col-md-3">
-                                                            <label class="form-label fw-semibold">Effective Start</label>
-                                                            <input type="date" name="effective_start"
-                                                                class="form-control"
-                                                                value="{{ optional($assignment->effective_start)->format('Y-m-d') }}">
-                                                        </div>
-                                                        <div class="col-md-3">
-                                                            <label class="form-label fw-semibold">Effective End</label>
-                                                            <input type="date" name="effective_end"
-                                                                class="form-control"
-                                                                value="{{ optional($assignment->effective_end)->format('Y-m-d') }}">
-                                                        </div>
-                                                        <div class="col-md-4">
-                                                            <div class="form-check mt-4">
-                                                                <input class="form-check-input" type="checkbox"
-                                                                    value="1" name="is_primary"
-                                                                    id="editAssignmentPrimary{{ $assignment->id }}"
-                                                                    @checked($assignment->is_primary)>
-                                                                <label class="form-check-label fw-semibold"
-                                                                    for="editAssignmentPrimary{{ $assignment->id }}">
-                                                                    Primary Assignment
-                                                                </label>
-                                                            </div>
-                                                        </div>
-                                                        <div class="col-md-4">
-                                                            <div class="form-check mt-4">
-                                                                <input class="form-check-input" type="checkbox"
-                                                                    value="1" name="notify_user"
-                                                                    id="editAssignmentNotify{{ $assignment->id }}">
-                                                                <label class="form-check-label fw-semibold"
-                                                                    for="editAssignmentNotify{{ $assignment->id }}">
-                                                                    Email notification to user
-                                                                </label>
-                                                            </div>
-                                                        </div>
-                                                        <div class="col-12 d-flex gap-2">
-                                                            <button class="btn btn-primary">Save Changes</button>
-                                                            <button class="btn btn-light" type="button"
-                                                                data-bs-toggle="collapse"
-                                                                data-bs-target="#editAssignmentRow{{ $assignment->id }}">
-                                                                Cancel
-                                                            </button>
-                                                        </div>
-                                                    </form>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    @endcanany
                                 @empty
                                     <tr>
                                         <td colspan="6" class="text-center text-muted py-4">No assignments created yet.
@@ -678,8 +592,106 @@
                         </table>
                     </div>
                 </div>
+
+                <!-- Edit Assignment Modals -->
+                @foreach ($assignments as $assignment)
+                    @canany(['finance.governance_structure.edit', 'finance.governance_structure.manage'])
+                        <div class="modal fade" id="editAssignmentModal{{ $assignment->id }}" tabindex="-1">
+                            <div class="modal-dialog modal-lg">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Edit Assignment</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <form method="POST" action="{{ route('finance.governance.assignments.update', $assignment) }}">
+                                        @csrf
+                                        @method('PUT')
+                                        <div class="modal-body">
+                                            <div class="row g-3">
+                                                <div class="col-md-6">
+                                                    <label class="form-label fw-semibold">Node</label>
+                                                    <select name="node_id" class="form-select" required>
+                                                        @foreach ($nodes as $node)
+                                                            <option value="{{ $node->id }}" @selected($assignment->node_id == $node->id)>
+                                                                {{ $node->name }} ({{ $node->level->name ?? 'Level' }})
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="form-label fw-semibold">Employee</label>
+                                                    <select name="user_id" class="form-select" required>
+                                                        @foreach ($users as $user)
+                                                            <option value="{{ $user->id }}" @selected($assignment->user_id == $user->id)>
+                                                                {{ $user->name }} - {{ $user->email }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="form-label fw-semibold">Role Title</label>
+                                                    <input type="text" name="role_title" class="form-control" value="{{ $assignment->role_title }}">
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-check mt-4">
+                                                        <input class="form-check-input" type="checkbox" value="1" name="is_primary"
+                                                            id="editPrimary{{ $assignment->id }}" @checked($assignment->is_primary)>
+                                                        <label class="form-check-label fw-semibold" for="editPrimary{{ $assignment->id }}">
+                                                            Primary Assignment
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label class="form-label fw-semibold">Effective Start</label>
+                                                    <input type="date" name="effective_start" class="form-control"
+                                                        value="{{ optional($assignment->effective_start)->format('Y-m-d') }}">
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label class="form-label fw-semibold">Effective End</label>
+                                                    <input type="date" name="effective_end" class="form-control"
+                                                        value="{{ optional($assignment->effective_end)->format('Y-m-d') }}">
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="form-check mt-4">
+                                                        <input class="form-check-input" type="checkbox" value="1" name="notify_user"
+                                                            id="editNotify{{ $assignment->id }}">
+                                                        <label class="form-check-label fw-semibold" for="editNotify{{ $assignment->id }}">
+                                                            Email notification
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    @endcanany
+                @endforeach
             </div>
         </div>
+
+        <script>
+            // Initialize DataTables for governance tables with special handling for collapsed edit rows
+            $(document).ready(function() {
+                // Configuration for all governance tables
+                const governanceTableConfig = $.extend(true, {}, window.dataTableConfig, {
+                    drawCallback: function() {
+                        // Remove DataTables classes from collapsed rows
+                        $('.child-row.collapse').removeClass('odd even');
+                    }
+                });
+
+                // Initialize each table
+                $('#governanceNodesTable').DataTable(governanceTableConfig);
+                $('#governanceLinesTable').DataTable(governanceTableConfig);
+                $('#governanceAssignmentsTable').DataTable(governanceTableConfig);
+            });
+        </script>
 
         <script>
             document.querySelectorAll('.user-search').forEach(input => {

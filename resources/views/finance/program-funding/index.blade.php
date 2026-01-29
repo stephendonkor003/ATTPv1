@@ -44,138 +44,55 @@
             </div>
         @endif
 
-        {{-- ===================== SEARCH BAR ===================== --}}
-        <div class="card shadow-sm mt-4">
-            <div class="card-body py-3">
-                <div class="row g-2">
-                    <div class="col-md-6 col-lg-4">
-                        <div class="input-group">
-                            <span class="input-group-text bg-light">
-                                <i class="feather-search"></i>
-                            </span>
-                            <input type="text" id="fundingSearch" class="form-control"
-                                placeholder="Search program, funder, currency, status…">
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         {{-- ===================== PROGRAM FUNDING TABLE ===================== --}}
         <div class="card shadow-sm mt-3">
-            <div class="card-body table-responsive">
-
-                <table class="table table-hover align-middle" id="fundingTable">
-                    <thead class="table-light">
+            <div class="card-body">
+                <table id="fundingTable" class="table table-striped table-hover data-table" style="width: 100%;">
+                    <thead>
                         <tr>
-                            <th>#</th>
+                            <th style="width: 50px;" class="text-center">#</th>
                             <th>Program</th>
                             <th>Funder</th>
                             <th>Governance</th>
-                            {{-- <th>Currency</th> --}}
-                            <th> Amount</th>
-                            <th>Status</th>
-                            <th>Created On</th>
-                            <th class="text-end">Action</th>
+                            <th style="width: 150px;" class="text-end">Amount</th>
+                            <th style="width: 100px;" class="text-center">Status</th>
+                            <th style="width: 120px;">Created On</th>
+                            <th style="width: 100px;" class="text-center no-sort no-export">Action</th>
                         </tr>
                     </thead>
-
                     <tbody>
                         @forelse($fundings as $f)
                             <tr>
-                                <td>{{ $loop->iteration }}</td>
-
-                                {{-- Program --}}
-                                <td class="searchable">
-                                    {{ $f->program_name ?? ($f->program->name ?? '—') }}
+                                <td class="text-center">{{ $loop->iteration }}</td>
+                                <td><strong>{{ $f->program_name ?? ($f->program->name ?? '—') }}</strong></td>
+                                <td>{{ $f->funder->name ?? '—' }}</td>
+                                <td>
+                                    <div class="fw-semibold">{{ $f->governanceNode->name ?? '-' }}</div>
+                                    <div class="text-muted small"><i class="feather-tag me-1"></i>{{ $f->governanceNode->level->name ?? '' }}</div>
                                 </td>
-
-                                {{-- Funder --}}
-                                <td class="searchable">
-                                    {{ $f->funder->name ?? '—' }}
+                                <td class="text-end">
+                                    <strong>{{ $f->program->currency ?? '' }} {{ number_format($f->approved_amount ?? 0, 2) }}</strong>
                                 </td>
-
-                                {{-- Governance --}}
-                                <td class="searchable">
-                                    <div class="fw-semibold">
-                                        {{ $f->governanceNode->name ?? '-' }}
-                                    </div>
-                                    <div class="text-muted small">
-                                        {{ $f->governanceNode->level->name ?? '' }}
-                                    </div>
-                                </td>
-
-                                {{-- Currency --}}
-                                {{-- <td class="searchable">
-                                    <span class="badge bg-light text-dark">
-                                        {{ $f->program->currency ?? '—' }}
-                                    </span>
-                                </td> --}}
-
-                                {{-- Amount --}}
-                                <td class="fw-bold">
-                                    {{ $f->program->currency ?? '' }}
-                                    {{ number_format($f->approved_amount ?? 0, 2) }}
-                                </td>
-
-                                {{-- Status --}}
-                                <td class="searchable">
-                                    <span
-                                        class="badge
-                                {{ $f->status === 'approved'
-                                    ? 'bg-success'
-                                    : ($f->status === 'pending'
-                                        ? 'bg-warning text-dark'
-                                        : 'bg-secondary') }}">
+                                <td class="text-center">
+                                    <span class="badge {{ $f->status === 'approved' ? 'bg-success' : ($f->status === 'pending' ? 'bg-warning text-dark' : 'bg-secondary') }}">
                                         {{ ucfirst($f->status) }}
                                     </span>
                                 </td>
-
-                                {{-- Created --}}
-                                <td>
-                                    {{ optional($f->created_at)->format('d M Y') }}
-                                </td>
-
-                                {{-- Action --}}
-                                <td class="text-end">
-                                    <a href="{{ route('finance.program-funding.show', $f->id) }}"
-                                        class="btn btn-sm btn-outline-primary">
-                                        View
+                                <td>{{ optional($f->created_at)->format('d M Y') }}</td>
+                                <td class="text-center no-export">
+                                    <a href="{{ route('finance.program-funding.show', $f->id) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="feather-eye"></i>
                                     </a>
-
-
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="text-center text-muted py-4">
-                                    No program funding records found.
-                                </td>
+                                <td colspan="8" class="text-center text-muted py-4">No program funding records found.</td>
                             </tr>
                         @endforelse
                     </tbody>
                 </table>
-
-                {{-- Pagination --}}
-                <div class="mt-3">
-                    {{ $fundings->links() }}
-                </div>
-
             </div>
         </div>
-
     </div>
-
-    {{-- ===================== SEARCH SCRIPT ===================== --}}
-    <script>
-        document.getElementById('fundingSearch').addEventListener('keyup', function() {
-            const term = this.value.toLowerCase();
-            const rows = document.querySelectorAll('#fundingTable tbody tr');
-
-            rows.forEach(row => {
-                const text = row.innerText.toLowerCase();
-                row.style.display = text.includes(term) ? '' : 'none';
-            });
-        });
-    </script>
 @endsection

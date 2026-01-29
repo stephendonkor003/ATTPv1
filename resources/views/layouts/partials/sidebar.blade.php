@@ -14,12 +14,12 @@
                 {{-- ================= DASHBOARD ================= --}}
                 @can('dashboard.access')
                     <li class="nxl-item nxl-caption">
-                        <label>Dashboard</label>
+                        <label>{{ __('admin.dashboard') }}</label>
                     </li>
                     <li class="nxl-item">
                         <a href="{{ route('dashboard') }}" class="nxl-link">
                             <span class="nxl-micon"><i class="feather-home"></i></span>
-                            <span class="nxl-mtext">Overview</span>
+                            <span class="nxl-mtext">{{ __('admin.overview') }}</span>
                         </a>
                     </li>
                 @endcan
@@ -28,13 +28,13 @@
                 {{-- ================= FINANCIAL GOVERNANCE ================= --}}
                 @canany(['finance.departments.view', 'finance.program_funding.view', 'finance.funders.view'])
                     <li class="nxl-item nxl-caption">
-                        <label>Financial Governance</label>
+                        <label>{{ __('admin.financial_governance') }}</label>
                     </li>
 
                     <li class="nxl-item nxl-hasmenu">
                         <a href="javascript:void(0);" class="nxl-link">
                             <span class="nxl-micon"><i class="feather-shield"></i></span>
-                            <span class="nxl-mtext">Governance Setup</span>
+                            <span class="nxl-mtext">{{ __('admin.governance_setup') }}</span>
                             <span class="nxl-arrow"><i class="feather-chevron-right"></i></span>
                         </a>
 
@@ -42,7 +42,7 @@
                             @canany(['finance.governance_structure.view', 'finance.governance_structure.manage'])
                                 <li class="nxl-item">
                                     <a href="{{ route('finance.governance.index') }}" class="nxl-link">
-                                        <i class="feather-git-branch me-2"></i> Governance Structure
+                                        <i class="feather-git-branch me-2"></i> {{ __('admin.governance_structure') }}
                                     </a>
                                 </li>
                             @endcanany
@@ -50,7 +50,7 @@
                             @canany(['finance.program_funding.view', 'finance.program_funding.manage'])
                                 <li class="nxl-item">
                                     <a href="{{ route('finance.program-funding.index') }}" class="nxl-link">
-                                        <i class="feather-credit-card me-2"></i> Program Financing
+                                        <i class="feather-credit-card me-2"></i> {{ __('admin.program_financing') }}
                                     </a>
                                 </li>
                             @endcanany
@@ -58,7 +58,7 @@
                             @canany(['finance.funders.view', 'finance.funders.manage'])
                                 <li class="nxl-item">
                                     <a href="{{ route('finance.funders.index') }}" class="nxl-link">
-                                        <i class="feather-globe me-2"></i> Funding Partners
+                                        <i class="feather-globe me-2"></i> {{ __('admin.funding_partners') }}
                                     </a>
                                 </li>
                             @endcanany
@@ -71,13 +71,13 @@
                 {{-- ================= BUDGET PLANNING ================= --}}
                 @canany(['sector.view', 'program.view', 'project.view', 'activities.view', 'subactivities.view'])
                     <li class="nxl-item nxl-caption">
-                        <label>Budget Planning</label>
+                        <label>{{ __('admin.budget_planning') }}</label>
                     </li>
 
                     <li class="nxl-item nxl-hasmenu">
                         <a href="javascript:void(0);" class="nxl-link">
                             <span class="nxl-micon"><i class="feather-folder"></i></span>
-                            <span class="nxl-mtext">Budget Structure</span>
+                            <span class="nxl-mtext">{{ __('admin.budget_structure') }}</span>
                             <span class="nxl-arrow"><i class="feather-chevron-right"></i></span>
                         </a>
 
@@ -85,7 +85,7 @@
                             @can('sector.view')
                                 <li class="nxl-item">
                                     <a href="{{ route('budget.sectors.index') }}" class="nxl-link">
-                                        <i class="feather-layers me-2"></i> Sectors
+                                        <i class="feather-layers me-2"></i> {{ __('admin.sectors') }}
                                     </a>
                                 </li>
                             @endcan
@@ -93,7 +93,7 @@
                             @can('program.view')
                                 <li class="nxl-item">
                                     <a href="{{ route('budget.programs.index') }}" class="nxl-link">
-                                        <i class="feather-grid me-2"></i> Programs
+                                        <i class="feather-grid me-2"></i> {{ __('admin.programs') }}
                                     </a>
                                 </li>
                             @endcan
@@ -101,7 +101,7 @@
                             @can('project.view')
                                 <li class="nxl-item">
                                     <a href="{{ route('budget.projects.index') }}" class="nxl-link">
-                                        <i class="feather-briefcase me-2"></i> Projects
+                                        <i class="feather-briefcase me-2"></i> {{ __('admin.projects') }}
                                     </a>
                                 </li>
                             @endcan
@@ -109,7 +109,7 @@
                             @can('activities.view')
                                 <li class="nxl-item">
                                     <a href="{{ route('budget.activities.index') }}" class="nxl-link">
-                                        <i class="feather-list me-2"></i> Activities
+                                        <i class="feather-list me-2"></i> {{ __('admin.activities') }}
                                     </a>
                                 </li>
                             @endcan
@@ -117,7 +117,7 @@
                             @can('subactivities.view')
                                 <li class="nxl-item">
                                     <a href="{{ route('budget.subactivities.index') }}" class="nxl-link">
-                                        <i class="feather-check-square me-2"></i> Sub-Activities
+                                        <i class="feather-check-square me-2"></i> {{ __('admin.sub_activities') }}
                                     </a>
                                 </li>
                             @endcan
@@ -129,13 +129,13 @@
                 {{-- ================= BUDGET EXECUTION ================= --}}
                 @canany(['finance.commitments.view', 'finance.resources.view', 'finance.executions.view'])
                     <li class="nxl-item nxl-caption">
-                        <label>Budget Execution</label>
+                        <label>{{ __('admin.budget_execution') }}</label>
                     </li>
 
                     <li class="nxl-item nxl-hasmenu">
                         <a href="javascript:void(0);" class="nxl-link">
                             <span class="nxl-micon"><i class="feather-activity"></i></span>
-                            <span class="nxl-mtext">Execution & Commitments</span>
+                            <span class="nxl-mtext">{{ __('admin.execution_commitments') }}</span>
                             <span class="nxl-arrow"><i class="feather-chevron-right"></i></span>
                         </a>
 
@@ -143,7 +143,7 @@
                             @can('finance.commitments.view')
                                 <li class="nxl-item">
                                     <a href="{{ route('finance.commitments.index') }}" class="nxl-link">
-                                        <i class="feather-edit me-2"></i> Budget Commitments
+                                        <i class="feather-edit me-2"></i> {{ __('admin.budget_commitments') }}
                                     </a>
                                 </li>
                             @endcan
@@ -151,13 +151,13 @@
                             @can('finance.resources.view')
                                 <li class="nxl-item">
                                     <a href="{{ route('finance.resources.categories.index') }}" class="nxl-link">
-                                        <i class="feather-folder me-2"></i> Resource Categories
+                                        <i class="feather-folder me-2"></i> {{ __('admin.resource_categories') }}
                                     </a>
                                 </li>
 
                                 <li class="nxl-item">
                                     <a href="{{ route('finance.resources.items.index') }}" class="nxl-link">
-                                        <i class="feather-box me-2"></i> Resource Items
+                                        <i class="feather-box me-2"></i> {{ __('admin.resource_items') }}
                                     </a>
                                 </li>
                             @endcan
@@ -170,7 +170,7 @@
                 @canany(['budget.reports.view', 'budget.summary.view', 'finance.executions.view', 'hr.analytics.view',
                     'prescreening.reports.view_all', 'evaluations.view_all'])
                     <li class="nxl-item nxl-caption">
-                        <label>Reports & Analytics Engine</label>
+                        <label>{{ __('admin.reports_analytics') }}</label>
                     </li>
 
                     <li class="nxl-item nxl-hasmenu">
@@ -178,7 +178,7 @@
                             <span class="nxl-micon">
                                 <i class="feather-bar-chart"></i>
                             </span>
-                            <span class="nxl-mtext">Reports & Oversight</span>
+                            <span class="nxl-mtext">{{ __('admin.reports_oversight') }}</span>
                             <span class="nxl-arrow">
                                 <i class="feather-chevron-right"></i>
                             </span>
@@ -191,7 +191,7 @@
                                 <li class="nxl-item">
                                     <a href="{{ route('budget.reports.index') }}" class="nxl-link">
                                         <i class="feather-file-text me-2"></i>
-                                        Budget Reports
+                                        {{ __('admin.budget_reports') }}
                                     </a>
                                 </li>
                             @endcan
@@ -201,7 +201,7 @@
                                 <li class="nxl-item">
                                     <a href="{{ route('finance.execution.dashboard') }}" class="nxl-link">
                                         <i class="feather-trending-up me-2"></i>
-                                        Execution Dashboard
+                                        {{ __('admin.execution_dashboard') }}
                                     </a>
 
                                 </li>
@@ -212,7 +212,7 @@
                                 <li class="nxl-item">
                                     <a href="{{ route('budget.summary.dashboard') }}" class="nxl-link">
                                         <i class="feather-pie-chart me-2"></i>
-                                        Program Allocation
+                                        {{ __('admin.program_allocation') }}
                                     </a>
                                 </li>
                             @endcan
@@ -222,7 +222,7 @@
                                 <li class="nxl-item">
                                     <a href="{{ route('budget.summary.executive') }}" class="nxl-link">
                                         <i class="feather-clipboard me-2"></i>
-                                        Allocations Reports
+                                        {{ __('admin.allocations_reports') }}
                                     </a>
                                 </li>
                             @endcan
@@ -232,7 +232,7 @@
                                 <li class="nxl-item">
                                     <a href="{{ route('reports.prescreening.index') }}" class="nxl-link">
                                         <i class="feather-file-text me-2"></i>
-                                        Prescreening Reports
+                                        {{ __('admin.prescreening_reports') }}
                                     </a>
                                 </li>
                             @endcan
@@ -241,7 +241,7 @@
                                 <li class="nxl-item">
                                     <a href="{{ route('reports.evaluations.index') }}" class="nxl-link">
                                         <i class="feather-file-text me-2"></i>
-                                        Evaluation Reports
+                                        {{ __('admin.evaluation_reports') }}
                                     </a>
                                 </li>
                             @endcan
@@ -267,7 +267,7 @@
                     ====================================================== --}}
                 @canany(['hr.access', 'hrm.positions.view', 'hrm.vacancies.view'])
                     <li class="nxl-item nxl-caption">
-                        <label>Human Capital Management</label>
+                        <label>{{ __('admin.human_capital') }}</label>
                     </li>
 
                     <li class="nxl-item nxl-hasmenu">
@@ -325,7 +325,7 @@
                 @canany(['procurement.create', 'procurement.view', 'procurement.manage', 'forms.manage',
                     'prescreening.evaluate', 'prescreening.manage', 'prescreening.view_all', 'procurement.audit'])
                     <li class="nxl-item nxl-caption">
-                        <label>Procurement Management</label>
+                        <label>{{ __('admin.procurement') }}</label>
                     </li>
 
                     <li class="nxl-item nxl-hasmenu">
@@ -462,7 +462,7 @@
 
                 @canany(['evaluations.manage', 'evaluations.evaluate'])
                     <li class="nxl-item nxl-caption">
-                        <label>Evaluation Management</label>
+                        <label>{{ __('admin.evaluation') }}</label>
                     </li>
 
                     <li class="nxl-item nxl-hasmenu">
@@ -528,7 +528,7 @@
                 {{-- ================= SITE VISITS ================= --}}
                 @canany(['site_visits.view', 'site_visits.create', 'site_visits.approve'])
                     <li class="nxl-item nxl-caption">
-                        <label>Site Visits</label>
+                        <label>{{ __('admin.site_visits') }}</label>
                     </li>
 
                     @can('site_visits.view')
@@ -587,7 +587,7 @@
                 {{-- ================= SYSTEM MANAGEMENT ================= --}}
                 @canany(['users.manage', 'roles.manage', 'permissions.manage', 'system.audit.view'])
                     <li class="nxl-item nxl-caption">
-                        <label>Users & Security</label>
+                        <label>{{ __('admin.users_security') }}</label>
                     </li>
 
                     @can('roles.manage')

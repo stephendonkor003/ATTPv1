@@ -47,6 +47,9 @@
         <div class="header-right ms-auto">
             <div class="d-flex align-items-center">
 
+                <!--! [Start] Language Selector !-->
+                <x-language-selector style="admin" />
+                <!--! [End] Language Selector !-->
 
                 <div class="nxl-h-item d-none d-sm-flex">
                     <div class="full-screen-switcher">

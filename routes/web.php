@@ -10,6 +10,7 @@
 use App\Http\Controllers\{
     DashboardController,
     LandingPageController,
+    LanguageController,
     ProfileController,
     ChangePasswordController,
     UserController,
@@ -147,7 +148,14 @@ use App\Http\Controllers\Procurement\{
 
 };
 
-
+/*
+|--------------------------------------------------------------------------
+| LANGUAGE SWITCHING ROUTES
+|--------------------------------------------------------------------------
+*/
+Route::post('/language/switch/{locale}', [LanguageController::class, 'switch'])->name('language.switch');
+Route::get('/language/current', [LanguageController::class, 'current'])->name('language.current');
+Route::get('/language/available', [LanguageController::class, 'available'])->name('language.available');
 
 Route::middleware(['auth', 'verified'])
     ->prefix('system')
@@ -1764,6 +1772,8 @@ Route::prefix('site-visits')->name('site-visits.')->group(function () {
 
 Route::get('/', [LandingPageController::class, 'index'])->name('landing.index');
 Route::get('/contact', [LandingPageController::class, 'contact'])->name('landing.contact');
+Route::get('/impact-map', [LandingPageController::class, 'impactMap'])->name('impact.map');
+Route::post('/impact-map/request-information', [LandingPageController::class, 'submitInformationRequest'])->name('impact.request');
 Route::get('/bids/{project}', [LandingPageController::class, 'showBid'])->name('landing.show');
 Route::get('/applicants', [ApplicantController::class, 'index'])->name('applicants.index');
 Route::get('/evaluation', [EvaluationController::class, 'index'])->name('evaluations.index');

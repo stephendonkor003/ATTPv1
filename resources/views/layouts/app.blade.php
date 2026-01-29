@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="{{ app()->getLocale() }}" dir="{{ app()->getLocale() === 'ar' ? 'rtl' : 'ltr' }}" data-theme="light">
 
 <head>
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="description" content="">
     <meta name="keyword" content="">
     <meta name="author" content="WRAPCODERS">
@@ -28,6 +29,14 @@
 
     <!-- Custom Theme CSS -->
     <link rel="stylesheet" href="{{ asset('admin/assets/css/theme.min.css') }}">
+
+    <!-- DataTable Custom CSS -->
+    <link rel="stylesheet" href="{{ asset('admin/assets/css/datatable-custom.css') }}">
+
+    <!-- RTL CSS for Arabic -->
+    @if(app()->getLocale() === 'ar')
+        <link rel="stylesheet" href="{{ asset('assets/css/rtl.css') }}">
+    @endif
 
     <!--[if lt IE 9]>
         <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
@@ -127,10 +136,11 @@
     <script src="{{ asset('admin/assets/vendors/js/select2-active.min.js') }}"></script>
     <script src="{{ asset('admin/assets/js/common-init.min.js') }}"></script>
     <script src="{{ asset('admin/assets/js/proposal-init.min.js') }}"></script>
-    <!-- jQuery -->
+
+    <!-- jQuery (loaded early for DataTables) -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-    <!-- DataTables CSS and JS -->
+    <!-- DataTables Core -->
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
@@ -143,35 +153,13 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
-    <script>
-        $(document).ready(function() {
-            $('#proposalList1').DataTable({
-                dom: 'Bfrtip',
-                buttons: [{
-                        extend: 'copy',
-                        className: 'btn-custom'
-                    },
-                    {
-                        extend: 'csv',
-                        className: 'btn-custom'
-                    },
-                    {
-                        extend: 'excel',
-                        className: 'btn-custom'
-                    },
-                    {
-                        extend: 'pdf',
-                        className: 'btn-custom'
-                    },
-                    {
-                        extend: 'print',
-                        className: 'btn-custom'
-                    }
-                ],
-                responsive: true
-            });
-        });
-    </script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.colVis.min.js"></script>
+
+    <!-- Custom DataTable Configuration -->
+    <script src="{{ asset('admin/assets/js/datatable-config.js') }}"></script>
+
+    <!-- Page-specific scripts -->
+    @stack('scripts')
 
 
 </body>

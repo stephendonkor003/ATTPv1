@@ -1,18 +1,24 @@
-<html lang="en">
+<html lang="{{ app()->getLocale() }}" dir="{{ app()->getLocale() === 'ar' ? 'rtl' : 'ltr' }}">
 
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Careers at 3pap – Join Africa’s Procurement Transformation</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Careers at ATTP – Join Africa's Procurement Transformation</title>
 
 
     <meta name="description"
-        content="Explore open career opportunities at 3pap and be part of Africa’s digital procurement transformation." />
-    <meta name="keywords" content="3pap careers, vacancies, procurement jobs, Africa, technology, digital procurement" />
-    <meta name="author" content="3pap Team" />
+        content="Explore open career opportunities at ATTP and be part of Africa’s digital procurement transformation." />
+    <meta name="keywords" content="ATTP careers, vacancies, procurement jobs, Africa, technology, digital procurement" />
+    <meta name="author" content="ATTP Team" />
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/assets/style.css" />
+
+    <!-- RTL CSS for Arabic -->
+    @if(app()->getLocale() === 'ar')
+        <link rel="stylesheet" href="{{ asset('assets/css/rtl.css') }}">
+    @endif
 
     <style>
         :root {
@@ -345,22 +351,24 @@
 
     <header class="navbar">
         <div class="logo">
-            <img src="{{ asset('assets/images/3pap.white.bg.africa.png') }}" class="logo logo-sm" alt="3pap">
+            <img src="{{ asset('assets/images/ATTP.white.bg.africa.png') }}" class="logo logo-sm" alt="ATTP">
         </div>
 
         ```
         <nav class="nav-links">
-            <a href="/">Home</a>
-            <a href="#culture">Our Culture</a>
-            <a href="#vacancies">Vacancies</a>
-            <a href="{{ route('events') }}">Events</a>
-            <a href="{{ route('careers') }}" class="active">Careers</a>
-            <a href="{{ route('applicants.faq') }}">FAQs</a>
+            <a href="/">{{ __('navigation.home') }}</a>
+            <a href="#culture">{{ __('navigation.our_culture') }}</a>
+            <a href="#vacancies">{{ __('navigation.vacancies') }}</a>
+            <a href="{{ route('events') }}">{{ __('navigation.events') }}</a>
+            <a href="{{ route('impact.map') }}">{{ __('navigation.impact_map') }}</a>
+            <a href="{{ route('careers') }}" class="active">{{ __('navigation.careers') }}</a>
+            <a href="{{ route('applicants.faq') }}">{{ __('navigation.faqs') }}</a>
         </nav>
 
         <div class="nav-actions">
-            <a href="{{ route('login') }}" class="btn btn-login">Login</a>
-            <a href="{{ route('applicants.create') }}" class="btn btn-primary">Call for Proposals</a>
+            <x-language-selector style="landing" />
+            <a href="{{ route('login') }}" class="btn btn-login">{{ __('navigation.login') }}</a>
+            <a href="{{ route('applicants.create') }}" class="btn btn-primary">{{ __('navigation.call_for_proposals') }}</a>
         </div>
         ```
 
@@ -370,10 +378,9 @@
 
     <section class="career-hero">
         <div class="content">
-            <h1>Build Your Career With 3pap</h1>
+            <h1>{{ __('career.hero_title') }}</h1>
             <p>
-                Join a purpose-driven team transforming public procurement across Africa through technology,
-                transparency, and innovation.
+                {{ __('career.hero_description') }}
             </p>
         </div>
     </section>
@@ -385,8 +392,8 @@
     <!-- ===== FILTER ===== -->
     <br>
     <div class="filter-bar" id="vacancies">
-        <input type="text" id="searchInput" placeholder="Search vacancies...">
-        <button onclick="filterVacancies()">Search</button>
+        <input type="text" id="searchInput" placeholder="{{ __('career.search_placeholder') }}">
+        <button onclick="filterVacancies()">{{ __('career.search_button') }}</button>
     </div>
 
     <!-- ===== VACANCIES ===== -->
@@ -398,18 +405,18 @@
             <div class="vacancy-card">
                 <h4>{{ $vacancy->title }}</h4>
                 <div class="vacancy-meta">
-                    Location: {{ $vacancy->location ?? 'Remote / Africa' }}
+                    {{ __('career.location_label') }}: {{ $vacancy->location ?? 'Remote / Africa' }}
                 </div>
                 <p>{{ Str::limit($vacancy->description, 150) }}</p>
 
                 <button class="apply-btn" data-id="{{ $vacancy->id }}" data-title="{{ $vacancy->title }}"
                     data-description="{{ $vacancy->description }}"
                     data-location="{{ $vacancy->location ?? 'Remote / Africa' }}" onclick="openApplyModal(this)">
-                    Apply Now
+                    {{ __('career.apply_now') }}
                 </button>
             </div>
         @empty
-            <p style="grid-column:1/-1; text-align:center;">No vacancies available at the moment.</p>
+            <p style="grid-column:1/-1; text-align:center;">{{ __('career.no_vacancies') }}</p>
         @endforelse
 
 
@@ -418,7 +425,7 @@
             <div class="modal-box" style="max-width:700px;">
                 <button class="close-btn" onclick="closeApplyModal()">&times;</button>
 
-                <h3 id="modalTitle">Apply for Position</h3>
+                <h3 id="modalTitle">{{ __('career.modal_title') }}</h3>
                 <p id="modalLocation" style="color:#a70d53; font-weight:600;"></p>
                 <p id="modalDescription" style="margin-bottom:1.5rem;"></p>
 
@@ -426,20 +433,20 @@
                     @csrf
                     <input type="hidden" name="vacancy_id" id="vacancy_id">
 
-                    <input type="text" name="full_name" placeholder="Full Name" required class="form-control mb-3">
-                    <input type="email" name="email" placeholder="Email Address" required class="form-control mb-3">
-                    <input type="text" name="phone" placeholder="Phone Number" required class="form-control mb-3">
-                    <input type="text" name="nationality" placeholder="Nationality (optional)"
+                    <input type="text" name="full_name" placeholder="{{ __('career.full_name') }}" required class="form-control mb-3">
+                    <input type="email" name="email" placeholder="{{ __('career.email') }}" required class="form-control mb-3">
+                    <input type="text" name="phone" placeholder="{{ __('career.phone') }}" required class="form-control mb-3">
+                    <input type="text" name="nationality" placeholder="{{ __('career.nationality') }}"
                         class="form-control mb-3">
 
-                    <label>Upload CV (PDF/DOC/DOCX)</label>
+                    <label>{{ __('career.upload_cv') }}</label>
                     <input type="file" name="resume" accept=".pdf,.doc,.docx" required class="form-control mb-3">
 
-                    <label>Upload Cover Letter (PDF/DOC/DOCX)</label>
+                    <label>{{ __('career.upload_cover_letter') }}</label>
                     <input type="file" name="cover_letter" accept=".pdf,.doc,.docx" required
                         class="form-control mb-3">
 
-                    <button type="submit" class="apply-btn" style="width:100%;">Submit Application</button>
+                    <button type="submit" class="apply-btn" style="width:100%;">{{ __('career.submit_application') }}</button>
                 </form>
             </div>
         </div>
@@ -448,9 +455,9 @@
             <div class="modal" id="successModal">
                 <div class="modal-box">
                     <button class="close-btn" onclick="closeSuccessModal()">&times;</button>
-                    <h3>Application Submitted!</h3>
-                    <p>Your job application has been sent successfully. We will review it and get back to you soon.</p>
-                    <button class="apply-btn" onclick="closeSuccessModal()">Close</button>
+                    <h3>{{ __('career.success_title') }}</h3>
+                    <p>{{ __('career.success_message') }}</p>
+                    <button class="apply-btn" onclick="closeSuccessModal()">{{ __('career.close') }}</button>
                 </div>
             </div>
         @endif
@@ -515,29 +522,29 @@
     <footer id="contact" class="footer">
         <div class="footer-content">
             <div class="footer-logo">
-                <h3>3pap.<span>Africa</span></h3>
-                <p>Digitalizing procurement across Africa — empowering organizations with transparency and efficiency.
+                <h3>ATTP.<span>Africa</span></h3>
+                <p>{{ __('landing.footer_tagline') }}
                 </p>
 
             </div>
 
             <div class="footer-links">
-                <h4>Quick Links</h4>
-                <a href="#">Home</a>
-                <a href="#process">System Flow</a>
-                <a href="#customization">Customization</a>
-                <a href="#">Contact</a>
+                <h4>{{ __('landing.quick_links') }}</h4>
+                <a href="#">{{ __('navigation.home') }}</a>
+                <a href="#process">{{ __('navigation.process') }}</a>
+                <a href="#customization">{{ __('navigation.customization') }}</a>
+                <a href="#">{{ __('navigation.contact') }}</a>
             </div>
 
             <div class="footer-contact">
-                <h4>Contact</h4>
-                <p>Email: info@3pap.africa</p>
-                <p>© 2025 3pap. All Rights Reserved.</p>
+                <h4>{{ __('navigation.contact') }}</h4>
+                <p>{{ __('landing.contact_email') }}: {{ __('landing.contact_info') }}</p>
+                <p>© 2025 ATTP. {{ __('common.all_rights_reserved') }}.</p>
             </div>
 
         </div>
         <p style="margin-top: 10px; font-weight: 600; text-align: center;">
-            A product of NPCT ESG Global Consultancy, Pretoria, RSA.
+            {{ __('common.powered_by') }}
         </p>
 
     </footer>

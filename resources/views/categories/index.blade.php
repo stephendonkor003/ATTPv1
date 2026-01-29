@@ -26,35 +26,32 @@
 
             <div class="main-content">
                 <div class="card">
-                    <div class="card-body table-responsive">
-                        <table class="table table-hover" style="width:100%" id="proposalList1">
+                    <div class="card-body">
+                        <x-data-table id="categoriesTable" :striped="true" :hover="true">
                             <thead>
                                 <tr>
-                                    <th>#</th>
+                                    <th class="text-center" style="width: 50px;">#</th>
                                     <th>Name</th>
                                     <th>Description</th>
                                     <th>Created By</th>
-                                    <th>Actions</th>
+                                    <th class="text-center no-sort no-export" style="width: 120px;">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @forelse ($categories as $index => $category)
                                     <tr>
-                                        <td>{{ $index + 1 }}</td>
-                                        <td>{{ $category->name }}</td>
-                                        <td>{{ Str::limit($category->description, 50) }}</td>
-                                        <td>{{ $category->creator->name ?? 'N/A' }}</td>
+                                        <td class="text-center">{{ $index + 1 }}</td>
+                                        <td><strong>{{ $category->name }}</strong></td>
+                                        <td>{{ Str::limit($category->description, 80) }}</td>
                                         <td>
-                                            <div class="d-flex gap-1">
-                                                <a href="{{ route('categories.edit', $category->id) }}"
-                                                    class="btn btn-sm btn-outline-primary">Edit</a>
-                                                <form action="{{ route('categories.destroy', $category->id) }}"
-                                                    method="POST" onsubmit="return confirm('Delete this category?')">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button class="btn btn-sm btn-outline-danger">Delete</button>
-                                                </form>
-                                            </div>
+                                            <span class="badge bg-info">{{ $category->creator->name ?? 'N/A' }}</span>
+                                        </td>
+                                        <td class="text-center">
+                                            <x-table-actions
+                                                :editRoute="route('categories.edit', $category->id)"
+                                                :deleteRoute="route('categories.destroy', $category->id)"
+                                                deleteMessage="Are you sure you want to delete this category?"
+                                            />
                                         </td>
                                     </tr>
                                 @empty
@@ -63,10 +60,7 @@
                                     </tr>
                                 @endforelse
                             </tbody>
-                        </table>
-                        <div class="m-3">
-                            {{ $categories->links('pagination::bootstrap-5') }}
-                        </div>
+                        </x-data-table>
                     </div>
                 </div>
             </div>

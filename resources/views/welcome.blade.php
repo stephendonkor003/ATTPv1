@@ -1,12 +1,13 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ app()->getLocale() }}" dir="{{ app()->getLocale() === 'ar' ? 'rtl' : 'ltr' }}">
 
 <head>
     <!-- Basic Meta -->
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>ATTP ? African Think Tank Platform Administration | African Union</title>
+    <title>{{ __('landing.page_title') }}</title>
 
     <meta name="description"
         content="ATTP (African Think Tank Platform Administration) is a pan-African knowledge and policy coordination platform supporting African Union institutions, think tanks, and development partners." />
@@ -45,6 +46,11 @@
     <!-- Fonts & Styles -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="{{ asset('assets/style.css') }}" />
+
+    <!-- RTL CSS for Arabic -->
+    @if(app()->getLocale() === 'ar')
+        <link rel="stylesheet" href="{{ asset('assets/css/rtl.css') }}">
+    @endif
 
     <!-- Schema.org Markup -->
     <script type="application/ld+json">
@@ -105,18 +111,19 @@
 
         </div>
         <nav class="nav-links">
-            <a href="{{ route('landing.index') }}">Home</a>
-            <a href="#annoucements">Annoucements</a>
-            <a href="{{ route('events') }}">Events / Webinars</a>
-            {{-- <a href="#customization">Customization</a> --}}
-            <a href="#contact">Contact</a>
-            <a href="{{ route('careers.index') }}">Career</a>
+            <a href="{{ route('landing.index') }}">{{ __('navigation.home') }}</a>
+            <a href="#annoucements">{{ __('landing.announcements') }}</a>
+            <a href="{{ route('events') }}">{{ __('landing.events_webinars') }}</a>
+            <a href="{{ route('impact.map') }}">{{ __('navigation.impact_map') }}</a>
+            <a href="#contact">{{ __('navigation.contact') }}</a>
+            <a href="{{ route('careers.index') }}">{{ __('navigation.careers') }}</a>
         </nav>
 
         <div class="nav-actions">
-            <a href="{{ route('login') }}" class="btn btn-login">Login</a>
+            <x-language-selector style="landing" />
+            <a href="{{ route('login') }}" class="btn btn-login">{{ __('navigation.login') }}</a>
             <a href="{{ route('public.procurement.index') }}" class="btn btn-primary">
-                Policy Programs & Research
+                {{ __('landing.policy_programs') }}
             </a>
 
 
@@ -138,12 +145,11 @@
             <br>
             <h1 id="typewriter" class="typing-text"></h1>
             <p>
-                Strengthening Africa's policy ecosystem by supporting African Union institutions,
-                think tanks, and partners through coordinated governance and strategic insight.
+                {{ __('landing.hero_subtitle') }}
             </p>
 
             <a href="{{ route('public.procurement.index') }}" class="cta-btn">
-                Explore Policy Programs & Initiatives
+                {{ __('landing.hero_cta') }}
             </a>
         </div>
     </section>
@@ -152,93 +158,83 @@
     <!-- ====== SYSTEM PROCESS FLOW ====== -->
     <!-- ====== SYSTEM PROCESS FLOW ====== -->
     <section id="process" class="process-section">
-        <h2>Institutional Process Flow</h2>
+        <h2>{{ __('landing.process_title') }}</h2>
         <p>
-            A comprehensive end-to-end framework supporting African Union programs,
-            financial governance, procurement harmonization, compliance, and accountability.
+            {{ __('landing.process_subtitle') }}
         </p>
 
         <div class="process-flow">
 
             <div class="flow-card">
                 <span>1</span>
-                <h3>Strategic Policy Alignment</h3>
+                <h3>{{ __('landing.step1_title') }}</h3>
                 <p>
-                    Alignment of initiatives with African Union agendas, continental frameworks,
-                    and approved policy priorities.
+                    {{ __('landing.step1_desc') }}
                 </p>
             </div>
 
             <div class="flow-card">
                 <span>2</span>
-                <h3>Program & Project Identification</h3>
+                <h3>{{ __('landing.step2_title') }}</h3>
                 <p>
-                    Identification and definition of programs and projects based on strategic needs,
-                    development goals, and institutional mandates.
+                    {{ __('landing.step2_desc') }}
                 </p>
             </div>
 
             <div class="flow-card">
                 <span>3</span>
-                <h3>Budgetary Intelligence & Planning</h3>
+                <h3>{{ __('landing.step3_title') }}</h3>
                 <p>
-                    Financial analysis, cost estimation, and budget planning to support evidence-based
-                    decision-making and fiscal sustainability.
+                    {{ __('landing.step3_desc') }}
                 </p>
             </div>
 
             <div class="flow-card">
                 <span>4</span>
-                <h3>Budget Control & Authorization</h3>
+                <h3>{{ __('landing.step4_title') }}</h3>
                 <p>
-                    Validation, approval, and control of budget allocations to ensure compliance
-                    with financial rules and expenditure limits.
+                    {{ __('landing.step4_desc') }}
                 </p>
             </div>
 
             <div class="flow-card">
                 <span>5</span>
-                <h3>Procurement Standardization</h3>
+                <h3>{{ __('landing.step5_title') }}</h3>
                 <p>
-                    Application of harmonized procurement standards and procedures to promote
-                    transparency, competition, and value for money.
+                    {{ __('landing.step5_desc') }}
                 </p>
             </div>
 
             <div class="flow-card">
                 <span>6</span>
-                <h3>360? Evaluation & Due Diligence</h3>
+                <h3>{{ __('landing.step6_title') }}</h3>
                 <p>
-                    Comprehensive technical, financial, legal, and policy evaluations to ensure
-                    full compliance and risk mitigation.
+                    {{ __('landing.step6_desc') }}
                 </p>
             </div>
 
             <div class="flow-card">
                 <span>7</span>
-                <h3>Funds Commitment & Regulatory Approval</h3>
+                <h3>{{ __('landing.step7_title') }}</h3>
                 <p>
-                    Formal commitment of funds and regulatory clearance in accordance with
-                    institutional, regional, and international regulations.
+                    {{ __('landing.step7_desc') }}
                 </p>
             </div>
 
             <div class="flow-card">
                 <span>8</span>
-                <h3>Monitoring, Reporting & Audit</h3>
+                <h3>{{ __('landing.step8_title') }}</h3>
                 <p>
-                    Continuous performance monitoring, reporting, and audit readiness to ensure
-                    accountability, transparency, and institutional learning.
+                    {{ __('landing.step8_desc') }}
                 </p>
             </div>
 
         </div>
     </section>
     <section id="annoucements" class="process-section">
-        <h2>ATTP Grants & Award Announcement</h2>
+        <h2>{{ __('landing.grants_title') }}</h2>
         <p>
-            The African Think Tank Platform (ATTP) is pleased to officially announce the
-            award of grants under the ATTP Call for Proposals.
+            {{ __('landing.grants_subtitle') }}
         </p>
 
         <div class="annoucment">
@@ -247,11 +243,11 @@
                 <span>1</span>
                 <h3>English (EN)</h3>
                 <p>
-                    Download the official ATTP Grants & Award Announcement document in English.
+                    {{ __('landing.download_en') }}
                 </p>
                 <a href="{{ asset('assets/award/ATTP_Award_Announcement_EN.pdf') }}" class="btn-view" target="_blank"
                     rel="noopener noreferrer">
-                    Download English Version
+                    {{ __('landing.download_version', ['language' => 'English']) }}
                 </a>
             </div>
 
@@ -259,11 +255,11 @@
                 <span>2</span>
                 <h3>French (FR)</h3>
                 <p>
-                    Download the official ATTP Grants & Award Announcement document in French.
+                    {{ __('landing.download_fr') }}
                 </p>
                 <a href="{{ asset('assets/award/ATTP_Award_Announcement_FR.pdf') }}" class="btn-view" target="_blank"
                     rel="noopener noreferrer">
-                    Download French Version
+                    {{ __('landing.download_version', ['language' => 'French']) }}
                 </a>
             </div>
 
@@ -271,11 +267,11 @@
                 <span>3</span>
                 <h3>Arabic (AR)</h3>
                 <p>
-                    Download the official ATTP Grants & Award Announcement document in Arabic.
+                    {{ __('landing.download_ar') }}
                 </p>
                 <a href="{{ asset('assets/award/ATTP_Award_Announcement_AR.pdf') }}" class="btn-view"
                     target="_blank" rel="noopener noreferrer">
-                    Download Arabic Version
+                    {{ __('landing.download_version', ['language' => 'Arabic']) }}
                 </a>
             </div>
 
@@ -283,11 +279,11 @@
                 <span>4</span>
                 <h3>Portuguese (PT)</h3>
                 <p>
-                    Download the official ATTP Grants & Award Announcement document in Portuguese.
+                    {{ __('landing.download_pt') }}
                 </p>
                 <a href="{{ asset('assets/award/ATTP_Award_Announcement_PT.pdf') }}" class="btn-view"
                     target="_blank" rel="noopener noreferrer">
-                    Download Portuguese Version
+                    {{ __('landing.download_version', ['language' => 'Portuguese']) }}
                 </a>
             </div>
 
@@ -295,11 +291,11 @@
                 <span>5</span>
                 <h3>Spanish (ES)</h3>
                 <p>
-                    Download the official ATTP Grants & Award Announcement document in Spanish.
+                    {{ __('landing.download_es') }}
                 </p>
                 <a href="{{ asset('assets/award/ATTP_Award_Announcement_ES.pdf') }}" class="btn-view"
                     target="_blank" rel="noopener noreferrer">
-                    Download Spanish Version
+                    {{ __('landing.download_version', ['language' => 'Spanish']) }}
                 </a>
             </div>
 
@@ -307,11 +303,11 @@
                 <span>6</span>
                 <h3>Swahili (SW)</h3>
                 <p>
-                    Download the official ATTP Grants & Award Announcement document in Swahili.
+                    {{ __('landing.download_sw') }}
                 </p>
                 <a href="{{ asset('assets/award/ATTP_Award_Announcement_SW.pdf') }}" class="btn-view"
                     target="_blank" rel="noopener noreferrer">
-                    Download Swahili Version
+                    {{ __('landing.download_version', ['language' => 'Swahili']) }}
                 </a>
             </div>
 
@@ -327,19 +323,17 @@
     <!-- ====== CUSTOMIZATION SECTION ====== -->
     <section id="customization" class="customization-section">
         <div class="content">
-            <h2>Centralized Governance & Strategic Oversight</h2>
+            <h2>{{ __('landing.governance_title') }}</h2>
             <p>
-                The ATTP platform provides a unified digital environment for centralizing
-                institutional workflows, harmonizing reporting standards, and delivering
-                real-time, bird?s-eye insight into funded programs and projects across Africa.
+                {{ __('landing.governance_subtitle') }}
             </p>
 
             <ul>
-                <li>End-to-end process flow centralization</li>
-                <li>Harmonized reporting frameworks across institutions</li>
-                <li>Executive-level visibility into funded programs and projects</li>
-                <li>Consolidated dashboards for performance, finance, and compliance</li>
-                <li>Secure, role-based access aligned with governance structures</li>
+                <li>{{ __('landing.governance_item1') }}</li>
+                <li>{{ __('landing.governance_item2') }}</li>
+                <li>{{ __('landing.governance_item3') }}</li>
+                <li>{{ __('landing.governance_item4') }}</li>
+                <li>{{ __('landing.governance_item5') }}</li>
             </ul>
         </div>
     </section>
@@ -353,24 +347,22 @@
             <div class="footer-logo">
                 <h3>ATTP<span> Administration</span></h3>
                 <p>
-                    African Think Tank Platform Administration ? supporting African Union
-                    institutions through centralized governance, policy coordination,
-                    and strategic oversight of programs and funded initiatives.
+                    {{ __('landing.footer_description') }}
                 </p>
             </div>
 
             <div class="footer-links">
-                <h4>Quick Links</h4>
-                <a href="#">Home</a>
-                <a href="#process">Institutional Process Flow</a>
-                <a href="#customization">Centralized Oversight</a>
-                <a href="#contact">Contact</a>
+                <h4>{{ __('landing.footer_links_title') }}</h4>
+                <a href="#">{{ __('landing.footer_link_home') }}</a>
+                <a href="#process">{{ __('landing.footer_link_process') }}</a>
+                <a href="#customization">{{ __('landing.footer_link_oversight') }}</a>
+                <a href="#contact">{{ __('navigation.contact') }}</a>
             </div>
 
             <div class="footer-contact">
-                <h4>Contact</h4>
-                <p>Email: attpinfo@africanunion.org</p>
-                <p>? 2026 African Think Tank Platform Administration (ATTP)</p>
+                <h4>{{ __('landing.footer_contact_title') }}</h4>
+                <p>{{ __('landing.footer_email') }}</p>
+                <p>{{ __('landing.footer_copyright', ['year' => date('Y')]) }}</p>
             </div>
 
         </div>
