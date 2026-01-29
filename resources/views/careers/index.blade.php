@@ -4,13 +4,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Careers at 3pap – Join Africa’s Procurement Transformation</title>
+    <title>Careers at ATTP – Join Africa’s Procurement Transformation</title>
 
     {{-- SEO --}}
     <meta name="description"
-        content="Explore open career opportunities at 3pap and be part of Africa’s digital procurement transformation.">
-    <meta name="keywords" content="3pap careers, vacancies, procurement jobs, Africa, technology, digital procurement">
-    <meta name="author" content="3pap Team">
+        content="Explore open career opportunities at ATTP and be part of Africa’s digital procurement transformation.">
+    <meta name="keywords" content="ATTP careers, vacancies, procurement jobs, Africa, technology, digital procurement">
+    <meta name="author" content="ATTP Team">
 
     {{-- Fonts --}}
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
@@ -195,7 +195,7 @@
     {{-- ================= NAVBAR ================= --}}
     <header class="navbar">
         <div class="logo">
-            <img src="{{ asset('assets/images/3pap.white.bg.africa.png') }}" alt="3pap" style="height:40px">
+            <img src="{{ asset('assets/images/ATTP.white.bg.africa.png') }}" alt="ATTP" style="height:40px">
         </div>
 
         <nav class="nav-links">
@@ -209,7 +209,7 @@
     {{-- ================= HERO ================= --}}
     <section class="career-hero">
         <div class="content">
-            <h1>Build Your Career With 3pap</h1>
+            <h1>Build Your Career With ATTP</h1>
             <p>
                 Join a purpose-driven team transforming public procurement across Africa through
                 technology, transparency, and innovation.

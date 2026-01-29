@@ -9,7 +9,7 @@
             <div class="page-header">
                 <div class="page-header-left d-flex align-items-center">
                     <div class="page-header-title">
-                        <h5 class="m-b-10">3Pap Portal Dashboard</h5>
+                        <h5 class="m-b-10">ATTP Portal Dashboard</h5>
                     </div>
                 </div>
                 <div class="page-header-right ms-auto text-end">

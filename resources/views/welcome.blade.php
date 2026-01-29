@@ -100,7 +100,7 @@
     <!-- ====== NAVBAR ====== -->
     <header class="navbar">
         <div class="logo">
-            {{-- 3pap<span>.africa</span> --}}
+            {{-- ATTP<span>.africa</span> --}}
             <img src="{{ asset('assets/images/au.png ') }}" alt="ATTP" class="logo logo-sm">
 
         </div>

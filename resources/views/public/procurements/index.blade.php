@@ -3,10 +3,10 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Open Procurements | 3pap Africa</title>
+    <title>Open Procurements | ATTP Africa</title>
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Explore open procurement opportunities and apply digitally on 3pap Africa.">
+    <meta name="description" content="Explore open procurement opportunities and apply digitally on ATTP Africa.">
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/assets/style.css">
@@ -201,7 +201,7 @@
             <h1>Open Procurement Opportunities</h1>
             <p>
                 Browse available procurement calls and submit your application
-                digitally through the 3pap platform.
+                digitally through the ATTP platform.
             </p>
         </div>
     </section>

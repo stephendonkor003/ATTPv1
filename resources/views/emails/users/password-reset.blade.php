@@ -27,7 +27,7 @@
             </div>
 
             <p style="margin-top: 30px;">Log in here:
-                <a href="https://africathinktankplatform.africa/login" style="color: #007144;">
+                <a href="https://uat.africathinktankplatform.africa/login" style="color: #007144;">
                     Access Your Account
                 </a>
             </p>
