@@ -8,6 +8,7 @@ use App\Mail\Security\PasswordChangedMail;
 use App\Models\UserLoginOtp;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rules\Password;
 
@@ -81,10 +82,11 @@ class SecurityController extends Controller
         Mail::to($user->email)->queue(new PasswordChangedMail($user));
 
         // Log the activity
-        activity()
-            ->causedBy($user)
-            ->performedOn($user)
-            ->log('Password changed successfully');
+        Log::info('Password changed successfully', [
+            'user_id' => $user->id,
+            'email' => $user->email,
+            'ip' => $request->ip(),
+        ]);
 
         return redirect()->intended(route('dashboard'))
             ->with('success', 'Your password has been updated successfully. Your account is now active.');
@@ -146,11 +148,11 @@ class SecurityController extends Controller
         $user->markOtpAsVerified();
 
         // Log the activity
-        activity()
-            ->causedBy($user)
-            ->performedOn($user)
-            ->withProperties(['ip' => $request->ip()])
-            ->log('OTP verification successful');
+        Log::info('OTP verification successful', [
+            'user_id' => $user->id,
+            'email' => $user->email,
+            'ip' => $request->ip(),
+        ]);
 
         return redirect()->intended(route('dashboard'))
             ->with('success', 'Identity verified successfully. Welcome back!');
@@ -187,10 +189,10 @@ class SecurityController extends Controller
         Mail::to($user->email)->queue(new LoginOtpMail($user, $otp->otp_code));
 
         // Log the activity
-        activity()
-            ->causedBy($user)
-            ->performedOn($user)
-            ->withProperties(['ip' => request()->ip()])
-            ->log('Login OTP code sent');
+        Log::info('Login OTP code sent', [
+            'user_id' => $user->id,
+            'email' => $user->email,
+            'ip' => request()->ip(),
+        ]);
     }
 }
