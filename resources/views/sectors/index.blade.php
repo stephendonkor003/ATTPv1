@@ -7,17 +7,19 @@
             <h4 class="fw-bold text-dark">Sectors</h4>
             @can('sector.create')
                 <a href="{{ route('budget.sectors.create') }}" class="btn btn-primary">
-                    <i class="bi bi-plus-circle me-1"></i> New Sector
+                    <i class="feather-plus-circle me-1"></i> New Sector
                 </a>
             @endcan
         </div>
 
         <div class="card mt-3 shadow-sm">
             <div class="card-body">
-                <table class="table table-bordered table-striped align-middle">
+                <x-data-table
+                    id="sectorsTable"
+                >
                     <thead class="table-light">
                         <tr>
-                            <th>#</th>
+                            <th width="50">#</th>
                             <th>Name</th>
                             <th>Description</th>
                             <th>Governance</th>
@@ -26,9 +28,13 @@
                     <tbody>
                         @foreach ($sectors as $sector)
                             <tr>
-                                <td>{{ $sector->id }}</td>
-                                <td>{{ $sector->name }}</td>
-                                <td>{{ $sector->description }}</td>
+                                <td>{{ $loop->iteration }}</td>
+                                <td>
+                                    <div class="fw-semibold text-dark">{{ $sector->name }}</div>
+                                </td>
+                                <td>
+                                    <span class="text-muted">{{ Str::limit($sector->description, 80) ?? '—' }}</span>
+                                </td>
                                 <td>
                                     <div class="fw-semibold">
                                         {{ $sector->governanceNode->name ?? '-' }}
@@ -40,7 +46,7 @@
                             </tr>
                         @endforeach
                     </tbody>
-                </table>
+                </x-data-table>
             </div>
         </div>
 

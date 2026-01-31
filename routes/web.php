@@ -157,7 +157,7 @@ Route::post('/language/switch/{locale}', [LanguageController::class, 'switch'])-
 Route::get('/language/current', [LanguageController::class, 'current'])->name('language.current');
 Route::get('/language/available', [LanguageController::class, 'available'])->name('language.available');
 
-Route::middleware(['auth', 'verified'])
+Route::middleware(['auth', 'verified', 'not.funding.partner'])
     ->prefix('system')
     ->name('system.')
     ->group(function () {
@@ -288,7 +288,7 @@ Route::prefix('careers')->name('careers.')->group(function () {
 });
 
 
-  Route::middleware(['auth'])
+  Route::middleware(['auth', 'not.funding.partner'])
     ->prefix('hr')
     ->name('hr.')
     ->group(function () {
@@ -306,6 +306,16 @@ Route::prefix('careers')->name('careers.')->group(function () {
         Route::post('positions', [HrController::class, 'storePosition'])
             ->middleware('permission:hrm.positions.create')
             ->name('positions.store');
+
+        // UPDATE
+        Route::put('positions/{position}', [HrController::class, 'updatePosition'])
+            ->middleware('permission:hrm.positions.edit')
+            ->name('positions.update');
+
+        // DELETE
+        Route::delete('positions/{position}', [HrController::class, 'destroyPosition'])
+            ->middleware('permission:hrm.positions.delete')
+            ->name('positions.destroy');
 
 
         /* =====================================================
@@ -400,7 +410,7 @@ Route::prefix('careers')->name('careers.')->group(function () {
 
 
 
-Route::middleware(['auth', 'permission:finance.access'])
+Route::middleware(['auth', 'not.funding.partner', 'permission:finance.access'])
     ->prefix('finance')
     ->name('finance.')
     ->group(function () {
@@ -466,6 +476,14 @@ Route::middleware(['auth', 'permission:finance.access'])
             ->middleware('permission:finance.resources.create')
             ->name('resources.categories.store');
 
+        Route::put('resources/categories/{category}', [BudgetCommitmentController::class, 'updateResourceCategory'])
+            ->middleware('permission:finance.resources.edit')
+            ->name('resources.categories.update');
+
+        Route::delete('resources/categories/{category}', [BudgetCommitmentController::class, 'destroyResourceCategory'])
+            ->middleware('permission:finance.resources.delete')
+            ->name('resources.categories.destroy');
+
         Route::get('resources/items', [BudgetCommitmentController::class, 'resources'])
             ->middleware('permission:finance.resources.view')
             ->name('resources.items.index');
@@ -473,6 +491,14 @@ Route::middleware(['auth', 'permission:finance.access'])
         Route::post('resources/items', [BudgetCommitmentController::class, 'storeResource'])
             ->middleware('permission:finance.resources.create')
             ->name('resources.items.store');
+
+        Route::put('resources/items/{resource}', [BudgetCommitmentController::class, 'updateResource'])
+            ->middleware('permission:finance.resources.edit')
+            ->name('resources.items.update');
+
+        Route::delete('resources/items/{resource}', [BudgetCommitmentController::class, 'destroyResource'])
+            ->middleware('permission:finance.resources.delete')
+            ->name('resources.items.destroy');
 
 
 
@@ -704,7 +730,7 @@ Route::middleware(['auth', 'permission:finance.access'])
 
 
 
-Route::middleware(['auth'])
+Route::middleware(['auth', 'not.funding.partner'])
     ->prefix('budget')
     ->name('budget.')
     ->group(function () {
@@ -947,7 +973,7 @@ Route::middleware(['auth'])
 
 
 
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth', 'verified', 'not.funding.partner'])->group(function () {
 
     /* =====================================================
      | DASHBOARD (ROLE / PERMISSION BASED)
@@ -1031,7 +1057,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 //         Route::post('{procurement}/award', 'award')->name('award');
 // });
 
-Route::middleware(['auth'])
+Route::middleware(['auth', 'not.funding.partner'])
     ->prefix('procurements')
     ->name('procurements.')
     ->group(function () {
@@ -1078,7 +1104,7 @@ Route::middleware(['auth'])
 
     use App\Http\Controllers\Procurement\ProcurementStatusController;
 
-Route::middleware(['auth'])
+Route::middleware(['auth', 'not.funding.partner'])
     ->prefix('procurement-status')
     ->name('statusProcurement.')
     ->group(function () {
@@ -1110,7 +1136,7 @@ Route::middleware(['auth'])
 
 
 
-Route::middleware(['auth', 'permission:forms.manage'])
+Route::middleware(['auth', 'not.funding.partner', 'permission:forms.manage'])
     ->prefix('procurement/forms')
     ->group(function () {
 
@@ -1198,7 +1224,7 @@ Route::middleware(['auth'])
 
 
 
-Route::middleware(['auth', 'can:procurement.audit'])
+Route::middleware(['auth', 'not.funding.partner', 'can:procurement.audit'])
     ->prefix('procurement/audit')
     ->group(function () {
 
@@ -1228,7 +1254,7 @@ Route::prefix('procurement/submissions')
 
 
 // todays code
-Route::middleware(['auth'])
+Route::middleware(['auth', 'not.funding.partner'])
     ->prefix('prescreening/templates')
     ->name('prescreening.templates.')
     ->group(function () {
@@ -1307,7 +1333,7 @@ Route::middleware(['auth'])
 
 
 
-Route::middleware(['auth'])
+Route::middleware(['auth', 'not.funding.partner'])
     ->prefix('prescreening')
     ->group(function () {
 
@@ -1337,7 +1363,7 @@ Route::middleware(['auth'])
          ->name('prescreening.submissions.rework');
     });
 
-Route::middleware(['auth', 'permission:prescreening.evaluate'])
+Route::middleware(['auth', 'not.funding.partner', 'permission:prescreening.evaluate'])
     ->get('prescreening/my-assignments', [PrescreeningUserAssignmentController::class, 'myAssignments'])
     ->name('prescreening.assignments.my');
 
@@ -1407,7 +1433,7 @@ use App\Http\Controllers\EvaluationCriteriaController;
 | EVALUATION CONFIGURATION (ADMIN)
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'permission:evaluations.manage'])
+Route::middleware(['auth', 'not.funding.partner', 'permission:evaluations.manage'])
     ->prefix('evals/config')
     ->name('evals.cfg.')
     ->group(function () {
@@ -1503,7 +1529,7 @@ Route::middleware(['auth', 'permission:evaluations.manage'])
 | PROCUREMENT → EVALUATION LINKING (STILL PHASE 1)
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'permission:evaluations.manage'])
+Route::middleware(['auth', 'not.funding.partner', 'permission:evaluations.manage'])
     ->prefix('procurements')
     ->name('procurements.')
     ->group(function () {
@@ -1530,7 +1556,7 @@ use App\Http\Controllers\EvaluationScoringController;
 | EVALUATOR SIDE
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'permission:evaluations.evaluate'])
+Route::middleware(['auth', 'not.funding.partner', 'permission:evaluations.evaluate'])
     ->prefix('my-evaluations')
     ->name('my.eval.')
     ->group(function () {
@@ -1575,7 +1601,7 @@ Route::middleware(['auth', 'permission:evaluations.evaluate'])
 | SCORING (AJAX)
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'permission:evaluations.evaluate'])
+Route::middleware(['auth', 'not.funding.partner', 'permission:evaluations.evaluate'])
     ->prefix('evaluation/score')
     ->name('eval.score.')
     ->group(function () {
@@ -1596,7 +1622,7 @@ Route::middleware(['auth', 'permission:evaluations.evaluate'])
 */
 
 
-Route::middleware(['auth', 'permission:evaluations.manage'])
+Route::middleware(['auth', 'not.funding.partner', 'permission:evaluations.manage'])
     ->prefix('evaluation-assignments')
     ->name('eval.assign.')
     ->group(function () {
@@ -1617,7 +1643,7 @@ Route::middleware(['auth', 'permission:evaluations.manage'])
         )->name('destroy');
 });
 
-Route::middleware(['auth', 'permission:evaluations.evaluate'])
+Route::middleware(['auth', 'not.funding.partner', 'permission:evaluations.evaluate'])
     ->prefix('evaluation-assignments')
     ->name('eval.assign.')
     ->group(function () {
@@ -1651,7 +1677,7 @@ Route::middleware(['auth', 'permission:evaluations.evaluate'])
         )->name('view');
     });
 
-Route::middleware(['auth', 'permission:evaluations.evaluate'])
+Route::middleware(['auth', 'not.funding.partner', 'permission:evaluations.evaluate'])
     ->prefix('panel-evaluations')
     ->name('eval.panel.')
     ->group(function () {
@@ -1772,8 +1798,19 @@ Route::prefix('site-visits')->name('site-visits.')->group(function () {
 
 Route::get('/', [LandingPageController::class, 'index'])->name('landing.index');
 Route::get('/contact', [LandingPageController::class, 'contact'])->name('landing.contact');
-Route::get('/impact-map', [LandingPageController::class, 'impactMap'])->name('impact.map');
 Route::post('/impact-map/request-information', [LandingPageController::class, 'submitInformationRequest'])->name('impact.request');
+
+/*
+|--------------------------------------------------------------------------
+| IMPACT MAP (Real Data from Program Funding)
+|--------------------------------------------------------------------------
+*/
+use App\Http\Controllers\ImpactMapController;
+
+Route::get('/impact-map', [ImpactMapController::class, 'index'])->name('impact.map');
+Route::post('/api/impact-map/filter', [ImpactMapController::class, 'getFilteredData'])->name('impact.filter');
+Route::get('/impact-map/download/pdf', [ImpactMapController::class, 'downloadPdf'])->name('impact.download.pdf');
+Route::get('/impact-map/download/excel', [ImpactMapController::class, 'downloadExcel'])->name('impact.download.excel');
 Route::get('/bids/{project}', [LandingPageController::class, 'showBid'])->name('landing.show');
 Route::get('/applicants', [ApplicantController::class, 'index'])->name('applicants.index');
 Route::get('/evaluation', [EvaluationController::class, 'index'])->name('evaluations.index');
@@ -1782,7 +1819,7 @@ Route::get('/create/{applicant_id}', [EvaluationController::class, 'create'])
 
 Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
 
-Route::middleware(['auth', 'permission:prescreening.reports.view_all'])
+Route::middleware(['auth', 'not.funding.partner', 'permission:prescreening.reports.view_all'])
     ->prefix('reports/prescreening')
     ->name('reports.prescreening.')
     ->group(function () {
@@ -1795,7 +1832,7 @@ Route::middleware(['auth', 'permission:prescreening.reports.view_all'])
         Route::get('/consolidated/pdf', [PrescreeningReportController::class, 'consolidatedPdf'])->name('consolidated.pdf');
     });
 
-Route::middleware(['auth', 'permission:evaluations.view_all'])
+Route::middleware(['auth', 'not.funding.partner', 'permission:evaluations.view_all'])
     ->prefix('reports/evaluations')
     ->name('reports.evaluations.')
     ->group(function () {
@@ -1813,12 +1850,185 @@ Route::get('/faq', [ApplicantController::class, 'faq'])->name('applicants.faq');
 Route::post('/apply', [ApplicantController::class, 'store'])->name('applicants.store');
 Route::get('/events', [ApplicantController::class, 'events'])->name('events');
 
-Route::middleware(['auth', 'permission:system.audit.view'])
+Route::middleware(['auth', 'not.funding.partner', 'permission:system.audit.view'])
     ->prefix('system/audit')
     ->name('system.audit.')
     ->group(function () {
         Route::get('/', [SystemAuditController::class, 'index'])->name('index');
     });
+
+
+/*
+|--------------------------------------------------------------------------
+| FUNDING PARTNER PORTAL
+|--------------------------------------------------------------------------
+*/
+use App\Http\Controllers\Partner\{PartnerDashboardController, PartnerRequestController, PartnerProfileController};
+use App\Http\Controllers\PartnerRequestManagementController;
+
+Route::middleware(['auth', 'funding.partner', 'permission:partner.dashboard.access'])
+    ->prefix('partner')
+    ->name('partner.')
+    ->group(function () {
+
+        // Dashboard
+        Route::get('/dashboard', [PartnerDashboardController::class, 'index'])
+            ->name('dashboard');
+
+        // Funded Programs
+        Route::middleware('permission:partner.programs.view')->group(function () {
+            Route::get('/programs', [PartnerDashboardController::class, 'programs'])
+                ->name('programs.index');
+
+            Route::get('/programs/{funding}', [PartnerDashboardController::class, 'showProgram'])
+                ->name('programs.show');
+
+            Route::get('/insights', [PartnerDashboardController::class, 'insights'])
+                ->name('insights');
+        });
+
+        // Projects (drill-down from programs)
+        Route::middleware('permission:partner.projects.view')->group(function () {
+            Route::get('/projects/{project}', [PartnerDashboardController::class, 'showProject'])
+                ->name('projects.show');
+        });
+
+        // Activities (drill-down from projects)
+        Route::middleware('permission:partner.projects.view')->group(function () {
+            Route::get('/activities/{activity}', [PartnerDashboardController::class, 'showActivity'])
+                ->name('activities.show');
+        });
+
+        // Document Downloads
+        Route::middleware('permission:partner.documents.view')->group(function () {
+            Route::get('/documents/{document}/download', [PartnerDashboardController::class, 'downloadDocument'])
+                ->name('documents.download');
+        });
+
+        // Information Requests (View/Read)
+        Route::middleware('permission:partner.requests.view')->group(function () {
+            Route::get('/requests', [PartnerRequestController::class, 'index'])
+                ->name('requests.index');
+
+            Route::get('/requests/{request}', [PartnerRequestController::class, 'show'])
+                ->name('requests.show');
+        });
+
+        // Information Requests (Create)
+        Route::middleware('permission:partner.requests.create')->group(function () {
+            Route::get('/request/create', [PartnerRequestController::class, 'create'])
+                ->name('requests.create');
+
+            Route::post('/requests', [PartnerRequestController::class, 'store'])
+                ->name('requests.store');
+        });
+
+        // Profile Management
+        Route::middleware('permission:partner.profile.edit')->group(function () {
+            Route::get('/profile/edit', [PartnerProfileController::class, 'edit'])
+                ->name('profile.edit');
+
+            Route::put('/profile', [PartnerProfileController::class, 'update'])
+                ->name('profile.update');
+        });
+
+        // Mark welcome as seen
+        Route::post('/welcome/seen', [PartnerDashboardController::class, 'markWelcomeSeen'])
+            ->name('welcome.seen');
+    });
+
+/*
+|--------------------------------------------------------------------------
+| PARTNER REQUEST MANAGEMENT (Admin Side)
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth', 'not.funding.partner', 'permission:partner.requests.manage'])
+    ->prefix('finance/partner-requests')
+    ->name('finance.partner-requests.')
+    ->group(function () {
+
+        Route::get('/', [PartnerRequestManagementController::class, 'index'])
+            ->name('index');
+
+        Route::get('/{request}', [PartnerRequestManagementController::class, 'show'])
+            ->name('show');
+
+        Route::post('/{request}/respond', [PartnerRequestManagementController::class, 'respond'])
+            ->middleware('permission:partner.requests.respond')
+            ->name('respond');
+    });
+
+
+/*
+|--------------------------------------------------------------------------
+| AU MASTER DATA MANAGEMENT
+|--------------------------------------------------------------------------
+*/
+use App\Http\Controllers\AuMasterData\{
+    AuMemberStateController,
+    AuRegionalBlockController,
+    AuAspirationController,
+    AuGoalController,
+    AuFlagshipProjectController
+};
+
+Route::middleware(['auth', 'not.funding.partner'])
+    ->prefix('settings/au-master-data')
+    ->name('settings.au.')
+    ->group(function () {
+
+        // Member States
+        Route::resource('member-states', AuMemberStateController::class)
+            ->except(['show']);
+
+        // Regional Blocks (RECs)
+        Route::resource('regional-blocks', AuRegionalBlockController::class)
+            ->except(['show']);
+
+        // Aspirations (Agenda 2063)
+        Route::resource('aspirations', AuAspirationController::class)
+            ->except(['show']);
+
+        // Goals (Agenda 2063)
+        Route::resource('goals', AuGoalController::class)
+            ->except(['show']);
+
+        // Flagship Projects
+        Route::resource('flagship-projects', AuFlagshipProjectController::class)
+            ->except(['show']);
+
+        // AJAX: Get goals by aspiration IDs
+        Route::get('goals/by-aspiration', [AuGoalController::class, 'byAspiration'])
+            ->name('goals.by-aspiration');
+    });
+
+
+/*
+|--------------------------------------------------------------------------
+| SECURITY ROUTES (Password Change, OTP Verification)
+|--------------------------------------------------------------------------
+*/
+use App\Http\Controllers\Auth\SecurityController;
+
+Route::middleware(['auth'])->prefix('security')->name('security.')->group(function () {
+
+    // Force Password Change
+    Route::get('/password/change', [SecurityController::class, 'showPasswordChangeForm'])
+        ->name('password.change');
+
+    Route::post('/password/change', [SecurityController::class, 'submitPasswordChange'])
+        ->name('password.submit');
+
+    // OTP Verification
+    Route::get('/otp/verify', [SecurityController::class, 'showOtpForm'])
+        ->name('otp.show');
+
+    Route::post('/otp/verify', [SecurityController::class, 'verifyOtp'])
+        ->name('otp.verify');
+
+    Route::post('/otp/resend', [SecurityController::class, 'resendOtp'])
+        ->name('otp.resend');
+});
 
 
 require __DIR__ . '/auth.php';

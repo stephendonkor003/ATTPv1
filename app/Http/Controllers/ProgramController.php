@@ -50,7 +50,7 @@ class ProgramController extends Controller
                     ->whereNotNull('governance_node_id');
             })
             ->latest()
-            ->paginate(15);
+            ->get();
 
         return view('budget.programs.index', compact('programs'));
     }

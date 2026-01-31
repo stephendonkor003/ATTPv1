@@ -6,7 +6,10 @@
         {{-- ================= HEADER ================= --}}
         <div class="page-header mb-4 d-flex justify-content-between align-items-center">
             <div>
-                <h4 class="fw-bold mb-1">Panel Evaluations</h4>
+                <h4 class="fw-bold mb-1">
+                    <i class="feather-users text-primary me-2"></i>
+                    Panel Evaluations
+                </h4>
                 <p class="text-muted mb-0">
                     Consolidated view of all evaluator decisions per procurement.
                 </p>
@@ -213,8 +216,11 @@
         @endforeach
     </div>
 
-    {{-- ================= JS ================= --}}
-    <script>
+@endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
         const select = document.getElementById('procurementSelect');
         const bulkBtn = document.getElementById('bulkPdfBtn');
 
@@ -224,15 +230,18 @@
             });
 
             if (!this.value) {
-                bulkBtn.classList.add('d-none');
+                bulkBtn?.classList.add('d-none');
                 return;
             }
 
             document.getElementById('procurement-' + this.value)
                 ?.classList.remove('d-none');
 
-            bulkBtn.href = `/evals/config/panel/pdf/procurement/${this.value}`;
-            bulkBtn.classList.remove('d-none');
+            if (bulkBtn) {
+                bulkBtn.href = `/evals/config/panel/pdf/procurement/${this.value}`;
+                bulkBtn.classList.remove('d-none');
+            }
         });
-    </script>
-@endsection
+    });
+</script>
+@endpush

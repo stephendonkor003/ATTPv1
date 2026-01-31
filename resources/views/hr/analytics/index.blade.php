@@ -1,4 +1,4 @@
-]@extends('layouts.app')
+@extends('layouts.app')
 
 @section('content')
     <div class="nxl-container">
@@ -132,80 +132,80 @@
 
     </div>
 
-    {{-- ================= STYLES ================= --}}
-    <style>
-        .icon-box {
-            width: 44px;
-            height: 44px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-        }
-    </style>
+@endsection
 
-    {{-- ================= CHART.JS ================= --}}
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+@push('styles')
+<style>
+    .icon-box {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+    }
+</style>
+@endpush
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-
-            /* STATUS PIE */
-            new Chart(document.getElementById('statusPieChart'), {
-                type: 'doughnut',
-                data: {
-                    labels: ['Scored', 'Shortlisted', 'Hired', 'Rejected'],
-                    datasets: [{
-                        data: [
-                            {{ $scored }},
-                            {{ $shortlisted }},
-                            {{ $hired }},
-                            {{ $rejected }}
-                        ],
-                        backgroundColor: ['#0dcaf0', '#ffc107', '#198754', '#dc3545']
-                    }]
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        /* STATUS PIE */
+        new Chart(document.getElementById('statusPieChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Scored', 'Shortlisted', 'Hired', 'Rejected'],
+                datasets: [{
+                    data: [
+                        {{ $scored }},
+                        {{ $shortlisted }},
+                        {{ $hired }},
+                        {{ $rejected }}
+                    ],
+                    backgroundColor: ['#0dcaf0', '#ffc107', '#198754', '#dc3545']
+                }]
+            },
+            options: {
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
                 },
-                options: {
-                    plugins: {
-                        legend: {
-                            position: 'bottom'
-                        }
-                    },
-                    cutout: '65%'
-                }
-            });
+                cutout: '65%'
+            }
+        });
 
-            /* PIPELINE BAR */
-            new Chart(document.getElementById('pipelineBarChart'), {
-                type: 'bar',
-                data: {
-                    labels: ['Applicants', 'Scored', 'Shortlisted', 'Hired'],
-                    datasets: [{
-                        label: 'Candidates',
-                        data: [
-                            {{ $totalApplicants }},
-                            {{ $scored }},
-                            {{ $shortlisted }},
-                            {{ $hired }}
-                        ],
-                        backgroundColor: '#0d6efd'
-                    }]
+        /* PIPELINE BAR */
+        new Chart(document.getElementById('pipelineBarChart'), {
+            type: 'bar',
+            data: {
+                labels: ['Applicants', 'Scored', 'Shortlisted', 'Hired'],
+                datasets: [{
+                    label: 'Candidates',
+                    data: [
+                        {{ $totalApplicants }},
+                        {{ $scored }},
+                        {{ $shortlisted }},
+                        {{ $hired }}
+                    ],
+                    backgroundColor: '#0d6efd'
+                }]
+            },
+            options: {
+                plugins: {
+                    legend: {
+                        display: false
+                    }
                 },
-                options: {
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
+                scales: {
+                    y: {
+                        beginAtZero: true
                     }
                 }
-            });
-
+            }
         });
-    </script>
-@endsection
+    });
+</script>
+@endpush

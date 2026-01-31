@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\GovernanceNode;
 
 class Activity extends Model
 {
@@ -24,6 +25,14 @@ class Activity extends Model
     public function project()
     {
         return $this->belongsTo(Project::class, 'project_id');
+    }
+
+    /**
+     * Relationship: Activity belongs to a Governance Node
+     */
+    public function governanceNode()
+    {
+        return $this->belongsTo(GovernanceNode::class, 'governance_node_id');
     }
 
     /**

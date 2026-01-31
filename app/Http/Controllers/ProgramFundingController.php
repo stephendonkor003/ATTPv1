@@ -7,6 +7,11 @@ use App\Models\ProgramFundingDocument;
 use App\Models\Department;
 use App\Models\Funder;
 use App\Models\GovernanceNode;
+use App\Models\AuMemberState;
+use App\Models\AuRegionalBlock;
+use App\Models\AuAspiration;
+use App\Models\AuGoal;
+use App\Models\AuFlagshipProject;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -56,8 +61,13 @@ class ProgramFundingController extends Controller
     public function create()
     {
         return view('finance.program-funding.create', [
-            'funders'     => Funder::orderBy('name')->get(),
-            'nodes'       => $this->availableNodes(),
+            'funders'          => Funder::orderBy('name')->get(),
+            'nodes'            => $this->availableNodes(),
+            'memberStates'     => AuMemberState::active()->ordered()->get(),
+            'regionalBlocks'   => AuRegionalBlock::active()->ordered()->get(),
+            'aspirations'      => AuAspiration::active()->ordered()->get(),
+            'goals'            => AuGoal::active()->with('aspiration')->ordered()->get(),
+            'flagshipProjects' => AuFlagshipProject::active()->ordered()->get(),
         ]);
     }
 
@@ -81,6 +91,19 @@ class ProgramFundingController extends Controller
             'start_year'      => 'required|integer|min:2000',
             'end_year'        => 'required|integer|gte:start_year',
 
+            // AU Strategic Alignment
+            'is_continental_initiative' => 'nullable|boolean',
+            'member_state_ids'          => 'nullable|array',
+            'member_state_ids.*'        => 'exists:myb_au_member_states,id',
+            'regional_block_ids'        => 'nullable|array',
+            'regional_block_ids.*'      => 'exists:myb_au_regional_blocks,id',
+            'aspiration_ids'            => 'nullable|array',
+            'aspiration_ids.*'          => 'exists:myb_au_aspirations,id',
+            'goal_ids'                  => 'nullable|array',
+            'goal_ids.*'                => 'exists:myb_au_goals,id',
+            'flagship_project_ids'      => 'nullable|array',
+            'flagship_project_ids.*'    => 'exists:myb_au_flagship_projects,id',
+
             // Documents
             'documents'        => 'nullable|array',
             'documents.*'      => 'file|mimes:pdf,doc,docx,xls,xlsx,jpg,png|max:5242880',
@@ -97,17 +120,40 @@ class ProgramFundingController extends Controller
 
         /* ================= CREATE FUNDING ================= */
         $funding = ProgramFunding::create([
-            'program_name'    => $validated['program_name'],
-            'funder_id'       => $validated['funder_id'],
-            'governance_node_id' => $validated['governance_node_id'],
-            'funding_type'    => $validated['funding_type'],
-            'approved_amount' => $validated['approved_amount'],
-            'currency'        => $validated['currency'],
-            'start_year'      => $validated['start_year'],
-            'end_year'        => $validated['end_year'],
-            'status'          => 'draft',
-            'created_by'      => Auth::id(),
+            'program_name'              => $validated['program_name'],
+            'funder_id'                 => $validated['funder_id'],
+            'governance_node_id'        => $validated['governance_node_id'],
+            'funding_type'              => $validated['funding_type'],
+            'approved_amount'           => $validated['approved_amount'],
+            'currency'                  => $validated['currency'],
+            'start_year'                => $validated['start_year'],
+            'end_year'                  => $validated['end_year'],
+            'status'                    => 'draft',
+            'is_continental_initiative' => $request->boolean('is_continental_initiative'),
+            'created_by'                => Auth::id(),
         ]);
+
+        /* ================= SYNC AU RELATIONSHIPS ================= */
+        // Only sync member states if NOT a continental initiative
+        if (!$request->boolean('is_continental_initiative') && !empty($request->input('member_state_ids'))) {
+            $funding->memberStates()->sync($request->input('member_state_ids'));
+        }
+
+        if (!empty($request->input('regional_block_ids'))) {
+            $funding->regionalBlocks()->sync($request->input('regional_block_ids'));
+        }
+
+        if (!empty($request->input('aspiration_ids'))) {
+            $funding->aspirations()->sync($request->input('aspiration_ids'));
+        }
+
+        if (!empty($request->input('goal_ids'))) {
+            $funding->goals()->sync($request->input('goal_ids'));
+        }
+
+        if (!empty($request->input('flagship_project_ids'))) {
+            $funding->flagshipProjects()->sync($request->input('flagship_project_ids'));
+        }
 
         /* ================= SAVE DOCUMENTS ================= */
         if ($request->hasFile('documents')) {
@@ -181,6 +227,11 @@ class ProgramFundingController extends Controller
         'documents',
         'creator',
         'governanceNode',
+        'memberStates',
+        'regionalBlocks',
+        'aspirations',
+        'goals.aspiration',
+        'flagshipProjects',
     ])->findOrFail($id);
 
     $this->assertFundingInScope($programFunding);
@@ -276,11 +327,25 @@ public function edit(ProgramFunding $programFunding)
     abort_if($programFunding->status !== 'draft', 403);
     $this->assertFundingInScope($programFunding);
 
-    $nodes = $this->availableNodes();
+    // Load AU relationships for pre-selection
+    $programFunding->load([
+        'memberStates',
+        'regionalBlocks',
+        'aspirations',
+        'goals',
+        'flagshipProjects',
+    ]);
 
-    $funders = Funder::orderBy('name')->get();
-
-    return view('finance.program-funding.edit', compact('programFunding', 'nodes', 'funders'));
+    return view('finance.program-funding.edit', [
+        'programFunding'   => $programFunding,
+        'nodes'            => $this->availableNodes(),
+        'funders'          => Funder::orderBy('name')->get(),
+        'memberStates'     => AuMemberState::active()->ordered()->get(),
+        'regionalBlocks'   => AuRegionalBlock::active()->ordered()->get(),
+        'aspirations'      => AuAspiration::active()->ordered()->get(),
+        'goals'            => AuGoal::active()->with('aspiration')->ordered()->get(),
+        'flagshipProjects' => AuFlagshipProject::active()->ordered()->get(),
+    ]);
 }
 
 /* =====================================================
@@ -300,11 +365,48 @@ public function update(Request $request, ProgramFunding $programFunding)
         'currency'        => 'required|string|max:10',
         'start_year'      => 'required|integer|min:2000',
         'end_year'        => 'required|integer|gte:start_year',
+
+        // AU Strategic Alignment
+        'is_continental_initiative' => 'nullable|boolean',
+        'member_state_ids'          => 'nullable|array',
+        'member_state_ids.*'        => 'exists:myb_au_member_states,id',
+        'regional_block_ids'        => 'nullable|array',
+        'regional_block_ids.*'      => 'exists:myb_au_regional_blocks,id',
+        'aspiration_ids'            => 'nullable|array',
+        'aspiration_ids.*'          => 'exists:myb_au_aspirations,id',
+        'goal_ids'                  => 'nullable|array',
+        'goal_ids.*'                => 'exists:myb_au_goals,id',
+        'flagship_project_ids'      => 'nullable|array',
+        'flagship_project_ids.*'    => 'exists:myb_au_flagship_projects,id',
     ]);
 
     $this->assertNodeInScope((int) $validated['governance_node_id']);
 
-    $programFunding->update($validated);
+    // Update basic fields
+    $programFunding->update([
+        'program_name'              => $validated['program_name'],
+        'funder_id'                 => $validated['funder_id'],
+        'governance_node_id'        => $validated['governance_node_id'],
+        'funding_type'              => $validated['funding_type'],
+        'approved_amount'           => $validated['approved_amount'],
+        'currency'                  => $validated['currency'],
+        'start_year'                => $validated['start_year'],
+        'end_year'                  => $validated['end_year'],
+        'is_continental_initiative' => $request->boolean('is_continental_initiative'),
+    ]);
+
+    /* ================= SYNC AU RELATIONSHIPS ================= */
+    // Only sync member states if NOT a continental initiative
+    if ($request->boolean('is_continental_initiative')) {
+        $programFunding->memberStates()->sync([]);
+    } else {
+        $programFunding->memberStates()->sync($request->input('member_state_ids', []));
+    }
+
+    $programFunding->regionalBlocks()->sync($request->input('regional_block_ids', []));
+    $programFunding->aspirations()->sync($request->input('aspiration_ids', []));
+    $programFunding->goals()->sync($request->input('goal_ids', []));
+    $programFunding->flagshipProjects()->sync($request->input('flagship_project_ids', []));
 
     return redirect()
         ->route('finance.program-funding.show', $programFunding)

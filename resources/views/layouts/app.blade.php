@@ -33,6 +33,9 @@
     <!-- DataTable Custom CSS -->
     <link rel="stylesheet" href="{{ asset('admin/assets/css/datatable-custom.css') }}">
 
+    <!-- Page-specific styles -->
+    @stack('styles')
+
     <!-- RTL CSS for Arabic -->
     @if(app()->getLocale() === 'ar')
         <link rel="stylesheet" href="{{ asset('assets/css/rtl.css') }}">

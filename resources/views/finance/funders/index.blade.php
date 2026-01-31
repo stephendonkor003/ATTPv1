@@ -32,54 +32,50 @@
             </div>
         @endif
 
-        {{-- ===================== SEARCH BAR ===================== --}}
-        <div class="card shadow-sm mt-4">
-            <div class="card-body py-3">
-                <div class="row g-2">
-                    <div class="col-md-6 col-lg-4">
-                        <div class="input-group">
-                            <span class="input-group-text bg-light">
-                                <i class="feather-search"></i>
-                            </span>
-                            <input type="text" id="funderSearch" class="form-control"
-                                placeholder="Search funder name, type, status…">
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         {{-- ===================== FUNDERS TABLE ===================== --}}
-        <div class="card shadow-sm mt-3">
-            <div class="card-body table-responsive">
+        <div class="card shadow-sm mt-4">
+            <div class="card-body">
 
-                <table class="table table-hover align-middle" id="fundersTable">
+                <x-data-table
+                    id="fundersTable"
+                >
                     <thead class="table-light">
                         <tr>
-                            <th>#</th>
+                            <th width="50">#</th>
                             <th>Funder Name</th>
                             <th>Type</th>
+                            <th>Currency</th>
                             <th>Created On</th>
-                            <th class="text-end">Action</th>
+                            <th width="100" class="text-end">Action</th>
                         </tr>
                     </thead>
 
                     <tbody>
-                        @forelse($funders as $funder)
+                        @foreach($funders as $funder)
                             <tr>
                                 <td>{{ $loop->iteration }}</td>
 
-                                <td class="searchable">
-                                    <div class="fw-semibold">
+                                <td>
+                                    <div class="fw-semibold text-dark">
                                         {{ $funder->name }}
                                     </div>
                                 </td>
 
-                                <td class="searchable">
-                                    {{ $funder->type ?? '—' }}
+                                <td>
+                                    <span class="badge bg-{{
+                                        $funder->type === 'government' ? 'primary' :
+                                        ($funder->type === 'donor' ? 'success' :
+                                        ($funder->type === 'private' ? 'warning' : 'info'))
+                                    }}">
+                                        {{ ucfirst($funder->type ?? 'N/A') }}
+                                    </span>
                                 </td>
 
-
+                                <td>
+                                    <span class="badge bg-secondary">
+                                        {{ strtoupper($funder->currency ?? 'N/A') }}
+                                    </span>
+                                </td>
 
                                 <td>
                                     {{ optional($funder->created_at)->format('d M Y') }}
@@ -88,42 +84,19 @@
                                 <td class="text-end">
                                     @can('finance.funders.edit')
                                         <a href="{{ route('finance.funders.edit', $funder->id) }}"
-                                            class="btn btn-sm btn-outline-warning">
-                                            Edit
+                                            class="btn btn-sm btn-outline-warning"
+                                            title="Edit Funder">
+                                            <i class="feather-edit"></i>
                                         </a>
                                     @endcan
                                 </td>
                             </tr>
-                        @empty
-                            <tr>
-                                <td colspan="6" class="text-center text-muted py-4">
-                                    No funders found.
-                                </td>
-                            </tr>
-                        @endforelse
+                        @endforeach
                     </tbody>
-                </table>
-
-                {{-- Pagination --}}
-                <div class="mt-3">
-                    {{ $funders->links() }}
-                </div>
+                </x-data-table>
 
             </div>
         </div>
 
     </div>
-
-    {{-- ===================== SEARCH SCRIPT ===================== --}}
-    <script>
-        document.getElementById('funderSearch').addEventListener('keyup', function() {
-            const term = this.value.toLowerCase();
-            const rows = document.querySelectorAll('#fundersTable tbody tr');
-
-            rows.forEach(row => {
-                const text = row.innerText.toLowerCase();
-                row.style.display = text.includes(term) ? '' : 'none';
-            });
-        });
-    </script>
 @endsection

@@ -44,11 +44,15 @@ const dataTableConfig = {
                 columns: ':visible:not(.no-export)'
             },
             customize: function(doc) {
+                // Use AU green theme for partner portal, maroon for admin
+                const isPartnerPortal = document.body.classList.contains('partner-portal-body');
+                const headerColor = isPartnerPortal ? '#007144' : '#532934';
+
                 doc.styles.tableHeader = {
                     bold: true,
                     fontSize: 11,
                     color: 'white',
-                    fillColor: '#532934'
+                    fillColor: headerColor
                 };
                 doc.styles.tableBodyOdd = {
                     fillColor: '#f8f9fa'
@@ -56,6 +60,28 @@ const dataTableConfig = {
                 doc.styles.tableBodyEven = {
                     fillColor: '#ffffff'
                 };
+
+                // Add footer with organization name for partner portal
+                if (isPartnerPortal) {
+                    doc.footer = function(currentPage, pageCount) {
+                        return {
+                            columns: [
+                                {
+                                    text: 'Africa Think Tank Platform',
+                                    alignment: 'left',
+                                    fontSize: 8,
+                                    margin: [40, 0]
+                                },
+                                {
+                                    text: 'Page ' + currentPage.toString() + ' of ' + pageCount,
+                                    alignment: 'right',
+                                    fontSize: 8,
+                                    margin: [0, 0, 40, 0]
+                                }
+                            ]
+                        };
+                    };
+                }
             }
         },
         {
@@ -138,14 +164,12 @@ function initDataTables() {
     }
 }
 
-// Initialize on document ready
+// Initialize on document ready (runs once)
 $(document).ready(function() {
-    initDataTables();
-});
-
-// Re-initialize when content is dynamically loaded
-$(document).on('DOMContentLoaded load', function() {
-    initDataTables();
+    // Small delay to let component scripts register first
+    setTimeout(function() {
+        initDataTables();
+    }, 10);
 });
 
 // Export the config for manual initialization

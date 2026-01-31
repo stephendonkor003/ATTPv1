@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use App\Models\GovernanceNode;
 use App\Models\User;
 
@@ -22,6 +23,7 @@ class ProgramFunding extends Model
         'start_year',
         'end_year',
         'status',
+        'is_continental_initiative',
         'rejection_reason',
         'rejected_by',
         'rejected_at',
@@ -34,6 +36,7 @@ class ProgramFunding extends Model
         'approved_at' => 'datetime',
         'rejected_at' => 'datetime',
         'approved_amount' => 'decimal:2',
+        'is_continental_initiative' => 'boolean',
     ];
 
     /* ==========================
@@ -114,6 +117,75 @@ public function creator()
     public function rejector()
     {
         return $this->belongsTo(User::class, 'rejected_by');
+    }
+
+    /* ==========================
+     * AU STRATEGIC ALIGNMENT RELATIONSHIPS
+     * ========================== */
+
+    /**
+     * Beneficiary member states for this funding.
+     */
+    public function memberStates(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            AuMemberState::class,
+            'myb_program_funding_member_states',
+            'program_funding_id',
+            'member_state_id'
+        )->withTimestamps();
+    }
+
+    /**
+     * Regional blocks targeted by this funding.
+     */
+    public function regionalBlocks(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            AuRegionalBlock::class,
+            'myb_program_funding_regional_blocks',
+            'program_funding_id',
+            'regional_block_id'
+        )->withTimestamps();
+    }
+
+    /**
+     * Agenda 2063 aspirations aligned with this funding.
+     */
+    public function aspirations(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            AuAspiration::class,
+            'myb_program_funding_aspirations',
+            'program_funding_id',
+            'aspiration_id'
+        )->withTimestamps();
+    }
+
+    /**
+     * Agenda 2063 goals aligned with this funding.
+     */
+    public function goals(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            AuGoal::class,
+            'myb_program_funding_goals',
+            'program_funding_id',
+            'goal_id'
+        )->withTimestamps();
+    }
+
+    /**
+     * AU flagship projects aligned with this funding.
+     */
+    public function flagshipProjects(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            AuFlagshipProject::class,
+            'myb_program_funding_flagship_projects',
+            'program_funding_id',
+            'flagship_project_id'
+        )->withTimestamps();
     }
 
 }

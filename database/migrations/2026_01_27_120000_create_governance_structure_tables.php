@@ -76,7 +76,7 @@ return new class extends Migration
             $table->index(['child_node_id', 'line_type']);
             $table->index(['parent_node_id', 'line_type']);
             $table->index(['line_type', 'effective_start']);
-            $table->index(['child_node_id', 'effective_start', 'effective_end']); // For date range queries
+            $table->index(['child_node_id', 'effective_start', 'effective_end'], 'idx_reporting_child_dates'); // For date range queries
         });
 
         // Governance Node Assignments - Assigns users/employees to nodes with roles
@@ -107,8 +107,8 @@ return new class extends Migration
             // Composite indexes for common queries
             $table->index(['node_id', 'is_primary']);
             $table->index(['user_id', 'is_primary']);
-            $table->index(['node_id', 'effective_start', 'effective_end']); // For date range queries
-            $table->index(['user_id', 'effective_start', 'effective_end']); // For user's assignment history
+            $table->index(['node_id', 'effective_start', 'effective_end'], 'idx_assignment_node_dates'); // For date range queries
+            $table->index(['user_id', 'effective_start', 'effective_end'], 'idx_assignment_user_dates'); // For user's assignment history
         });
     }
 

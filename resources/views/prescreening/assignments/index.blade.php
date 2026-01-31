@@ -169,8 +169,11 @@
 
     </div>
 
-    {{-- ================= SEARCH SCRIPT ================= --}}
-    <script>
+@endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('procurementSearch').addEventListener('input', function() {
             const query = this.value.toLowerCase();
             let visible = 0;
@@ -190,5 +193,6 @@
 
             document.getElementById('resultCount').innerText = visible;
         });
-    </script>
-@endsection
+    });
+</script>
+@endpush

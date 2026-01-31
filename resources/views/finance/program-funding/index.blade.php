@@ -47,7 +47,7 @@
         {{-- ===================== PROGRAM FUNDING TABLE ===================== --}}
         <div class="card shadow-sm mt-3">
             <div class="card-body">
-                <table id="fundingTable" class="table table-striped table-hover data-table" style="width: 100%;">
+                <table id="fundingTable" class="table table-striped table-hover {{ $fundings->count() > 0 ? 'data-table' : '' }}" style="width: 100%;">
                     <thead>
                         <tr>
                             <th style="width: 50px;" class="text-center">#</th>

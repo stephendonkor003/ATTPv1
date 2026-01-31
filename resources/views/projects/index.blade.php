@@ -83,28 +83,30 @@
 
             {{-- PROJECT LIST TABLE --}}
             <div class="card shadow-sm border-0">
-                <div class="card-body table-responsive">
+                <div class="card-body">
 
-                    <table class="table table-bordered align-middle">
+                    <x-data-table
+                        id="projectsTable"
+                    >
                         <thead class="table-light">
                             <tr>
-                                <th>#</th>
+                                <th width="50">#</th>
                                 <th>Project ID</th>
                                 <th>Name</th>
                                 <th>Program</th>
                                 <th>Total Budget</th>
                                 <th>Years</th>
                                 <th>Activities</th>
-                                <th class="text-center">Actions</th>
+                                <th width="200" class="text-center">Actions</th>
                             </tr>
                         </thead>
 
                         <tbody>
-                            @forelse ($projects as $index => $p)
+                            @foreach ($projects as $p)
                                 <tr>
-                                    <td>{{ $projects->firstItem() + $index }}</td>
+                                    <td>{{ $loop->iteration }}</td>
 
-                                    <td class="fw-bold">
+                                    <td class="fw-bold text-primary">
                                         {{ $p->project_id }}
                                     </td>
 
@@ -131,8 +133,8 @@
 
                                     {{-- ACTIVITIES COUNT --}}
                                     <td>
-                                        <span class="badge bg-info text-dark">
-                                            {{ $p->activities->count() }} Activities
+                                        <span class="badge bg-info">
+                                            {{ $p->activities->count() }}
                                         </span>
                                     </td>
 
@@ -140,22 +142,22 @@
                                         @can('activities.create')
                                             {{-- ADD ACTIVITY --}}
                                             <a href="{{ route('budget.activities.create', $p->id) }}"
-                                                class="btn btn-sm btn-success mb-1" title="Add New Activity">
-                                                <i class="bi bi-plus-circle"></i> Add Activity
+                                                class="btn btn-sm btn-success" title="Add New Activity">
+                                                <i class="feather-plus-circle"></i>
                                             </a>
                                         @endcan
 
                                         {{-- VIEW PROJECT --}}
                                         <a href="{{ route('budget.projects.show', $p->id) }}"
-                                            class="btn btn-sm btn-info mb-1" title="View Details">
-                                            <i class="bi bi-eye"></i>
+                                            class="btn btn-sm btn-info" title="View Details">
+                                            <i class="feather-eye"></i>
                                         </a>
 
                                         {{-- EDIT PROJECT --}}
                                         @can('project.edit')
                                             <a href="{{ route('budget.projects.edit', $p->id) }}"
-                                                class="btn btn-sm btn-warning mb-1" title="Edit Project">
-                                                <i class="bi bi-pencil-square"></i>
+                                                class="btn btn-sm btn-warning" title="Edit Project">
+                                                <i class="feather-edit"></i>
                                             </a>
                                         @endcan
 
@@ -166,28 +168,16 @@
                                                 onsubmit="return confirm('Are you sure you want to delete this project?');">
                                                 @csrf @method('DELETE')
                                                 <button class="btn btn-sm btn-danger" title="Delete Project">
-                                                    <i class="bi bi-trash"></i>
+                                                    <i class="feather-trash-2"></i>
                                                 </button>
                                             </form>
                                         @endcan
 
                                     </td>
                                 </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="8" class="text-center text-muted py-4">
-                                        <i class="bi bi-inbox fs-3 d-block"></i>
-                                        No projects found.
-                                    </td>
-                                </tr>
-                            @endforelse
+                            @endforeach
                         </tbody>
-                    </table>
-
-                    {{-- PAGINATION --}}
-                    <div class="mt-3">
-                        {{ $projects->links() }}
-                    </div>
+                    </x-data-table>
 
                 </div>
             </div>

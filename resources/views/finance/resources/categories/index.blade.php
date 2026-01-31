@@ -16,8 +16,6 @@
             </div>
 
             <div class="d-flex align-items-center gap-2">
-                <input type="text" id="categorySearch" class="form-control form-control-sm" placeholder="Search category..."
-                    style="width:220px">
                 @can('finance.resources.create')
                     <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
                         <i class="feather-plus me-1"></i>
@@ -29,41 +27,102 @@
 
         {{-- ================= TABLE CARD ================= --}}
         <div class="card mt-4 shadow-sm border-0">
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0" id="categoriesTable">
-                        <thead class="table-light">
+            <div class="card-body">
+
+                <x-data-table id="categoriesTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">Category Name</th>
+                            <th>Description</th>
+                            <th>Governance Node</th>
+                            <th class="text-center">Resources</th>
+                            <th class="text-center">Status</th>
+                            <th class="text-center" width="100">Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @foreach ($categories as $category)
                             <tr>
-                                <th class="ps-4">Category Name</th>
-                                <th class="text-center" style="width:140px;">Status</th>
-                            </tr>
-                        </thead>
+                                <td class="ps-4 fw-medium">
+                                    <i class="feather-tag text-muted me-1"></i>
+                                    {{ $category->name }}
+                                </td>
 
-                        <tbody>
-                            @forelse ($categories as $category)
-                                <tr>
-                                    <td class="ps-4 fw-medium">
-                                        <i class="feather-tag text-muted me-1"></i>
-                                        {{ $category->name }}
-                                    </td>
+                                <td>
+                                    <span class="text-muted">{{ $category->description ?? '-' }}</span>
+                                </td>
 
-                                    <td class="text-center">
-                                        <span class="badge bg-success-subtle text-success px-3">
-                                            Active
+                                <td>
+                                    @if($category->governanceNode)
+                                        <span class="badge bg-info-subtle text-info">
+                                            <i class="feather-layers me-1"></i>
+                                            {{ $category->governanceNode->name }}
                                         </span>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="2" class="text-center py-5 text-muted">
-                                        <i class="feather-inbox fs-3 d-block mb-2"></i>
-                                        No resource categories created yet
-                                    </td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
+                                    @else
+                                        <span class="text-muted">System-wide</span>
+                                    @endif
+                                </td>
+
+                                <td class="text-center">
+                                    <span class="badge bg-secondary">{{ $category->resources_count ?? $category->resources()->count() }}</span>
+                                </td>
+
+                                <td class="text-center">
+                                    @if($category->status === 'active')
+                                        <span class="badge bg-success-subtle text-success px-3">Active</span>
+                                    @else
+                                        <span class="badge bg-danger-subtle text-danger px-3">Inactive</span>
+                                    @endif
+                                </td>
+
+                                <td class="text-center">
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-light" data-bs-toggle="dropdown">
+                                            <i class="feather-more-vertical"></i>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end">
+                                            @can('finance.resources.edit')
+                                                <li>
+                                                    <a class="dropdown-item" href="#"
+                                                       data-bs-toggle="modal"
+                                                       data-bs-target="#editCategoryModal"
+                                                       data-id="{{ $category->id }}"
+                                                       data-name="{{ $category->name }}"
+                                                       data-description="{{ $category->description }}"
+                                                       data-status="{{ $category->status }}">
+                                                        <i class="feather-edit-2 me-2"></i> Edit
+                                                    </a>
+                                                </li>
+                                            @endcan
+                                            @can('finance.resources.delete')
+                                                @if(!$category->resources()->exists() && !$category->commitments()->exists())
+                                                    <li>
+                                                        <form action="{{ route('finance.resources.categories.destroy', $category) }}" method="POST" class="d-inline"
+                                                              onsubmit="return confirm('Are you sure you want to delete this category?')">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button type="submit" class="dropdown-item text-danger">
+                                                                <i class="feather-trash-2 me-2"></i> Delete
+                                                            </button>
+                                                        </form>
+                                                    </li>
+                                                @else
+                                                    <li>
+                                                        <span class="dropdown-item text-muted" title="Has resources or commitments">
+                                                            <i class="feather-lock me-2"></i> Cannot Delete
+                                                        </span>
+                                                    </li>
+                                                @endif
+                                            @endcan
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </x-data-table>
+
             </div>
         </div>
 
@@ -86,22 +145,30 @@
                     </div>
 
                     <div class="modal-body">
-                        <label class="form-label fw-medium">
-                            Category Name <span class="text-danger">*</span>
-                        </label>
+                        <div class="mb-3">
+                            <label class="form-label fw-medium">
+                                Category Name <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" name="name" class="form-control" placeholder="e.g. Equipment, Services" required>
+                        </div>
 
-                        <input type="text" name="name" class="form-control" placeholder="e.g. Equipment, Services"
-                            required>
+                        <div class="mb-3">
+                            <label class="form-label fw-medium">Description</label>
+                            <textarea name="description" class="form-control" rows="3" placeholder="Optional description..."></textarea>
+                        </div>
+
+                        @if(Auth::user()->governance_node_id)
+                            <div class="alert alert-info mb-0">
+                                <i class="feather-info me-1"></i>
+                                This category will be assigned to your governance node: <strong>{{ Auth::user()->governanceNode->name ?? 'N/A' }}</strong>
+                            </div>
+                        @endif
                     </div>
 
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">
-                            Cancel
-                        </button>
-
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
                         <button type="submit" class="btn btn-primary">
-                            <i class="feather-save me-1"></i>
-                            Save
+                            <i class="feather-save me-1"></i> Save
                         </button>
                     </div>
                 </div>
@@ -109,16 +176,77 @@
         </div>
     </div>
 
-    {{-- ================= SEARCH SCRIPT ================= --}}
-    <script>
-        document.getElementById('categorySearch').addEventListener('keyup', function() {
-            const value = this.value.toLowerCase();
+    {{-- ================= EDIT CATEGORY MODAL ================= --}}
+    <div class="modal fade" id="editCategoryModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <form method="POST" id="editCategoryForm" class="w-100">
+                @csrf
+                @method('PUT')
 
-            document.querySelectorAll('#categoriesTable tbody tr').forEach(row => {
-                row.style.display = row.textContent.toLowerCase().includes(value) ?
-                    '' :
-                    'none';
-            });
-        });
-    </script>
+                <div class="modal-content border-0 shadow">
+                    <div class="modal-header">
+                        <h5 class="fw-bold mb-0">
+                            <i class="feather-edit text-primary me-1"></i>
+                            Edit Resource Category
+                        </h5>
+
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-medium">
+                                Category Name <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" name="name" id="edit_name" class="form-control" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-medium">Description</label>
+                            <textarea name="description" id="edit_description" class="form-control" rows="3"></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-medium">Status <span class="text-danger">*</span></label>
+                            <select name="status" id="edit_status" class="form-select" required>
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="feather-save me-1"></i> Update
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
 @endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const editModal = document.getElementById('editCategoryModal');
+
+        editModal.addEventListener('show.bs.modal', function(event) {
+            const button = event.relatedTarget;
+            const id = button.getAttribute('data-id');
+            const name = button.getAttribute('data-name');
+            const description = button.getAttribute('data-description');
+            const status = button.getAttribute('data-status');
+
+            // Update form action
+            document.getElementById('editCategoryForm').action = '{{ url("finance/resources/categories") }}/' + id;
+
+            // Fill form fields
+            document.getElementById('edit_name').value = name;
+            document.getElementById('edit_description').value = description || '';
+            document.getElementById('edit_status').value = status || 'active';
+        });
+    });
+</script>
+@endpush

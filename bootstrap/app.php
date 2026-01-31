@@ -5,6 +5,10 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use App\Http\Middleware\CheckPermission;
 use App\Http\Middleware\SetLocale;
+use App\Http\Middleware\EnsureFundingPartner;
+use App\Http\Middleware\EnsureNotFundingPartner;
+use App\Http\Middleware\EnsurePasswordNotExpired;
+use App\Http\Middleware\EnsureOtpVerified;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -18,11 +22,17 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'permission' => CheckPermission::class,
+            'funding.partner' => EnsureFundingPartner::class,
+            'not.funding.partner' => EnsureNotFundingPartner::class,
+            'password.not.expired' => EnsurePasswordNotExpired::class,
+            'otp.verified' => EnsureOtpVerified::class,
         ]);
 
         // Register SetLocale middleware to web group
         $middleware->web(append: [
             SetLocale::class,
+            EnsurePasswordNotExpired::class,
+            EnsureOtpVerified::class,
         ]);
 
     })

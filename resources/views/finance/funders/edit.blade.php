@@ -28,7 +28,7 @@
 
         <div class="card shadow-sm border-0 mt-3">
             <div class="card-body">
-                <form method="POST" action="{{ route('finance.funders.update', $funder) }}">
+                <form method="POST" action="{{ route('finance.funders.update', $funder) }}" enctype="multipart/form-data">
                     @csrf
                     @method('PUT')
 
@@ -52,6 +52,19 @@
                         <label class="form-label fw-semibold">Currency *</label>
                         <input name="currency" class="form-control" value="{{ old('currency', $funder->currency) }}"
                             required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Organization Logo</label>
+                        @if($funder->hasLogo())
+                            <div class="mb-2">
+                                <img src="{{ $funder->getLogoUrl() }}" alt="{{ $funder->name }}"
+                                     style="max-height: 80px; max-width: 200px;" class="border rounded p-2">
+                                <p class="text-muted small mb-0">Current logo</p>
+                            </div>
+                        @endif
+                        <input type="file" name="logo" class="form-control" accept="image/*">
+                        <small class="text-muted">Upload a new logo to replace the current one (PNG, JPG, or SVG). Max 2MB.</small>
                     </div>
 
                     <div class="alert alert-warning">

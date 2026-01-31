@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\GovernanceNode;
 
 class SubActivity extends Model
 {
@@ -21,6 +22,11 @@ class SubActivity extends Model
     public function activity()
     {
         return $this->belongsTo(Activity::class, 'activity_id');
+    }
+
+    public function governanceNode()
+    {
+        return $this->belongsTo(GovernanceNode::class, 'governance_node_id');
     }
 
     public function allocations()

@@ -13,15 +13,18 @@
                 </div>
                 @can('program.create')
                     <a href="{{ route('budget.programs.create') }}" class="btn btn-success">
-                        <i class="bi bi-plus-circle me-1"></i> New Program
+                        <i class="feather-plus-circle me-1"></i> New Program
                     </a>
                 @endcan
             </div>
 
             <!-- Program Table -->
             <div class="card shadow-sm">
-                <div class="card-body table-responsive">
-                    <table class="table table-bordered align-middle mb-0">
+                <div class="card-body">
+
+                    <x-data-table
+                        id="programsTable"
+                    >
                         <thead class="table-light">
                             <tr>
                                 <th>#</th>
@@ -35,12 +38,16 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse($programs as $index => $program)
+                            @foreach($programs as $program)
                                 <tr>
-                                    <td>{{ $index + 1 }}</td>
+                                    <td>{{ $loop->iteration }}</td>
                                     <td><span class="fw-semibold text-primary">{{ $program->program_id }}</span></td>
                                     <td>{{ $program->name }}</td>
-                                    <td>{{ $program->sector->name ?? '—' }}</td>
+                                    <td>
+                                        <span class="badge bg-info-subtle text-info">
+                                            {{ $program->sector->name ?? '—' }}
+                                        </span>
+                                    </td>
                                     <td>
                                         <div class="fw-semibold">
                                             {{ $program->governanceNode->name ?? '-' }}
@@ -49,61 +56,53 @@
                                             {{ $program->governanceNode->level->name ?? '' }}
                                         </small>
                                     </td>
-                                    <td>{{ $program->projects->count() }}</td>
+                                    <td>
+                                        <span class="badge bg-secondary">
+                                            {{ $program->projects->count() }}
+                                        </span>
+                                    </td>
                                     <td>{{ $program->created_at->format('d M, Y') }}</td>
                                     <td class="text-center">
                                         @can('program.view')
                                             <a href="{{ route('budget.programs.show', $program->id) }}"
-                                                class="btn btn-sm btn-outline-info">
-                                                <i class="bi bi-eye"></i>
+                                                class="btn btn-sm btn-outline-info"
+                                                title="View Program">
+                                                <i class="feather-eye"></i>
                                             </a>
                                         @endcan
                                         @can('program.edit')
                                             <a href="{{ route('budget.programs.edit', $program->id) }}"
-                                                class="btn btn-sm btn-outline-warning">
-                                                <i class="bi bi-pencil"></i>
+                                                class="btn btn-sm btn-outline-warning"
+                                                title="Edit Program">
+                                                <i class="feather-edit"></i>
                                             </a>
                                         @endcan
                                         @can('projects.show')
                                             <a href="{{ route('budget.projects.index', $program->id) }}"
-                                                class="btn btn-sm btn-outline-primary">
-                                                <i class="bi bi-folder2-open me-1"></i> Projects
+                                                class="btn btn-sm btn-outline-primary"
+                                                title="View Projects">
+                                                <i class="feather-folder"></i>
                                             </a>
                                         @endcan
                                         @can('program.delete')
                                             <form action="{{ route('budget.programs.destroy', $program->id) }}" method="POST"
                                                 class="d-inline">
-
                                                 @csrf
-                                                @method('DELETE') <!-- 🔥 REQUIRED -->
-
-                                                <button type="submit" class="btn btn-sm btn-danger"
-                                                    onclick="return confirm('Delete this program?')">
-                                                    <i class="bi bi-trash3"></i>
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                    onclick="return confirm('Delete this program?')"
+                                                    title="Delete Program">
+                                                    <i class="feather-trash-2"></i>
                                                 </button>
                                             </form>
                                         @endcan
-
-
                                     </td>
                                 </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="8" class="text-center text-muted py-4">
-                                        <i class="bi bi-info-circle me-1"></i> No programs found.
-                                    </td>
-                                </tr>
-                            @endforelse
+                            @endforeach
                         </tbody>
-                    </table>
-                </div>
+                    </x-data-table>
 
-                <!-- Pagination -->
-                @if ($programs->hasPages())
-                    <div class="card-footer bg-light border-top-0">
-                        {{ $programs->links() }}
-                    </div>
-                @endif
+                </div>
             </div>
 
         </div>

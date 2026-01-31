@@ -9,7 +9,7 @@
     <meta name="keyword" content="">
     <meta name="author" content="WRAPCODERS">
 
-    <title>@yield('title', 'Duralux || Proposal')</title>
+    <title>@yield('title', 'AUC || AUC')</title>
 
     <!-- Favicon -->
     <link rel="shortcut icon" type="image/x-icon" href="{{ asset('assets/images/favicon.ico') }}">

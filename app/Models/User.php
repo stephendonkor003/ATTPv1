@@ -24,6 +24,8 @@ class User extends Authenticatable
         'password',
         'user_type',
         'must_change_password',
+        'password_changed_at',
+        'otp_verified_at',
         'role_id',
         'governance_node_id',
     ];
@@ -45,6 +47,8 @@ class User extends Authenticatable
             'email_verified_at'     => 'datetime',
             'password'              => 'hashed',
             'must_change_password'  => 'boolean',
+            'password_changed_at'   => 'datetime',
+            'otp_verified_at'       => 'datetime',
         ];
     }
 
@@ -102,6 +106,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Funding partner portal relationship
+     */
+    public function funderPortal()
+    {
+        return $this->hasOne(Funder::class, 'user_id');
+    }
+
+    /**
      * Direct permissions (override layer)
      */
     public function permissions()
@@ -139,5 +151,132 @@ class User extends Authenticatable
     public function hasRole(string $roleName): bool
     {
         return $this->role && $this->role->name === $roleName;
+    }
+
+    public function isFundingPartner(): bool
+    {
+        return $this->user_type === 'funding_partner';
+    }
+
+    /* =====================================================
+     | SECURITY & PASSWORD MANAGEMENT
+     ===================================================== */
+
+    /**
+     * Relationship to login OTPs
+     */
+    public function loginOtps()
+    {
+        return $this->hasMany(UserLoginOtp::class);
+    }
+
+    /**
+     * Check if user must change password (first login or forced)
+     */
+    public function mustChangePassword(): bool
+    {
+        // Admin users are exempt
+        if ($this->isSuperAdmin()) {
+            return false;
+        }
+
+        return $this->must_change_password === true;
+    }
+
+    /**
+     * Check if password has expired (older than 2 months)
+     */
+    public function isPasswordExpired(): bool
+    {
+        // Admin users are exempt
+        if ($this->isSuperAdmin()) {
+            return false;
+        }
+
+        // If never changed, not expired (but must_change_password will catch it)
+        if (!$this->password_changed_at) {
+            return false;
+        }
+
+        // Password expires after 60 days (2 months)
+        return $this->password_changed_at->addDays(60)->isPast();
+    }
+
+    /**
+     * Check if user requires OTP verification
+     */
+    public function requiresOtpVerification(): bool
+    {
+        // Admin users are exempt from OTP
+        if ($this->isSuperAdmin()) {
+            return false;
+        }
+
+        // Funding partners are exempt (they have their own flow)
+        if ($this->isFundingPartner()) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Check if OTP was verified in current session
+     */
+    public function hasVerifiedOtpRecently(): bool
+    {
+        // Check if OTP was verified within last 24 hours
+        if (!$this->otp_verified_at) {
+            return false;
+        }
+
+        return $this->otp_verified_at->isAfter(now()->subHours(24));
+    }
+
+    /**
+     * Mark password as changed
+     */
+    public function markPasswordAsChanged(): void
+    {
+        $this->update([
+            'password_changed_at' => now(),
+            'must_change_password' => false,
+        ]);
+    }
+
+    /**
+     * Mark OTP as verified
+     */
+    public function markOtpAsVerified(): void
+    {
+        $this->update([
+            'otp_verified_at' => now(),
+        ]);
+    }
+
+    /**
+     * Get days until password expires
+     */
+    public function daysUntilPasswordExpires(): ?int
+    {
+        if (!$this->password_changed_at) {
+            return null;
+        }
+
+        $expiryDate = $this->password_changed_at->addDays(60);
+
+        if ($expiryDate->isPast()) {
+            return 0;
+        }
+
+        return now()->diffInDays($expiryDate);
+    }
+
+    /**
+     * Check if user is Super Admin
+     */
+    public function isSuperAdmin(): bool
+    {
+        return $this->role && $this->role->name === 'Super Admin';
     }
 }

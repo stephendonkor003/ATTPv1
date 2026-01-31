@@ -4,9 +4,12 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Mail\Security\LoginOtpMail;
+use App\Models\UserLoginOtp;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\View\View;
 
 class AuthenticatedSessionController extends Controller
@@ -22,15 +25,6 @@ class AuthenticatedSessionController extends Controller
     /**
      * Handle an incoming authentication request.
      */
-    // public function store(LoginRequest $request): RedirectResponse
-    // {
-    //     $request->authenticate();
-
-    //     $request->session()->regenerate();
-
-    //     return redirect()->intended(route('dashboard', absolute: false));
-    // }
-
     public function store(LoginRequest $request): RedirectResponse
     {
         $request->authenticate();
@@ -38,20 +32,57 @@ class AuthenticatedSessionController extends Controller
 
         $user = Auth::user();
 
-        // Redirect applicants to change password if required
-        if ($user->user_type === 'applicant' && $user->must_change_password) {
-            return redirect()->route('password.change.form');
+        // Check if user is a super admin (bypass all security checks)
+        if ($user->isSuperAdmin()) {
+            // Funding partners who are also super admins go to partner dashboard
+            if ($user->user_type === 'funding_partner' || $user->isFundingPartner()) {
+                return redirect()->intended(route('partner.dashboard', absolute: false));
+            }
+            return redirect()->intended(route('dashboard', absolute: false));
         }
 
+        // Check if password change is required (first login or expired)
+        if ($user->mustChangePassword() || $user->isPasswordExpired()) {
+            return redirect()->route('security.password.change');
+        }
+
+        // Generate and send OTP for non-admin users
+        if ($user->requiresOtpVerification()) {
+            $this->sendLoginOtp($user, $request->session()->getId());
+            return redirect()->route('security.otp.show')
+                ->with('otpSent', true);
+        }
+
+        // Redirect funding partners to their portal
+        if ($user->user_type === 'funding_partner' || $user->isFundingPartner()) {
+            return redirect()->intended(route('partner.dashboard', absolute: false));
+        }
+
+        // Default redirect to admin dashboard for all other users
         return redirect()->intended(route('dashboard', absolute: false));
     }
 
+    /**
+     * Generate and send OTP to the user's email.
+     */
+    protected function sendLoginOtp($user, ?string $sessionId = null): void
+    {
+        // Generate new OTP
+        $otp = UserLoginOtp::generateFor($user, $sessionId);
+
+        // Send email with OTP
+        Mail::to($user->email)->send(new LoginOtpMail($user, $otp->otp_code));
+    }
 
     /**
      * Destroy an authenticated session.
      */
     public function destroy(Request $request): RedirectResponse
     {
+        // Clear OTP verification status from session
+        $request->session()->forget('otp_verified');
+        $request->session()->forget('otp_verified_at');
+
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();

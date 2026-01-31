@@ -11,7 +11,7 @@
             <div class="modal-content border-0 shadow-lg">
                 <div class="modal-header bg-success text-white">
                     <h5 class="modal-title" id="programInfoModalLabel">
-                        <i class="bi bi-diagram-3 me-2"></i> Program Information
+                        <i class="feather-folder me-2"></i> Program Information
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
@@ -32,7 +32,7 @@
                 </div>
                 <div class="modal-footer">
                     <button class="btn btn-outline-secondary" data-bs-dismiss="modal">
-                        <i class="bi bi-x-circle me-1"></i> Close
+                        <i class="feather-x-circle me-1"></i> Close
                     </button>
                 </div>
             </div>
@@ -47,7 +47,7 @@
             <div class="page-header d-flex justify-content-between align-items-center mb-4">
                 <div>
                     <h4 class="mb-1">
-                        <i class="bi bi-diagram-3 me-2 text-success"></i>
+                        <i class="feather-folder me-2 text-success"></i>
                         Projects under {{ $program->name }}
                     </h4>
                     <p class="text-muted mb-0">
@@ -55,7 +55,7 @@
                     </p>
                 </div>
                 <a href="{{ route('projects.create') }}" class="btn btn-success">
-                    <i class="bi bi-plus-circle me-1"></i> Add Project
+                    <i class="feather-plus-circle me-1"></i> Add Project
                 </a>
             </div>
 
@@ -64,13 +64,13 @@
                     ======================= -->
             @if (session('success'))
                 <div class="alert alert-success alert-dismissible fade show">
-                    <i class="bi bi-check-circle-fill me-2"></i> {{ session('success') }}
+                    <i class="feather-check-circle me-2"></i> {{ session('success') }}
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
             @endif
             @if (session('error'))
                 <div class="alert alert-danger alert-dismissible fade show">
-                    <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ session('error') }}
+                    <i class="feather-alert-triangle me-2"></i> {{ session('error') }}
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
             @endif
@@ -82,74 +82,124 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h6 class="fw-semibold mb-0">
-                            <i class="bi bi-list-task me-2 text-primary"></i> Total Projects:
+                            <i class="feather-list me-2 text-primary"></i> Total Projects:
                             <span class="text-dark">{{ $projects->count() }}</span>
                         </h6>
                         <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal"
                             data-bs-target="#programInfoModal">
-                            <i class="bi bi-info-circle me-1"></i> Program Details
+                            <i class="feather-info me-1"></i> Program Details
                         </button>
                     </div>
 
-                    <div class="table-responsive">
-                        <table class="table table-bordered align-middle mb-0">
-                            <thead class="table-light">
+                    <x-data-table
+                        id="projectsTable"
+                        :config="[
+                            'order' => [[1, 'asc']],
+                            'pageLength' => 25,
+                            'lengthMenu' => [[10, 25, 50, 100, -1], [10, 25, 50, 100, 'All']],
+                            'dom' => 'Bfrtip',
+                            'buttons' => [
+                                [
+                                    'extend' => 'copy',
+                                    'text' => '<i class=\"feather-copy\"></i> Copy',
+                                    'className' => 'btn btn-sm btn-secondary'
+                                ],
+                                [
+                                    'extend' => 'excel',
+                                    'text' => '<i class=\"feather-file\"></i> Excel',
+                                    'className' => 'btn btn-sm btn-success',
+                                    'exportOptions' => ['columns' => ':visible:not(:last-child)']
+                                ],
+                                [
+                                    'extend' => 'pdf',
+                                    'text' => '<i class=\"feather-file-text\"></i> PDF',
+                                    'className' => 'btn btn-sm btn-danger',
+                                    'exportOptions' => ['columns' => ':visible:not(:last-child)']
+                                ],
+                                [
+                                    'extend' => 'print',
+                                    'text' => '<i class=\"feather-printer\"></i> Print',
+                                    'className' => 'btn btn-sm btn-info',
+                                    'exportOptions' => ['columns' => ':visible:not(:last-child)']
+                                ],
+                                [
+                                    'extend' => 'colvis',
+                                    'text' => '<i class=\"feather-eye\"></i> Columns',
+                                    'className' => 'btn btn-sm btn-primary'
+                                ]
+                            ],
+                            'columnDefs' => [
+                                ['orderable' => false, 'targets' => [0, -1]],
+                                ['searchable' => false, 'targets' => [0, -1]],
+                                ['width' => '50px', 'targets' => 0],
+                                ['width' => '120px', 'targets' => 1],
+                                ['width' => '120px', 'targets' => -1]
+                            ]
+                        ]"
+                    >
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Project ID</th>
+                                <th>Project Name</th>
+                                <th>Program</th>
+                                <th>Total Budget (GHS)</th>
+                                <th>Duration (Yrs)</th>
+                                <th>Created On</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($projects as $project)
                                 <tr>
-                                    <th style="width: 5%">#</th>
-                                    <th style="width: 15%">Project ID</th>
-                                    <th style="width: 25%">Project Name</th>
-                                    <th style="width: 15%">Total Budget (GHS)</th>
-                                    <th style="width: 10%">Duration (Yrs)</th>
-                                    <th style="width: 15%">Created On</th>
-                                    <th class="text-center" style="width: 15%">Actions</th>
+                                    <td>{{ $loop->iteration }}</td>
+                                    <td><span class="fw-semibold text-primary">{{ $project->project_id }}</span></td>
+                                    <td>{{ $project->name }}</td>
+                                    <td>
+                                        <span class="badge bg-success-subtle text-success">
+                                            {{ $project->program->name ?? 'N/A' }}
+                                        </span>
+                                    </td>
+                                    <td>{{ number_format($project->total_budget, 2) }}</td>
+                                    <td>
+                                        <span class="badge bg-secondary">
+                                            {{ $project->duration_years }}
+                                        </span>
+                                    </td>
+                                    <td>{{ $project->created_at->format('d M, Y') }}</td>
+                                    <td class="text-center">
+                                        <a href="{{ route('projects.show', $project->id) }}"
+                                            class="btn btn-sm btn-outline-info" title="View Details">
+                                            <i class="feather-eye"></i>
+                                        </a>
+                                        <a href="{{ route('projects.edit', $project->id) }}"
+                                            class="btn btn-sm btn-outline-warning" title="Edit Project">
+                                            <i class="feather-edit"></i>
+                                        </a>
+                                        <form action="{{ route('projects.destroy', $project->id) }}" method="POST"
+                                            class="d-inline">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                onclick="return confirm('Are you sure you want to delete this project?')"
+                                                title="Delete Project">
+                                                <i class="feather-trash-2"></i>
+                                            </button>
+                                        </form>
+                                    </td>
                                 </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($projects as $index => $project)
-                                    <tr>
-                                        <td>{{ $index + 1 }}</td>
-                                        <td><span class="fw-semibold text-primary">{{ $project->project_id }}</span></td>
-                                        <td>{{ $project->name }}</td>
-                                        <td>{{ number_format($project->total_budget, 2) }}</td>
-                                        <td>{{ $project->duration_years }}</td>
-                                        <td>{{ $project->created_at->format('d M, Y') }}</td>
-                                        <td class="text-center">
-                                            <div class="btn-group">
-                                                <a href="{{ route('projects.show', $project->id) }}"
-                                                    class="btn btn-sm btn-outline-info" title="View Details">
-                                                    <i class="bi bi-eye"></i>
-                                                </a>
-                                                <a href="{{ route('projects.edit', $project->id) }}"
-                                                    class="btn btn-sm btn-outline-primary" title="Edit Project">
-                                                    <i class="bi bi-pencil"></i>
-                                                </a>
-                                                <form action="{{ route('projects.destroy', $project->id) }}" method="POST"
-                                                    class="d-inline">
-                                                    @csrf
-                                                    <button type="submit" class="btn btn-sm btn-outline-danger"
-                                                        onclick="return confirm('Are you sure you want to delete this project?')"
-                                                        title="Delete Project">
-                                                        <i class="bi bi-trash3"></i>
-                                                    </button>
-                                                </form>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="7" class="text-center text-muted py-4">
-                                            <i class="bi bi-info-circle me-1"></i>
-                                            No projects have been added under this program yet.
-                                        </td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
+                            @empty
+                                <tr>
+                                    <td colspan="8" class="text-center text-muted py-4">
+                                        <i class="feather-info"></i>
+                                        No projects have been added under this program yet.
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </x-data-table>
                 </div>
             </div>
-
-
 
         </div>
     </main>

@@ -18,22 +18,22 @@
         </div>
 
         {{-- ================= TABLE ================= --}}
-        <div class="card shadow-sm">
-            <div class="card-body p-0">
-                <table class="table table-hover table-bordered align-middle mb-0">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <x-data-table id="templatesTable">
                     <thead class="table-light">
                         <tr>
-                            <th>Name</th>
+                            <th class="ps-4">Name</th>
                             <th>Description</th>
-                            <th>Status</th>
-                            <th>Criteria</th>
-                            <th width="160">Actions</th>
+                            <th class="text-center">Status</th>
+                            <th class="text-center">Criteria</th>
+                            <th width="160" class="text-center">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse ($templates as $template)
+                        @foreach ($templates as $template)
                             <tr>
-                                <td class="fw-semibold">
+                                <td class="ps-4 fw-semibold">
                                     {{ $template->name }}
                                 </td>
 
@@ -41,37 +41,32 @@
                                     {{ Str::limit($template->description, 80) ?? '—' }}
                                 </td>
 
-                                <td>
-                                    <span class="badge {{ $template->is_active ? 'bg-success' : 'bg-secondary' }}">
+                                <td class="text-center">
+                                    <span class="badge {{ $template->is_active ? 'bg-success' : 'bg-secondary' }} px-3 py-1">
                                         {{ $template->is_active ? 'Active' : 'Inactive' }}
                                     </span>
                                 </td>
 
                                 <td class="text-center">
-                                    {{ $template->criteria_count ?? $template->criteria->count() }}
+                                    <span class="badge bg-info px-3 py-1">
+                                        {{ $template->criteria_count ?? $template->criteria->count() }}
+                                    </span>
                                 </td>
 
                                 <td class="text-center">
                                     <a href="{{ route('prescreening.templates.show', $template) }}"
                                         class="btn btn-sm btn-outline-primary">
-                                        View
+                                        <i class="feather-eye"></i>
                                     </a>
-
                                     <a href="{{ route('prescreening.templates.edit', $template) }}"
                                         class="btn btn-sm btn-outline-secondary">
-                                        Edit
+                                        <i class="feather-edit"></i>
                                     </a>
                                 </td>
                             </tr>
-                        @empty
-                            <tr>
-                                <td colspan="5" class="text-center text-muted py-4">
-                                    No prescreening templates created yet.
-                                </td>
-                            </tr>
-                        @endforelse
+                        @endforeach
                     </tbody>
-                </table>
+                </x-data-table>
             </div>
         </div>
 

@@ -30,11 +30,13 @@ class DatabaseSeeder extends Seeder
         RoleSeeder::class,
         PermissionSeeder::class,
         RolePermissionSeeder::class,
+        PartnerPortalPermissionsSeeder::class,
         GovernanceLevelSeeder::class,
         GovernanceNodeSeeder::class,
         GovernanceReportingLineSeeder::class,
         UserSeeder::class,
         GovernanceAssignmentSeeder::class,
+        AssignPartnerPermissionsSeeder::class,
     ]);
 }
 

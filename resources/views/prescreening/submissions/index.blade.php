@@ -4,9 +4,12 @@
     <div class="nxl-container">
 
         {{-- ================= PAGE HEADER ================= --}}
-        <div class="page-header d-flex justify-content-between align-items-center">
+        <div class="page-header d-flex justify-content-between align-items-center mb-3">
             <div>
-                <h4 class="fw-bold mb-1">Prescreening Evaluations</h4>
+                <h4 class="fw-bold mb-1">
+                    <i class="feather-file-text text-primary me-2"></i>
+                    Prescreening Evaluations
+                </h4>
                 <p class="text-muted mb-0">
                     Review prescreening outcomes submitted by evaluators.
                     Locked evaluations can only be edited when a rework is requested.
@@ -15,7 +18,7 @@
         </div>
 
         {{-- ================= STATUS LEGEND ================= --}}
-        <div class="card mt-3 border-0 shadow-sm">
+        <div class="card mb-3 border-0 shadow-sm">
             <div class="card-body">
                 <h6 class="fw-bold mb-3">Status Guide</h6>
 
@@ -38,42 +41,22 @@
             </div>
         </div>
 
-        {{-- ================= SEARCH BAR ================= --}}
-        <div class="card mt-3 shadow-sm">
-            <div class="card-body">
-                <div class="row align-items-center">
-                    <div class="col-md-6">
-                        <h6 class="fw-bold mb-0">Search Evaluations</h6>
-                        <small class="text-muted">
-                            Type to filter by submission code, procurement, evaluator, or status.
-                        </small>
-                    </div>
-
-                    <div class="col-md-6 text-md-end mt-2 mt-md-0">
-                        <input type="text" id="evaluationSearch" class="form-control" placeholder="🔍 Search...">
-                    </div>
-                </div>
-            </div>
-        </div>
-
         {{-- ================= TABLE CARD ================= --}}
-        <div class="card mt-4 shadow-sm">
+        <div class="card shadow-sm border-0">
             <div class="card-body">
-
-                <table class="table table-hover table-bordered align-middle" id="evaluationTable">
+                <x-data-table id="evaluationTable">
                     <thead class="table-light">
                         <tr>
-                            <th>#</th>
-                            <th>Submission Code</th>
+                            <th class="ps-4">Submission Code</th>
                             <th>Procurement</th>
-                            <th>Status</th>
+                            <th class="text-center">Status</th>
                             <th>Evaluator</th>
-                            <th>Actions</th>
+                            <th width="160" class="text-center">Actions</th>
                         </tr>
                     </thead>
 
                     <tbody>
-                        @forelse ($submissions as $submission)
+                        @foreach ($submissions as $submission)
                             @php
                                 $statusColors = [
                                     'submitted' => 'secondary',
@@ -88,23 +71,21 @@
                                 $badge = $statusColors[$status] ?? 'info';
                             @endphp
 
-                            <tr class="search-row">
-                                <td>{{ $loop->iteration }}</td>
-
-                                <td class="searchable">
-                                    <strong>{{ $submission->procurement_submission_code }}</strong>
-                                    <br>
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="fw-semibold text-primary">{{ $submission->procurement_submission_code }}</div>
                                     <small class="text-muted">
                                         {{ $submission->created_at?->diffForHumans() }}
                                     </small>
                                 </td>
 
-                                <td class="searchable">
-                                    {{ $submission->procurement->title }}
+                                <td>
+                                    <div class="fw-medium">{{ $submission->procurement->title }}</div>
+                                    <small class="text-muted">{{ $submission->procurement->reference_no ?? '—' }}</small>
                                 </td>
 
-                                <td class="searchable">
-                                    <span class="badge bg-{{ $badge }}">
+                                <td class="text-center">
+                                    <span class="badge bg-{{ $badge }} px-3 py-1">
                                         {{ str_replace('_', ' ', ucfirst($status)) }}
                                     </span>
 
@@ -116,14 +97,14 @@
                                     @endif
                                 </td>
 
-                                <td class="searchable">
+                                <td>
                                     {{ optional($submission->prescreeningResult?->evaluator)->name ?? '—' }}
                                 </td>
 
-                                <td class="text-nowrap">
+                                <td class="text-center">
                                     <a href="{{ route('prescreening.submissions.show', $submission) }}"
                                         class="btn btn-sm btn-outline-primary">
-                                        View
+                                        <i class="feather-eye me-1"></i> View
                                     </a>
 
                                     @can('prescreening.request_rework')
@@ -141,37 +122,11 @@
                                     @endcan
                                 </td>
                             </tr>
-
-                        @empty
-                            <tr>
-                                <td colspan="6" class="text-center text-muted py-4">
-                                    <i class="feather-inbox fs-4"></i><br>
-                                    No prescreening evaluations found.
-                                </td>
-                            </tr>
-                        @endforelse
+                        @endforeach
                     </tbody>
-                </table>
-
+                </x-data-table>
             </div>
         </div>
 
     </div>
-
-    {{-- ================= AUTO SEARCH SCRIPT ================= --}}
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const searchInput = document.getElementById('evaluationSearch');
-            const rows = document.querySelectorAll('#evaluationTable tbody tr.search-row');
-
-            searchInput.addEventListener('keyup', function() {
-                const query = this.value.toLowerCase().trim();
-
-                rows.forEach(row => {
-                    const text = row.innerText.toLowerCase();
-                    row.style.display = text.includes(query) ? '' : 'none';
-                });
-            });
-        });
-    </script>
 @endsection

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\GovernanceNode;
 
 class Project extends Model
 {
@@ -34,6 +35,11 @@ class Project extends Model
         return $this->belongsTo(Program::class, 'program_id');
     }
 
+    // Each Project belongs to a Governance Node
+    public function governanceNode()
+    {
+        return $this->belongsTo(GovernanceNode::class, 'governance_node_id');
+    }
 
     public function sector()
     {

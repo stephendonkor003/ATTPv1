@@ -46,6 +46,13 @@
                                     </a>
                                 </li>
                             @endcanany
+                            @canany(['finance.funders.view', 'finance.funders.manage'])
+                                <li class="nxl-item">
+                                    <a href="{{ route('finance.funders.index') }}" class="nxl-link">
+                                        <i class="feather-globe me-2"></i> {{ __('admin.funding_partners') }}
+                                    </a>
+                                </li>
+                            @endcanany
 
                             @canany(['finance.program_funding.view', 'finance.program_funding.manage'])
                                 <li class="nxl-item">
@@ -55,13 +62,7 @@
                                 </li>
                             @endcanany
 
-                            @canany(['finance.funders.view', 'finance.funders.manage'])
-                                <li class="nxl-item">
-                                    <a href="{{ route('finance.funders.index') }}" class="nxl-link">
-                                        <i class="feather-globe me-2"></i> {{ __('admin.funding_partners') }}
-                                    </a>
-                                </li>
-                            @endcanany
+
 
                         </ul>
                     </li>
@@ -624,6 +625,54 @@
                 @endcanany
 
 
+                {{-- ================= AU MASTER DATA ================= --}}
+                @canany(['settings.au_master_data.view', 'settings.au_master_data.create', 'settings.au_master_data.edit'])
+                    <li class="nxl-item nxl-caption">
+                        <label>AU Master Data</label>
+                    </li>
+
+                    <li class="nxl-item nxl-hasmenu">
+                        <a href="javascript:void(0);" class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-globe"></i></span>
+                            <span class="nxl-mtext">AU Configuration</span>
+                            <span class="nxl-arrow"><i class="feather-chevron-right"></i></span>
+                        </a>
+
+                        <ul class="nxl-submenu">
+                            @can('settings.au_master_data.view')
+                                <li class="nxl-item">
+                                    <a href="{{ route('settings.au.member-states.index') }}" class="nxl-link">
+                                        <i class="feather-flag me-2"></i> Member States
+                                    </a>
+                                </li>
+
+                                <li class="nxl-item">
+                                    <a href="{{ route('settings.au.regional-blocks.index') }}" class="nxl-link">
+                                        <i class="feather-map me-2"></i> Regional Blocks (RECs)
+                                    </a>
+                                </li>
+
+                                <li class="nxl-item">
+                                    <a href="{{ route('settings.au.aspirations.index') }}" class="nxl-link">
+                                        <i class="feather-star me-2"></i> Aspirations
+                                    </a>
+                                </li>
+
+                                <li class="nxl-item">
+                                    <a href="{{ route('settings.au.goals.index') }}" class="nxl-link">
+                                        <i class="feather-target me-2"></i> Goals
+                                    </a>
+                                </li>
+
+                                <li class="nxl-item">
+                                    <a href="{{ route('settings.au.flagship-projects.index') }}" class="nxl-link">
+                                        <i class="feather-award me-2"></i> Flagship Projects
+                                    </a>
+                                </li>
+                            @endcan
+                        </ul>
+                    </li>
+                @endcanany
 
 
             </ul>

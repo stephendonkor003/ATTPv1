@@ -4,7 +4,10 @@
     <div class="nxl-container">
 
         <div class="page-header mb-4">
-            <h4 class="fw-bold mb-1">Evaluation Reports</h4>
+            <h4 class="fw-bold mb-1">
+                <i class="feather-file-text text-primary me-2"></i>
+                Evaluation Reports
+            </h4>
             <p class="text-muted mb-0">Comprehensive evaluation reports for submissions and procurements.</p>
         </div>
 
@@ -75,44 +78,47 @@
 
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const procSelect = document.getElementById('procurementSelect');
-            const procView = document.getElementById('procurementViewBtn');
-            const procPdf = document.getElementById('procurementPdfBtn');
-            const subSelect = document.getElementById('submissionSelect');
-            const subView = document.getElementById('submissionViewBtn');
-            const subPdf = document.getElementById('submissionPdfBtn');
-
-            procSelect.addEventListener('change', function() {
-                const value = this.value;
-                if (!value) {
-                    procView.classList.add('disabled');
-                    procPdf.classList.add('disabled');
-                    procView.href = '#';
-                    procPdf.href = '#';
-                    return;
-                }
-                procView.classList.remove('disabled');
-                procPdf.classList.remove('disabled');
-                procView.href = `{{ url('reports/evaluations/procurement') }}/${value}`;
-                procPdf.href = `{{ url('reports/evaluations/procurement') }}/${value}/pdf`;
-            });
-
-            subSelect.addEventListener('change', function() {
-                const value = this.value;
-                if (!value) {
-                    subView.classList.add('disabled');
-                    subPdf.classList.add('disabled');
-                    subView.href = '#';
-                    subPdf.href = '#';
-                    return;
-                }
-                subView.classList.remove('disabled');
-                subPdf.classList.remove('disabled');
-                subView.href = `{{ url('reports/evaluations/submission') }}/${value}`;
-                subPdf.href = `{{ url('reports/evaluations/submission') }}/${value}/pdf`;
-            });
-        });
-    </script>
 @endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const procSelect = document.getElementById('procurementSelect');
+        const procView = document.getElementById('procurementViewBtn');
+        const procPdf = document.getElementById('procurementPdfBtn');
+        const subSelect = document.getElementById('submissionSelect');
+        const subView = document.getElementById('submissionViewBtn');
+        const subPdf = document.getElementById('submissionPdfBtn');
+
+        procSelect.addEventListener('change', function() {
+            const value = this.value;
+            if (!value) {
+                procView.classList.add('disabled');
+                procPdf.classList.add('disabled');
+                procView.href = '#';
+                procPdf.href = '#';
+                return;
+            }
+            procView.classList.remove('disabled');
+            procPdf.classList.remove('disabled');
+            procView.href = `{{ url('reports/evaluations/procurement') }}/${value}`;
+            procPdf.href = `{{ url('reports/evaluations/procurement') }}/${value}/pdf`;
+        });
+
+        subSelect.addEventListener('change', function() {
+            const value = this.value;
+            if (!value) {
+                subView.classList.add('disabled');
+                subPdf.classList.add('disabled');
+                subView.href = '#';
+                subPdf.href = '#';
+                return;
+            }
+            subView.classList.remove('disabled');
+            subPdf.classList.remove('disabled');
+            subView.href = `{{ url('reports/evaluations/submission') }}/${value}`;
+            subPdf.href = `{{ url('reports/evaluations/submission') }}/${value}/pdf`;
+        });
+    });
+</script>
+@endpush

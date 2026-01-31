@@ -5,8 +5,11 @@
 
         {{-- HEADER --}}
         <div class="page-header mb-4">
-            <h4 class="page-title">Evaluator Assignment</h4>
-            <p class="text-muted">
+            <h4 class="fw-bold mb-1">
+                <i class="feather-user-check text-primary me-2"></i>
+                Evaluator Assignment
+            </h4>
+            <p class="text-muted mb-0">
                 Assign evaluators to procurements and manage evaluation workflow.
             </p>
         </div>
@@ -175,24 +178,27 @@
 
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            document.querySelectorAll('.assignment-type').forEach(select => {
-                const procurementId = select.dataset.procurement;
-                const submissionWrap = document.getElementById(`submissionSelect${procurementId}`);
-                const submissionSelect = submissionWrap?.querySelector('select[name="submission_id"]');
-
-                const toggleSubmission = () => {
-                    const isSubmission = select.value === 'submission';
-                    submissionWrap.classList.toggle('d-none', !isSubmission);
-                    if (submissionSelect) {
-                        submissionSelect.required = isSubmission;
-                    }
-                };
-
-                select.addEventListener('change', toggleSubmission);
-                toggleSubmission();
-            });
-        });
-    </script>
 @endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.assignment-type').forEach(select => {
+            const procurementId = select.dataset.procurement;
+            const submissionWrap = document.getElementById(`submissionSelect${procurementId}`);
+            const submissionSelect = submissionWrap?.querySelector('select[name="submission_id"]');
+
+            const toggleSubmission = () => {
+                const isSubmission = select.value === 'submission';
+                submissionWrap.classList.toggle('d-none', !isSubmission);
+                if (submissionSelect) {
+                    submissionSelect.required = isSubmission;
+                }
+            };
+
+            select.addEventListener('change', toggleSubmission);
+            toggleSubmission();
+        });
+    });
+</script>
+@endpush

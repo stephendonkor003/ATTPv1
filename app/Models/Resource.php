@@ -33,11 +33,20 @@ class Resource extends Model
         return $this->belongsTo(ResourceCategory::class, 'resource_category_id');
     }
 
+    public function governanceNode()
+    {
+        return $this->belongsTo(GovernanceNode::class, 'governance_node_id');
+    }
+
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
     public function commitments()
     {
         return $this->hasMany(BudgetCommitment::class, 'resource_id');
     }
-
 
     public function procurements()
     {
@@ -47,5 +56,14 @@ class Resource extends Model
     public function forms()
     {
         return $this->hasMany(DynamicForm::class, 'resource_id');
+    }
+
+    /* =========================
+        SCOPES
+    ========================== */
+
+    public function scopeActive($query)
+    {
+        return $query->where('status', 'active');
     }
 }

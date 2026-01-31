@@ -144,6 +144,105 @@
             </div>
         @endif
 
+        {{-- ================= AU STRATEGIC ALIGNMENT ================= --}}
+        @if ($programFunding->is_continental_initiative ||
+             $programFunding->memberStates->count() ||
+             $programFunding->regionalBlocks->count() ||
+             $programFunding->aspirations->count() ||
+             $programFunding->goals->count() ||
+             $programFunding->flagshipProjects->count())
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-body">
+                    <h6 class="fw-bold mb-3">
+                        <i class="feather-globe me-1"></i> AU Strategic Alignment
+                    </h6>
+
+                    <div class="row g-4">
+                        {{-- Continental Initiative / Member States --}}
+                        <div class="col-md-6">
+                            <small class="text-muted d-block mb-2">Beneficiary Member States</small>
+                            @if ($programFunding->is_continental_initiative)
+                                <span class="badge bg-success fs-6">
+                                    <i class="feather-globe me-1"></i> Continental Initiative
+                                </span>
+                                <div class="small text-muted mt-1">Applies to all 55 AU member states</div>
+                            @elseif ($programFunding->memberStates->count())
+                                <div class="d-flex flex-wrap gap-1">
+                                    @foreach ($programFunding->memberStates as $state)
+                                        <span class="badge bg-light text-dark border">{{ $state->name }}</span>
+                                    @endforeach
+                                </div>
+                            @else
+                                <span class="text-muted">Not specified</span>
+                            @endif
+                        </div>
+
+                        {{-- Regional Blocks --}}
+                        <div class="col-md-6">
+                            <small class="text-muted d-block mb-2">Regional Blocks (RECs)</small>
+                            @if ($programFunding->regionalBlocks->count())
+                                <div class="d-flex flex-wrap gap-1">
+                                    @foreach ($programFunding->regionalBlocks as $block)
+                                        <span class="badge bg-info text-dark">
+                                            {{ $block->abbreviation ?? $block->name }}
+                                        </span>
+                                    @endforeach
+                                </div>
+                            @else
+                                <span class="text-muted">Not specified</span>
+                            @endif
+                        </div>
+
+                        {{-- Aspirations --}}
+                        <div class="col-md-6">
+                            <small class="text-muted d-block mb-2">Agenda 2063 Aspirations</small>
+                            @if ($programFunding->aspirations->count())
+                                <div class="d-flex flex-wrap gap-1">
+                                    @foreach ($programFunding->aspirations as $aspiration)
+                                        <span class="badge bg-primary">
+                                            Aspiration {{ $aspiration->number }}
+                                        </span>
+                                    @endforeach
+                                </div>
+                            @else
+                                <span class="text-muted">Not specified</span>
+                            @endif
+                        </div>
+
+                        {{-- Goals --}}
+                        <div class="col-md-6">
+                            <small class="text-muted d-block mb-2">Agenda 2063 Goals</small>
+                            @if ($programFunding->goals->count())
+                                <div class="d-flex flex-wrap gap-1">
+                                    @foreach ($programFunding->goals as $goal)
+                                        <span class="badge bg-secondary">
+                                            Goal {{ $goal->number }}
+                                        </span>
+                                    @endforeach
+                                </div>
+                            @else
+                                <span class="text-muted">Not specified</span>
+                            @endif
+                        </div>
+
+                        {{-- Flagship Projects --}}
+                        @if ($programFunding->flagshipProjects->count())
+                            <div class="col-md-12">
+                                <small class="text-muted d-block mb-2">AU Flagship Projects</small>
+                                <div class="d-flex flex-wrap gap-1">
+                                    @foreach ($programFunding->flagshipProjects as $project)
+                                        <span class="badge bg-warning text-dark">
+                                            #{{ $project->number }}: {{ $project->name }}
+                                        </span>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        @endif
+
         {{-- ================= SUPPORTING DOCUMENTS ================= --}}
         <div class="card shadow-sm border-0 mb-4">
             <div class="card-body">

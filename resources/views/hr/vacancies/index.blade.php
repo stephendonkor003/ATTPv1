@@ -27,135 +27,121 @@
 
         {{-- ================= VACANCIES TABLE ================= --}}
         <div class="card shadow-sm border-0">
-            <div class="card-header bg-white border-0 pb-0">
-                <h6 class="fw-semibold mb-1">Vacancies List</h6>
-                <p class="text-muted small mb-0">
-                    All vacancies and their current approval or publication status
-                </p>
-            </div>
+            <div class="card-body">
+                <x-data-table id="vacanciesTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">Vacancy Code</th>
+                            <th>Position</th>
+                            <th>Governance Node</th>
+                            <th class="text-center">Employment Type</th>
+                            <th class="text-center">Visibility</th>
+                            <th class="text-center">Status</th>
+                            <th class="text-center" width="180">Actions</th>
+                        </tr>
+                    </thead>
 
-            <div class="card-body pt-3">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle w-100 mb-0 hr-vacancies-table">
-                        <thead class="table-light">
+                    <tbody>
+                        @foreach ($vacancies as $vacancy)
                             <tr>
-                                <th>Vacancy Code</th>
-                                <th>Position</th>
-                                <th>Employment Type</th>
-                                <th>Visibility</th>
-                                <th>Status</th>
-                                <th class="text-end">Actions</th>
-                            </tr>
-                        </thead>
+                                <td class="ps-4 fw-semibold">
+                                    {{ $vacancy->vacancy_code }}
+                                </td>
 
-                        <tbody>
-                            @forelse ($vacancies as $vacancy)
-                                <tr>
-                                    <td class="fw-semibold">
-                                        {{ $vacancy->vacancy_code }}
-                                    </td>
+                                <td>
+                                    <div class="fw-medium">{{ $vacancy->position->title }}</div>
+                                    <small class="text-muted">
+                                        {{ $vacancy->open_date->format('d M') }} - {{ $vacancy->close_date->format('d M Y') }}
+                                    </small>
+                                </td>
 
-                                    <td>
-                                        {{ $vacancy->position->title }}
-                                    </td>
-
-                                    <td>
-                                        <span class="badge bg-info-subtle text-info px-3 py-1">
-                                            {{ ucfirst($vacancy->position->employment_type) }}
+                                <td>
+                                    @if($vacancy->governanceNode)
+                                        <span class="badge bg-primary-subtle text-primary">
+                                            <i class="feather-layers me-1"></i>
+                                            {{ $vacancy->governanceNode->name }}
                                         </span>
-                                    </td>
+                                    @else
+                                        <span class="text-muted">—</span>
+                                    @endif
+                                </td>
 
-                                    <td>
-                                        @if ($vacancy->is_public)
-                                            <span class="badge bg-primary-subtle text-primary px-3 py-1">
-                                                Public
-                                            </span>
-                                        @else
-                                            <span class="badge bg-secondary-subtle text-secondary px-3 py-1">
-                                                Internal
-                                            </span>
+                                <td class="text-center">
+                                    <span class="badge bg-info-subtle text-info px-3 py-1">
+                                        {{ ucfirst($vacancy->position->employment_type) }}
+                                    </span>
+                                </td>
+
+                                <td class="text-center">
+                                    @if ($vacancy->is_public)
+                                        <span class="badge bg-primary-subtle text-primary px-3 py-1">
+                                            Public
+                                        </span>
+                                    @else
+                                        <span class="badge bg-secondary-subtle text-secondary px-3 py-1">
+                                            Internal
+                                        </span>
+                                    @endif
+                                </td>
+
+                                <td class="text-center">
+                                    @php
+                                        $statusMap = [
+                                            'draft' => 'secondary',
+                                            'submitted' => 'warning',
+                                            'approved' => 'info',
+                                            'published' => 'success',
+                                            'closed' => 'dark',
+                                        ];
+                                    @endphp
+                                    <span class="badge bg-{{ $statusMap[$vacancy->status] ?? 'secondary' }} px-3 py-1">
+                                        {{ ucfirst($vacancy->status) }}
+                                    </span>
+                                </td>
+
+                                <td class="text-center">
+                                    <div class="d-inline-flex gap-1">
+                                        @if ($vacancy->status === 'draft')
+                                            @can('hrm.vacancies.submit')
+                                                <form action="{{ route('hr.vacancies.submit', $vacancy->id) }}" method="POST">
+                                                    @csrf
+                                                    <button class="btn btn-sm btn-outline-warning">Submit</button>
+                                                </form>
+                                            @endcan
                                         @endif
-                                    </td>
 
-                                    {{-- STATUS --}}
-                                    <td>
-                                        @php
-                                            $statusMap = [
-                                                'draft' => 'secondary',
-                                                'submitted' => 'warning',
-                                                'approved' => 'info',
-                                                'published' => 'success',
-                                                'closed' => 'dark',
-                                            ];
-                                        @endphp
-                                        <span class="badge bg-{{ $statusMap[$vacancy->status] ?? 'secondary' }} px-3 py-1">
-                                            {{ ucfirst($vacancy->status) }}
-                                        </span>
-                                    </td>
+                                        @if ($vacancy->status === 'submitted')
+                                            @can('hr.vacancies.approve')
+                                                <form action="{{ route('hr.vacancies.approve', $vacancy->id) }}" method="POST">
+                                                    @csrf
+                                                    <button class="btn btn-sm btn-outline-info">Approve</button>
+                                                </form>
+                                            @endcan
+                                        @endif
 
-                                    {{-- ACTIONS --}}
-                                    <td class="text-end">
-                                        <div class="d-inline-flex gap-1">
+                                        @if ($vacancy->status === 'approved')
+                                            @can('hr.vacancies.approve')
+                                                <form action="{{ route('hr.vacancies.publish', $vacancy->id) }}" method="POST">
+                                                    @csrf
+                                                    <button class="btn btn-sm btn-outline-success">Publish</button>
+                                                </form>
+                                            @endcan
+                                        @endif
 
-                                            @if ($vacancy->status === 'draft')
-                                                @can('hrm.vacancies.submit')
-                                                    <form action="{{ route('hr.vacancies.submit', $vacancy->id) }}"
-                                                        method="POST">
-                                                        @csrf
-                                                        <button class="btn btn-sm btn-outline-warning">
-                                                            Submit for Approval
-                                                        </button>
-                                                    </form>
-                                                @endcan
-                                            @endif
-
-                                            @if ($vacancy->status === 'submitted')
-                                                @can('hr.vacancies.approve')
-                                                    <form action="{{ route('hr.vacancies.approve', $vacancy->id) }}"
-                                                        method="POST">
-                                                        @csrf
-                                                        <button class="btn btn-sm btn-outline-info">
-                                                            Approve
-                                                        </button>
-                                                    </form>
-                                                @endcan
-                                            @endif
-
-                                            @if ($vacancy->status === 'approved')
-                                                @can('hr.vacancies.approve')
-                                                    <form action="{{ route('hr.vacancies.publish', $vacancy->id) }}"
-                                                        method="POST">
-                                                        @csrf
-                                                        <button class="btn btn-sm btn-outline-success">
-                                                            Publish
-                                                        </button>
-                                                    </form>
-                                                @endcan
-                                            @endif
-
-                                            @if (in_array($vacancy->status, ['published', 'closed']))
-                                                @can('hr.applicants.view')
-                                                    <a href="{{ route('hr.vacancies.applicants', $vacancy->id) }}"
-                                                        class="btn btn-sm btn-outline-primary">
-                                                        Show Applicants
-                                                    </a>
-                                                @endcan
-                                            @endif
-
-                                        </div>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="6" class="text-center py-5 text-muted">
-                                        <i class="feather-inbox fs-4 d-block mb-2"></i>
-                                        No vacancies have been created yet
-                                    </td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
+                                        @if (in_array($vacancy->status, ['published', 'closed']))
+                                            @can('hr.applicants.view')
+                                                <a href="{{ route('hr.vacancies.applicants', $vacancy->id) }}"
+                                                    class="btn btn-sm btn-outline-primary">
+                                                    <i class="feather-users me-1"></i> Applicants
+                                                </a>
+                                            @endcan
+                                        @endif
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </x-data-table>
             </div>
         </div>
 
@@ -239,25 +225,4 @@
         </div>
     </div>
 
-    {{-- ================= STYLES ================= --}}
-    <style>
-        .hr-vacancies-table th {
-            font-size: 13px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: .04em;
-        }
-
-        .hr-vacancies-table td {
-            vertical-align: middle;
-        }
-
-        @media (max-width: 768px) {
-
-            .hr-vacancies-table th:nth-child(3),
-            .hr-vacancies-table td:nth-child(3) {
-                display: none;
-            }
-        }
-    </style>
 @endsection

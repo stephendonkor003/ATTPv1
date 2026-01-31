@@ -16,48 +16,45 @@
             </a>
         </div>
 
-        <div class="card shadow-sm">
-            <div class="card-body p-0">
-                <table class="table table-hover table-bordered align-middle mb-0">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <x-data-table id="criteriaTable">
                     <thead class="table-light">
                         <tr>
-                            <th>Order</th>
+                            <th class="ps-4">Order</th>
                             <th>Name</th>
                             <th>Field Key</th>
                             <th>Type</th>
-                            <th>Mandatory</th>
-                            <th width="160">Actions</th>
+                            <th class="text-center">Mandatory</th>
+                            <th width="160" class="text-center">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($criteria as $criterion)
+                        @foreach($criteria as $criterion)
                             <tr>
-                                <td>{{ $criterion->sort_order }}</td>
+                                <td class="ps-4">{{ $criterion->sort_order }}</td>
                                 <td class="fw-semibold">{{ $criterion->name }}</td>
                                 <td><code>{{ $criterion->field_key }}</code></td>
                                 <td>{{ ucfirst(str_replace('_', ' ', $criterion->evaluation_type)) }}</td>
-                                <td>
-                                    <span class="badge {{ $criterion->is_mandatory ? 'bg-success' : 'bg-secondary' }}">
+                                <td class="text-center">
+                                    <span class="badge {{ $criterion->is_mandatory ? 'bg-success' : 'bg-secondary' }} px-3 py-1">
                                         {{ $criterion->is_mandatory ? 'Yes' : 'No' }}
                                     </span>
                                 </td>
-                                <td>
+                                <td class="text-center">
                                     <a href="{{ route('prescreening.criteria.show', [$template, $criterion]) }}"
-                                        class="btn btn-sm btn-outline-primary">View</a>
-
+                                        class="btn btn-sm btn-outline-primary">
+                                        <i class="feather-eye"></i>
+                                    </a>
                                     <a href="{{ route('prescreening.criteria.edit', [$template, $criterion]) }}"
-                                        class="btn btn-sm btn-outline-secondary">Edit</a>
+                                        class="btn btn-sm btn-outline-secondary">
+                                        <i class="feather-edit"></i>
+                                    </a>
                                 </td>
                             </tr>
-                        @empty
-                            <tr>
-                                <td colspan="6" class="text-center text-muted py-4">
-                                    No criteria defined yet.
-                                </td>
-                            </tr>
-                        @endforelse
+                        @endforeach
                     </tbody>
-                </table>
+                </x-data-table>
             </div>
         </div>
 

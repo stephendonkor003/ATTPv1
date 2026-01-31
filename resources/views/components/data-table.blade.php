@@ -43,14 +43,15 @@
 @push('scripts')
 <script>
     $(document).ready(function() {
-        @if($configJson)
-            const customConfig = {!! $configJson !!};
-            $('#{{ $id }}').DataTable($.extend(true, {}, window.dataTableConfig, customConfig));
-        @else
-            if (!$.fn.DataTable.isDataTable('#{{ $id }}')) {
-                $('#{{ $id }}').DataTable(window.dataTableConfig);
-            }
-        @endif
+        // Check if DataTable is already initialized to prevent reinitializing
+        if (!$.fn.DataTable.isDataTable('#{{ $id }}')) {
+            @if($configJson)
+                const customConfig = {!! $configJson !!};
+                $('#{{ $id }}').DataTable($.extend(true, {}, window.dataTableConfig || {}, customConfig));
+            @else
+                $('#{{ $id }}').DataTable(window.dataTableConfig || {});
+            @endif
+        }
     });
 </script>
 @endpush

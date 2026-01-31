@@ -4,14 +4,17 @@
     <div class="nxl-container">
 
         <div class="page-header mb-4">
-            <h4 class="page-title">Evaluator Assignment</h4>
-            <p class="text-muted">
+            <h4 class="fw-bold mb-1">
+                <i class="feather-user-plus text-primary me-2"></i>
+                Evaluator Assignment
+            </h4>
+            <p class="text-muted mb-0">
                 Procurement: <strong>{{ $procurement->title }}</strong>
             </p>
         </div>
 
         {{-- ASSIGN FORM --}}
-        <div class="card shadow-sm mb-4">
+        <div class="card shadow-sm border-0 mb-4">
             <div class="card-body">
                 <form method="POST" action="{{ route('eval.assign.store') }}">
                     @csrf
@@ -20,7 +23,7 @@
 
                     <div class="row g-3">
                         <div class="col-md-4">
-                            <label class="form-label">Evaluation</label>
+                            <label class="form-label fw-semibold">Evaluation</label>
                             <select name="evaluation_id" class="form-select" required>
                                 <option value="">Select evaluation</option>
                                 @foreach ($evaluations as $eval)
@@ -32,7 +35,7 @@
                         </div>
 
                         <div class="col-md-4">
-                            <label class="form-label">Evaluator</label>
+                            <label class="form-label fw-semibold">Evaluator</label>
                             <select name="user_id" class="form-select" required>
                                 <option value="">Select evaluator</option>
                                 @foreach ($users as $user)
@@ -45,7 +48,7 @@
 
                         <div class="col-md-4 align-self-end">
                             <button class="btn btn-primary w-100">
-                                Assign Evaluator
+                                <i class="feather-user-plus me-1"></i> Assign Evaluator
                             </button>
                         </div>
                     </div>
@@ -54,78 +57,71 @@
         </div>
 
         {{-- ASSIGNED LIST --}}
-        <div class="card shadow-sm">
-            <table class="table table-bordered mb-0 align-middle">
-                <thead class="table-light">
-                    <tr>
-                        <th>Evaluator</th>
-                        <th>Evaluation</th>
-                        <th>Status</th>
-                        <th>Assigned At</th>
-                        <th width="260">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-
-                    @forelse ($assignments as $a)
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <x-data-table id="assignmentsTable">
+                    <thead class="table-light">
                         <tr>
-                            <td>{{ $a->evaluator->name }}</td>
-                            <td>{{ $a->evaluation->name }}</td>
-                            <td>
-                                @php
-                                    $map = [
-                                        'assigned' => 'secondary',
-                                        'submitted' => 'success',
-                                        'rework' => 'warning',
-                                    ];
-                                @endphp
-                                <span class="badge bg-{{ $map[$a->status] ?? 'secondary' }}">
-                                    {{ ucfirst($a->status) }}
-                                </span>
-                            </td>
-                            <td>{{ $a->assigned_at?->format('d M Y') }}</td>
-                            <td>
-                                <div class="d-flex gap-2">
-
-                                    {{-- Applicants --}}
-                                    <a href="{{ route('eval.assign.applicants', $a->id) }}"
-                                        class="btn btn-sm btn-outline-primary">
-                                        Applicants
-                                    </a>
-
-                                    {{-- Compare --}}
-                                    @if ($a->status === 'submitted')
-                                        <a href="{{ route('eval.assign.compare', $a->id) }}"
-                                            class="btn btn-sm btn-outline-success">
-                                            Compare
+                            <th class="ps-4">Evaluator</th>
+                            <th>Evaluation</th>
+                            <th class="text-center">Status</th>
+                            <th>Assigned At</th>
+                            <th width="260" class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($assignments as $a)
+                            @php
+                                $statusColors = [
+                                    'assigned' => 'secondary',
+                                    'submitted' => 'success',
+                                    'rework' => 'warning',
+                                ];
+                            @endphp
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="fw-medium">{{ $a->evaluator->name }}</div>
+                                    <small class="text-muted">{{ $a->evaluator->email }}</small>
+                                </td>
+                                <td>{{ $a->evaluation->name }}</td>
+                                <td class="text-center">
+                                    <span class="badge bg-{{ $statusColors[$a->status] ?? 'secondary' }} px-3 py-1">
+                                        {{ ucfirst($a->status) }}
+                                    </span>
+                                </td>
+                                <td>{{ $a->assigned_at?->format('d M Y') }}</td>
+                                <td class="text-center">
+                                    <div class="d-inline-flex gap-1">
+                                        <a href="{{ route('eval.assign.applicants', $a->id) }}"
+                                            class="btn btn-sm btn-outline-primary">
+                                            <i class="feather-users me-1"></i> Applicants
                                         </a>
-                                    @endif
 
-                                    {{-- Remove --}}
-                                    @if ($a->status !== 'submitted')
-                                        <form method="POST" action="{{ route('eval.assign.destroy', $a) }}"
-                                            onsubmit="return confirm('Remove evaluator?')">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button class="btn btn-sm btn-outline-danger">
-                                                Remove
-                                            </button>
-                                        </form>
-                                    @endif
+                                        @if ($a->status === 'submitted')
+                                            <a href="{{ route('eval.assign.compare', $a->id) }}"
+                                                class="btn btn-sm btn-outline-success">
+                                                <i class="feather-bar-chart-2 me-1"></i> Compare
+                                            </a>
+                                        @endif
 
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="5" class="text-center text-muted">
-                                No evaluators assigned
-                            </td>
-                        </tr>
-                    @endforelse
-
-                </tbody>
-            </table>
+                                        @if ($a->status !== 'submitted')
+                                            <form method="POST" action="{{ route('eval.assign.destroy', $a) }}"
+                                                class="d-inline"
+                                                onsubmit="return confirm('Remove evaluator?')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button class="btn btn-sm btn-outline-danger">
+                                                    <i class="feather-trash-2"></i>
+                                                </button>
+                                            </form>
+                                        @endif
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </x-data-table>
+            </div>
         </div>
 
     </div>

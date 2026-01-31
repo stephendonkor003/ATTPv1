@@ -48,8 +48,8 @@ class BudgetCommitmentController extends Controller
         $query->whereIn('governance_node_id', $scopedNodeIds)
             ->whereNotNull('governance_node_id');
     })
-    ->latest()
-    ->paginate(15);
+    ->orderBy('id', 'desc')
+    ->get();
 
     return view('finance.commitments.index', compact('commitments'));
 }
@@ -277,13 +277,19 @@ class BudgetCommitmentController extends Controller
      | ================== RESOURCE MANAGEMENT =================
      ========================================================= */
 
-    /** Resource Categories (index + store) */
+    /** Resource Categories (index + store + update + delete) */
     public function resourceCategories()
     {
+        $scopedNodeIds = $this->scopedNodeIds();
+        if ($scopedNodeIds !== null && empty($scopedNodeIds)) {
+            abort(403, 'You do not have access to resource categories.');
+        }
+
         return view('finance.resources.categories.index', [
-            'categories' => ResourceCategory::latest()
-                ->when($this->scopedNodeIds() !== null, function ($query) {
-                    $query->whereIn('governance_node_id', $this->scopedNodeIds())
+            'categories' => ResourceCategory::with('governanceNode')
+                ->latest()
+                ->when($scopedNodeIds !== null, function ($query) use ($scopedNodeIds) {
+                    $query->whereIn('governance_node_id', $scopedNodeIds)
                         ->whereNotNull('governance_node_id');
                 })
                 ->get()
@@ -293,7 +299,8 @@ class BudgetCommitmentController extends Controller
     public function storeResourceCategory(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:100'
+            'name' => 'required|string|max:100',
+            'description' => 'nullable|string|max:500',
         ]);
 
         $scopedNodeIds = $this->scopedNodeIds();
@@ -312,20 +319,63 @@ class BudgetCommitmentController extends Controller
         return back()->with('success', 'Resource category added.');
     }
 
+    public function updateResourceCategory(Request $request, ResourceCategory $category)
+    {
+        $this->assertResourceCategoryInScope($category->id);
+
+        $request->validate([
+            'name' => 'required|string|max:100',
+            'description' => 'nullable|string|max:500',
+            'status' => 'required|in:active,inactive',
+        ]);
+
+        $category->update([
+            'name' => $request->name,
+            'description' => $request->description,
+            'status' => $request->status,
+        ]);
+
+        return back()->with('success', 'Resource category updated.');
+    }
+
+    public function destroyResourceCategory(ResourceCategory $category)
+    {
+        $this->assertResourceCategoryInScope($category->id);
+
+        // Check if category has resources
+        if ($category->resources()->exists()) {
+            return back()->with('error', 'Cannot delete category with existing resources.');
+        }
+
+        // Check if category has commitments
+        if ($category->commitments()->exists()) {
+            return back()->with('error', 'Cannot delete category with existing commitments.');
+        }
+
+        $category->delete();
+
+        return back()->with('success', 'Resource category deleted.');
+    }
+
     /** Resources (items) */
     public function resources()
     {
+        $scopedNodeIds = $this->scopedNodeIds();
+        if ($scopedNodeIds !== null && empty($scopedNodeIds)) {
+            abort(403, 'You do not have access to resources.');
+        }
+
         return view('finance.resources.items.index', [
-            'resources' => Resource::with('category')
-                ->when($this->scopedNodeIds() !== null, function ($query) {
-                    $query->whereIn('governance_node_id', $this->scopedNodeIds())
+            'resources' => Resource::with(['category', 'governanceNode'])
+                ->when($scopedNodeIds !== null, function ($query) use ($scopedNodeIds) {
+                    $query->whereIn('governance_node_id', $scopedNodeIds)
                         ->whereNotNull('governance_node_id');
                 })
                 ->latest()
                 ->get(),
             'categories'=> ResourceCategory::where('status','active')
-                ->when($this->scopedNodeIds() !== null, function ($query) {
-                    $query->whereIn('governance_node_id', $this->scopedNodeIds())
+                ->when($scopedNodeIds !== null, function ($query) use ($scopedNodeIds) {
+                    $query->whereIn('governance_node_id', $scopedNodeIds)
                         ->whereNotNull('governance_node_id');
                 })
                 ->get()
@@ -377,6 +427,51 @@ class BudgetCommitmentController extends Controller
     return back()->with('success', 'Resource created successfully.');
 }
 
+    public function updateResource(Request $request, Resource $resource)
+    {
+        $this->assertResourceInScope($resource);
+
+        $validated = $request->validate([
+            'resource_category_id' => 'required|exists:myb_resource_categories,id',
+            'name'                 => 'required|string|max:255',
+            'reference_code'       => 'nullable|string|max:100',
+            'description'          => 'nullable|string|max:1000',
+            'is_human_resource'    => 'nullable|boolean',
+            'status'               => 'required|in:active,inactive',
+        ]);
+
+        $this->assertResourceCategoryInScope((int) $validated['resource_category_id']);
+
+        $resource->update([
+            'resource_category_id' => $validated['resource_category_id'],
+            'name'                 => $validated['name'],
+            'reference_code'       => $validated['reference_code'] ?? null,
+            'description'          => $validated['description'] ?? null,
+            'is_human_resource'    => $request->boolean('is_human_resource'),
+            'status'               => $validated['status'],
+        ]);
+
+        return back()->with('success', 'Resource updated successfully.');
+    }
+
+    public function destroyResource(Resource $resource)
+    {
+        $this->assertResourceInScope($resource);
+
+        // Check if resource has commitments
+        if ($resource->commitments()->exists()) {
+            return back()->with('error', 'Cannot delete resource with existing budget commitments.');
+        }
+
+        // Check if resource has procurements
+        if ($resource->procurements()->exists()) {
+            return back()->with('error', 'Cannot delete resource with existing procurements.');
+        }
+
+        $resource->delete();
+
+        return back()->with('success', 'Resource deleted successfully.');
+    }
 
     /* =========================================================
      | ================== AJAX ENDPOINTS ======================
@@ -772,5 +867,15 @@ private function getAllocatedAmount(string $level, int $id, int $year): float
         }
     }
 
+    private function assertResourceInScope(Resource $resource): void
+    {
+        $scopedNodeIds = $this->scopedNodeIds();
+        if ($scopedNodeIds === null) {
+            return;
+        }
 
+        if (!$resource->governance_node_id || !in_array($resource->governance_node_id, $scopedNodeIds, true)) {
+            abort(403, 'You do not have access to this resource.');
+        }
+    }
 }

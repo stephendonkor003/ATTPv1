@@ -29,4 +29,23 @@ class ResourceCategory extends Model
     {
         return $this->hasMany(BudgetCommitment::class, 'resource_category_id');
     }
+
+    public function governanceNode()
+    {
+        return $this->belongsTo(GovernanceNode::class, 'governance_node_id');
+    }
+
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    /* =========================
+        SCOPES
+    ========================== */
+
+    public function scopeActive($query)
+    {
+        return $query->where('status', 'active');
+    }
 }

@@ -27,7 +27,7 @@ class ProjectController extends Controller
                     ->whereNotNull('governance_node_id');
             })
             ->orderBy('id', 'desc')
-            ->paginate(15);
+            ->get();
 
         $programSummaries = Program::query()
             ->when($scopedNodeIds !== null, function ($query) use ($scopedNodeIds) {

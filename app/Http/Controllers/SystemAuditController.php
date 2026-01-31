@@ -9,20 +9,11 @@ class SystemAuditController extends Controller
 {
     public function index(Request $request)
     {
-        $query = SystemAuditLog::with('user')->latest();
-
-        if ($request->filled('action')) {
-            $query->where('action', $request->string('action'));
-        }
-
-        if ($request->filled('user')) {
-            $query->whereHas('user', function ($q) use ($request) {
-                $q->where('name', 'like', '%' . $request->string('user') . '%')
-                    ->orWhere('email', 'like', '%' . $request->string('user') . '%');
-            });
-        }
-
-        $logs = $query->paginate(50);
+        // Load recent logs for DataTable (client-side search/sort/pagination)
+        $logs = SystemAuditLog::with('user')
+            ->latest()
+            ->limit(1000) // Limit to last 1000 entries for performance
+            ->get();
 
         return view('system.audit.index', compact('logs'));
     }

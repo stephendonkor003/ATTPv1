@@ -30,27 +30,23 @@
 
         {{-- ================= TABLE ================= --}}
         <div class="card shadow-sm">
-            <div class="card-body p-0">
-
-                <table class="table table-hover table-bordered align-middle mb-0">
+            <div class="card-body">
+                <x-data-table id="formsTable">
                     <thead class="table-light">
                         <tr>
-                            <th width="50">#</th>
-                            <th>Form</th>
+                            <th class="ps-4">Form</th>
                             <th>Category</th>
-                            <th>Stage</th>
-                            <th>Status</th>
+                            <th class="text-center">Stage</th>
+                            <th class="text-center">Status</th>
                             <th>Attachment</th>
-                            <th width="160" class="text-center">Actions</th>
+                            <th width="120" class="text-center">Actions</th>
                         </tr>
                     </thead>
 
                     <tbody>
-                        @forelse ($forms as $index => $form)
+                        @foreach ($forms as $form)
                             <tr>
-                                <td>{{ $index + 1 }}</td>
-
-                                <td>
+                                <td class="ps-4">
                                     <div class="fw-semibold">{{ $form->name }}</div>
                                     <small class="text-muted">
                                         Created by {{ $form->creator->name ?? '—' }}
@@ -59,48 +55,42 @@
 
                                 <td>{{ $form->resource->name ?? '—' }}</td>
 
-                                <td>
-                                    <span class="badge bg-info">
+                                <td class="text-center">
+                                    <span class="badge bg-info px-3 py-1">
                                         {{ ucfirst($form->applies_to) }}
                                     </span>
                                 </td>
 
-                                <td>
+                                <td class="text-center">
                                     @if ($form->is_active)
-                                        <span class="badge bg-success">Active</span>
+                                        <span class="badge bg-success px-3 py-1">Active</span>
                                     @else
-                                        <span class="badge bg-secondary">Inactive</span>
+                                        <span class="badge bg-secondary px-3 py-1">Inactive</span>
                                     @endif
                                 </td>
 
-                                {{-- ATTACHMENT STATUS --}}
                                 <td>
                                     @if ($form->procurement)
-                                        <span class="badge bg-success mb-1">
+                                        <span class="badge bg-success-subtle text-success mb-1">
                                             <i class="feather-check-circle me-1"></i>
                                             Attached
                                         </span>
                                         <div class="small text-muted">
-                                            {{ $form->procurement->title }}
+                                            {{ Str::limit($form->procurement->title, 30) }}
                                         </div>
                                     @else
-                                        <span class="badge bg-warning text-dark">
+                                        <span class="badge bg-warning-subtle text-warning">
                                             <i class="feather-alert-circle me-1"></i>
                                             Not Attached
                                         </span>
                                     @endif
                                 </td>
 
-                                {{-- ACTIONS --}}
                                 <td class="text-center">
-
-                                    {{-- EDIT --}}
-                                    <a href="{{ route('forms.edit', $form->id) }}" class="btn btn-sm btn-outline-primary"
-                                        title="Edit Form">
+                                    <a href="{{ route('forms.edit', $form->id) }}" class="btn btn-sm btn-outline-primary" title="Edit Form">
                                         <i class="feather-edit"></i>
                                     </a>
 
-                                    {{-- ATTACH / CHANGE (ALWAYS MODAL) --}}
                                     @if ($form->isApproved())
                                         <button type="button" class="btn btn-sm btn-outline-success ms-1 attachFormBtn"
                                             data-form-id="{{ $form->id }}" data-form-name="{{ $form->name }}"
@@ -110,19 +100,11 @@
                                             <i class="feather-link"></i>
                                         </button>
                                     @endif
-
                                 </td>
                             </tr>
-                        @empty
-                            <tr>
-                                <td colspan="7" class="text-center text-muted py-4">
-                                    No procurement forms available.
-                                </td>
-                            </tr>
-                        @endforelse
+                        @endforeach
                     </tbody>
-                </table>
-
+                </x-data-table>
             </div>
         </div>
     </div>
@@ -255,30 +237,29 @@
         </div>
     </div>
 
-    {{-- ================= SCRIPTS ================= --}}
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-
-            document.querySelectorAll('.attachFormBtn').forEach(btn => {
-                btn.addEventListener('click', function() {
-
-                    const formId = this.dataset.formId;
-                    const formName = this.dataset.formName;
-                    const currentProcurement = this.dataset.currentProcurement;
-
-                    document.getElementById('attachFormId').value = formId;
-                    document.getElementById('attachFormName').innerText = formName;
-
-                    const select = document.getElementById('procurementSelect');
-                    select.value = currentProcurement ?? '';
-
-                    document.getElementById('attachModalTitle').innerText =
-                        currentProcurement ?
-                        'Change Procurement for Form' :
-                        'Attach Form to Procurement';
-                });
-            });
-
-        });
-    </script>
 @endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.attachFormBtn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const formId = this.dataset.formId;
+                const formName = this.dataset.formName;
+                const currentProcurement = this.dataset.currentProcurement;
+
+                document.getElementById('attachFormId').value = formId;
+                document.getElementById('attachFormName').innerText = formName;
+
+                const select = document.getElementById('procurementSelect');
+                select.value = currentProcurement ?? '';
+
+                document.getElementById('attachModalTitle').innerText =
+                    currentProcurement ?
+                    'Change Procurement for Form' :
+                    'Attach Form to Procurement';
+            });
+        });
+    });
+</script>
+@endpush

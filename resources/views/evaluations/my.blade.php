@@ -1,38 +1,35 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="nxl-container my-evaluations">
+    <div class="nxl-container">
 
         {{-- ================= PAGE HEADER ================= --}}
         <div class="page-header mb-4 d-flex justify-content-between align-items-center">
             <div>
-                <h4 class="page-title mb-1">My Evaluations</h4>
+                <h4 class="fw-bold mb-1">
+                    <i class="feather-clipboard text-primary me-2"></i>
+                    My Evaluations
+                </h4>
                 <p class="text-muted mb-0">
                     You are assigned to evaluate the following procurements.
-                    Each applicant must be evaluated independently.
                 </p>
             </div>
 
-            <span class="badge bg-info fs-6">
+            <span class="badge bg-primary px-3 py-2 fs-6">
                 {{ $assignments->count() }} Assignments
             </span>
         </div>
 
         {{-- ================= INFO BANNER ================= --}}
-        <div class="alert alert-primary d-flex align-items-start mb-4">
+        <div class="alert alert-info d-flex align-items-start mb-4">
             <i class="feather-info fs-4 me-3 mt-1"></i>
             <div>
                 <strong>Evaluation Guidelines</strong>
-                <ul class="mb-0 ps-3">
-                    <li>Each applicant is evaluated independently.</li>
-                    <li>You may save drafts before final submission.</li>
-                    <li>Once submitted, an applicant’s evaluation is locked.</li>
-                    <li>
-                        <em>
-                            Services evaluations use numeric scoring.
-                            Goods evaluations use Yes / No with comments.
-                        </em>
-                    </li>
+                <ul class="mb-0 ps-3 small">
+                    <li>Each applicant is evaluated independently</li>
+                    <li>You may save drafts before final submission</li>
+                    <li>Once submitted, an applicant's evaluation is locked</li>
+                    <li><em>Services evaluations use numeric scoring. Goods evaluations use Yes/No with comments.</em></li>
                 </ul>
             </div>
         </div>
@@ -41,57 +38,51 @@
         @forelse ($assignments as $assignment)
             @php
                 $evalType = $assignment->evaluation->type ?? 'services';
-
                 $typeColor = $evalType === 'goods' ? 'warning' : 'primary';
-                $typeLabel = $evalType === 'goods' ? 'Goods (Yes / No)' : 'Services (Scored)';
+                $typeLabel = $evalType === 'goods' ? 'Goods' : 'Services';
 
                 $assignmentSubmissions = $assignment->form_submission_id
                     ? $submissions->where('id', $assignment->form_submission_id)
                     : $submissions->where('procurement_id', $assignment->procurement_id);
             @endphp
 
-            <div class="card shadow-sm mb-4">
+            <div class="card shadow-sm border-0 mb-4">
 
                 {{-- PROCUREMENT HEADER --}}
                 <div class="card-header bg-light d-flex justify-content-between align-items-center">
                     <div>
-                        <strong>{{ $assignment->procurement->title }}</strong>
-
-                        <span class="badge bg-secondary ms-2">
-                            {{ $assignment->evaluation->name }}
-                        </span>
-
-                        <span class="badge bg-{{ $typeColor }} ms-1">
-                            {{ $typeLabel }}
-                        </span>
+                        <span class="fw-bold">{{ $assignment->procurement->title }}</span>
+                        <span class="badge bg-secondary ms-2">{{ $assignment->evaluation->name }}</span>
+                        <span class="badge bg-{{ $typeColor }} ms-1">{{ $typeLabel }}</span>
                     </div>
 
-                    @if ($assignment->form_submission_id)
-                        <span class="badge bg-info ms-2">Specific Submission</span>
-                    @else
-                        <span class="badge bg-info ms-2">Entire Procurement</span>
-                    @endif
+                    <div class="d-flex gap-2">
+                        @if ($assignment->form_submission_id)
+                            <span class="badge bg-info">Specific Submission</span>
+                        @else
+                            <span class="badge bg-info">Entire Procurement</span>
+                        @endif
 
-                    <span class="badge bg-{{ $assignment->status === 'submitted' ? 'success' : 'warning text-dark' }}">
-                        {{ ucfirst($assignment->status) }}
-                    </span>
+                        <span class="badge bg-{{ $assignment->status === 'submitted' ? 'success' : 'warning text-dark' }}">
+                            {{ ucfirst($assignment->status) }}
+                        </span>
+                    </div>
                 </div>
 
                 {{-- SUBMISSIONS TABLE --}}
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
+                <div class="card-body">
+                    <x-data-table :id="'submissionsTable' . $assignment->id">
                         <thead class="table-light">
                             <tr>
-                                <th>Submission Code</th>
+                                <th class="ps-4">Submission Code</th>
                                 <th>Form</th>
                                 <th>Applicant</th>
                                 <th>Date</th>
-                                <th class="text-end">Action</th>
+                                <th width="140" class="text-center">Action</th>
                             </tr>
                         </thead>
                         <tbody>
-
-                            @forelse ($assignmentSubmissions as $submission)
+                            @foreach ($assignmentSubmissions as $submission)
                                 @php
                                     $evalSubmission = \App\Models\EvaluationSubmission::where([
                                         'evaluation_id' => $assignment->evaluation_id,
@@ -102,51 +93,40 @@
                                 @endphp
 
                                 <tr>
-                                    <td>
-                                        <span class="badge bg-light text-dark border">
+                                    <td class="ps-4">
+                                        <span class="badge bg-light text-dark border px-3 py-1">
                                             {{ $submission->procurement_submission_code }}
                                         </span>
                                     </td>
 
                                     <td>{{ $submission->form->name }}</td>
 
-                                    <td>{{ optional($submission->submitter)->name }}</td>
+                                    <td>{{ optional($submission->submitter)->name ?? '—' }}</td>
 
                                     <td>{{ $submission->created_at->format('d M Y') }}</td>
 
-                                    <td class="text-end">
+                                    <td class="text-center">
                                         @if ($evalSubmission?->submitted_at)
                                             <a href="{{ route('eval.assign.view', [$assignment->id, $submission->id]) }}"
                                                 class="btn btn-outline-success btn-sm">
-                                                <i class="feather-eye me-1"></i>
-                                                View
+                                                <i class="feather-eye me-1"></i> View
                                             </a>
                                         @elseif ($evalSubmission)
                                             <a href="{{ route('eval.assign.start', [$assignment->id, $submission->id]) }}"
                                                 class="btn btn-outline-primary btn-sm">
-                                                <i class="feather-edit me-1"></i>
-                                                Continue
+                                                <i class="feather-edit me-1"></i> Continue
                                             </a>
                                         @else
                                             <a href="{{ route('eval.assign.start', [$assignment->id, $submission->id]) }}"
                                                 class="btn btn-primary btn-sm">
-                                                <i class="feather-play me-1"></i>
-                                                Start
+                                                <i class="feather-play me-1"></i> Start
                                             </a>
                                         @endif
                                     </td>
                                 </tr>
-
-                            @empty
-                                <tr>
-                                    <td colspan="5" class="text-center text-muted py-4">
-                                        No applications submitted yet.
-                                    </td>
-                                </tr>
-                            @endforelse
-
+                            @endforeach
                         </tbody>
-                    </table>
+                    </x-data-table>
                 </div>
 
             </div>
@@ -161,10 +141,4 @@
         @endforelse
 
     </div>
-
-    <style>
-        .my-evaluations .badge {
-            font-size: 0.85rem;
-        }
-    </style>
 @endsection

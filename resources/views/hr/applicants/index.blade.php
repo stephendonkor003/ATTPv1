@@ -93,139 +93,111 @@
 
         {{-- ================= APPLICATIONS TABLE ================= --}}
         <div class="card shadow-sm border-0 mb-4">
-            <div class="card-header bg-white border-0 pb-0">
-                <h6 class="fw-semibold mb-1">Applicant Records</h6>
-                <p class="text-muted small mb-0">
-                    Individual applicants, AI scores, documents, and actions
-                </p>
-            </div>
+            <div class="card-body">
+                <x-data-table id="applicantsTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">Applicant</th>
+                            <th class="text-center">AI Score</th>
+                            <th class="text-center">Status</th>
+                            <th class="text-center">Documents</th>
+                            <th class="text-center" width="180">Actions</th>
+                        </tr>
+                    </thead>
 
-            <div class="card-body pt-3">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle w-100 hr-app-table mb-0">
-                        <thead class="table-light">
+                    <tbody>
+                        @foreach ($applicants as $applicant)
                             <tr>
-                                <th>Applicant</th>
-                                <th>AI Score</th>
-                                <th>Status</th>
-                                <th>Documents</th>
-                                <th class="text-end">Actions</th>
-                            </tr>
-                        </thead>
+                                <td class="ps-4">
+                                    <div class="fw-semibold">{{ $applicant->full_name }}</div>
+                                    <small class="text-muted">{{ $applicant->email }}</small>
+                                    @if($applicant->phone)
+                                        <br><small class="text-muted">{{ $applicant->phone }}</small>
+                                    @endif
+                                </td>
 
-                        <tbody>
-                            @forelse ($applicants as $applicant)
-                                <tr>
-                                    {{-- APPLICANT --}}
-                                    <td>
-                                        <div class="fw-semibold">{{ $applicant->full_name }}</div>
-                                        <small class="text-muted">{{ $applicant->email }}</small>
-                                    </td>
+                                <td class="text-center">
+                                    @php
+                                        $score = $applicant->shortlist?->score;
+                                    @endphp
 
-                                    {{-- AI SCORE --}}
-                                    <td>
-                                        @php
-                                            $score = DB::table('hr_shortlists')
-                                                ->where('applicant_id', $applicant->id)
-                                                ->value('score');
-                                        @endphp
-
-                                        @if ($score !== null)
-                                            <span class="badge bg-success-subtle text-success">
-                                                {{ $score }}%
-                                            </span>
-                                        @else
-                                            <span class="badge bg-secondary-subtle text-secondary">
-                                                Not scored
-                                            </span>
-                                        @endif
-                                    </td>
-
-                                    {{-- STATUS --}}
-                                    <td>
-                                        @php
-                                            $statusMap = [
-                                                'applied' => 'secondary',
-                                                'scored' => 'info',
-                                                'shortlisted' => 'primary',
-                                                'hired' => 'success',
-                                                'rejected' => 'danger',
-                                            ];
-                                        @endphp
-                                        <span class="badge bg-{{ $statusMap[$applicant->status] ?? 'secondary' }}">
-                                            {{ ucfirst($applicant->status) }}
+                                    @if ($score !== null)
+                                        <span class="badge bg-success-subtle text-success px-3 py-1">
+                                            {{ $score }}%
                                         </span>
-                                    </td>
+                                    @else
+                                        <span class="badge bg-secondary-subtle text-secondary">
+                                            Not scored
+                                        </span>
+                                    @endif
+                                </td>
 
-                                    {{-- DOCUMENTS --}}
-                                    <td>
-                                        @if ($applicant->cv_path)
-                                            <a href="{{ asset('storage/' . $applicant->cv_path) }}" target="_blank"
-                                                class="btn btn-sm btn-outline-primary">
-                                                CV
-                                            </a>
-                                        @else
-                                            <span class="badge bg-secondary-subtle text-secondary">No CV</span>
+                                <td class="text-center">
+                                    @php
+                                        $statusMap = [
+                                            'applied' => 'secondary',
+                                            'scored' => 'info',
+                                            'shortlisted' => 'primary',
+                                            'hired' => 'success',
+                                            'rejected' => 'danger',
+                                        ];
+                                    @endphp
+                                    <span class="badge bg-{{ $statusMap[$applicant->status] ?? 'secondary' }} px-3 py-1">
+                                        {{ ucfirst($applicant->status) }}
+                                    </span>
+                                </td>
+
+                                <td class="text-center">
+                                    @if ($applicant->cv_path)
+                                        <a href="{{ asset('storage/' . $applicant->cv_path) }}" target="_blank"
+                                            class="btn btn-sm btn-outline-primary">
+                                            <i class="feather-file-text me-1"></i> CV
+                                        </a>
+                                    @else
+                                        <span class="badge bg-secondary-subtle text-secondary">No CV</span>
+                                    @endif
+                                    @if ($applicant->cover_letter_path)
+                                        <a href="{{ asset('storage/' . $applicant->cover_letter_path) }}"
+                                            target="_blank" class="btn btn-sm btn-outline-secondary ms-1">
+                                            Cover
+                                        </a>
+                                    @endif
+                                </td>
+
+                                <td class="text-center">
+                                    <div class="d-inline-flex gap-1">
+                                        @if ($applicant->status === 'applied')
+                                            @can('hr.ai.score')
+                                                <form method="POST" action="{{ route('hr.applicants.score', $applicant->id) }}">
+                                                    @csrf
+                                                    <button class="btn btn-sm btn-outline-info">AI Score</button>
+                                                </form>
+                                            @endcan
                                         @endif
-                                        @if ($applicant->cover_letter_path)
-                                            <a href="{{ asset('storage/' . $applicant->cover_letter_path) }}"
-                                                target="_blank" class="btn btn-sm btn-outline-secondary">
-                                                Cover
-                                            </a>
+
+                                        @if ($applicant->status === 'scored')
+                                            @can('hr.applicants.hire')
+                                                <form method="POST" action="{{ route('hr.applicants.shortlist', $applicant->id) }}">
+                                                    @csrf
+                                                    <button class="btn btn-sm btn-outline-primary">Shortlist</button>
+                                                </form>
+                                            @endcan
                                         @endif
-                                    </td>
 
-                                    {{-- ACTIONS --}}
-                                    <td class="text-end">
-                                        <div class="d-inline-flex gap-1">
-
-                                            {{-- AI SCORE --}}
-                                            @if ($applicant->status === 'applied')
-                                                @can('hr.ai.score')
-                                                    <form method="POST"
-                                                        action="{{ route('hr.applicants.score', $applicant->id) }}">
-                                                        @csrf
-                                                        <button class="btn btn-sm btn-outline-info">AI Score</button>
-                                                    </form>
-                                                @endcan
-                                            @endif
-
-                                            {{-- SHORTLIST --}}
-                                            @if ($applicant->status === 'scored')
-                                                @can('hr.applicants.hire')
-                                                    <form method="POST"
-                                                        action="{{ route('hr.applicants.shortlist', $applicant->id) }}">
-                                                        @csrf
-                                                        <button class="btn btn-sm btn-outline-primary">Shortlist</button>
-                                                    </form>
-                                                @endcan
-                                            @endif
-
-                                            {{-- HIRE --}}
-                                            @if ($applicant->status === 'shortlisted')
-                                                @can('hr.applicants.hire')
-                                                    <form method="POST"
-                                                        action="{{ route('hr.applicants.hire', $applicant->id) }}">
-                                                        @csrf
-                                                        <button class="btn btn-sm btn-outline-success">Hire</button>
-                                                    </form>
-                                                @endcan
-                                            @endif
-
-                                        </div>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="5" class="text-center py-5 text-muted">
-                                        <i class="feather-inbox fs-3 d-block mb-2"></i>
-                                        No applications received yet
-                                    </td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
+                                        @if ($applicant->status === 'shortlisted')
+                                            @can('hr.applicants.hire')
+                                                <form method="POST" action="{{ route('hr.applicants.hire', $applicant->id) }}">
+                                                    @csrf
+                                                    <button class="btn btn-sm btn-outline-success">Hire</button>
+                                                </form>
+                                            @endcan
+                                        @endif
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </x-data-table>
             </div>
         </div>
 
@@ -279,53 +251,39 @@
 
     </div>
 
-    {{-- ================= STYLES ================= --}}
-    <style>
-        @media (max-width: 768px) {
+@endsection
 
-            .hr-app-table th:nth-child(2),
-            .hr-app-table td:nth-child(2),
-            .hr-app-table th:nth-child(4),
-            .hr-app-table td:nth-child(4) {
-                display: none;
-            }
-        }
-    </style>
-
-    {{-- ================= CHART.JS ================= --}}
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-
-            new Chart(document.getElementById('pipelineChart'), {
-                type: 'bar',
-                data: {
-                    labels: ['Applied', 'Scored', 'Shortlisted', 'Hired'],
-                    datasets: [{
-                        data: [
-                            {{ $total }},
-                            {{ $scored }},
-                            {{ $shortlisted }},
-                            {{ $hired }}
-                        ],
-                        backgroundColor: '#0d6efd'
-                    }]
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        new Chart(document.getElementById('pipelineChart'), {
+            type: 'bar',
+            data: {
+                labels: ['Applied', 'Scored', 'Shortlisted', 'Hired'],
+                datasets: [{
+                    data: [
+                        {{ $total }},
+                        {{ $scored }},
+                        {{ $shortlisted }},
+                        {{ $hired }}
+                    ],
+                    backgroundColor: '#0d6efd'
+                }]
+            },
+            options: {
+                plugins: {
+                    legend: {
+                        display: false
+                    }
                 },
-                options: {
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
+                scales: {
+                    y: {
+                        beginAtZero: true
                     }
                 }
-            });
-
+            }
         });
-    </script>
-@endsection
+    });
+</script>
+@endpush

@@ -49,6 +49,9 @@ class HrPublicController extends Controller
             'cover_letter' => 'nullable|file|mimes:pdf,doc,docx|max:5120',
         ]);
 
+        // Fetch vacancy to inherit governance_node_id
+        $vacancy = HrVacancy::findOrFail($validated['vacancy_id']);
+
         $resumePath = $request->file('resume')
             ->store('hr/applications/cv', 'public');
 
@@ -58,14 +61,15 @@ class HrPublicController extends Controller
             : null;
 
         HrApplicant::create([
-            'vacancy_id'        => $validated['vacancy_id'],
-            'full_name'         => $validated['full_name'],
-            'email'             => $validated['email'],
-            'phone'             => $validated['phone'],
-            'cv_path'           => $resumePath,
-            'cover_letter_path' => $coverPath,
-            'status'            => 'applied',
-            'submitted_at'      => now(),
+            'vacancy_id'         => $validated['vacancy_id'],
+            'governance_node_id' => $vacancy->governance_node_id,
+            'full_name'          => $validated['full_name'],
+            'email'              => $validated['email'],
+            'phone'              => $validated['phone'],
+            'cv_path'            => $resumePath,
+            'cover_letter_path'  => $coverPath,
+            'status'             => 'applied',
+            'submitted_at'       => now(),
         ]);
 
         Mail::to($validated['email'])->send(new JobApplicationReceived(

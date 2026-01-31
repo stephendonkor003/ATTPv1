@@ -9,7 +9,7 @@
         <div class="page-header mb-4 d-flex justify-content-between align-items-center">
             <div>
                 <h4 class="fw-bold mb-1">
-                    <i class="feather-shield me-2"></i>
+                    <i class="feather-shield text-primary me-2"></i>
                     Roles Management
                 </h4>
                 <p class="text-muted mb-0">
@@ -17,86 +17,66 @@
                 </p>
             </div>
 
-            {{-- Add Role --}}
-            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createRoleModal">
-                <i class="feather-plus-circle me-1"></i>
+            <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#createRoleModal">
+                <i class="feather-plus me-1"></i>
                 Add New Role
             </button>
         </div>
 
         {{-- ================= FLASH MESSAGES ================= --}}
         @if (session('success'))
-            <div class="alert alert-success">
-                {{ session('success') }}
-            </div>
+            <div class="alert alert-success">{{ session('success') }}</div>
         @endif
 
         @if ($errors->any())
-            <div class="alert alert-danger">
-                {{ $errors->first() }}
-            </div>
+            <div class="alert alert-danger">{{ $errors->first() }}</div>
         @endif
 
         {{-- ================= ROLES TABLE ================= --}}
         <div class="card shadow-sm border-0">
-            <div class="card-body table-responsive">
-
-                <table class="table table-hover align-middle">
+            <div class="card-body">
+                <x-data-table id="rolesTable">
                     <thead class="table-light">
                         <tr>
-                            <th style="width:60px">#</th>
-                            <th>Role Name</th>
+                            <th class="ps-4">Role Name</th>
                             <th>Description</th>
                             <th class="text-center">Permissions</th>
-                            <th class="text-center" style="width:180px">Actions</th>
+                            <th class="text-center" width="160">Actions</th>
                         </tr>
                     </thead>
 
                     <tbody>
-                        @forelse ($roles as $index => $role)
+                        @foreach ($roles as $role)
                             <tr>
-                                <td>{{ $index + 1 }}</td>
-
-                                <td class="fw-semibold">
-                                    {{ $role->name }}
+                                <td class="ps-4">
+                                    <div class="fw-semibold">{{ $role->name }}</div>
                                 </td>
 
-                                <td>
+                                <td class="text-muted">
                                     {{ $role->description ?? '—' }}
                                 </td>
 
                                 <td class="text-center">
-                                    <span class="badge bg-info">
+                                    <span class="badge bg-info px-3 py-1">
                                         {{ $role->permissions->count() }}
                                     </span>
                                 </td>
 
                                 <td class="text-center">
-
-                                    {{-- Assign Permissions --}}
                                     <a href="{{ route('system.permissions.assign', $role->id) }}"
-                                        class="btn btn-sm btn-outline-primary me-1" title="Assign Permissions">
+                                        class="btn btn-sm btn-outline-primary" title="Assign Permissions">
                                         <i class="feather-lock"></i>
                                     </a>
 
-                                    {{-- Edit Role --}}
                                     <a href="{{ route('system.roles.edit', $role->id) }}"
-                                        class="btn btn-sm btn-outline-warning me-1" title="Edit Role">
+                                        class="btn btn-sm btn-outline-warning" title="Edit Role">
                                         <i class="feather-edit"></i>
                                     </a>
-
                                 </td>
                             </tr>
-                        @empty
-                            <tr>
-                                <td colspan="5" class="text-center text-muted py-4">
-                                    No roles defined yet.
-                                </td>
-                            </tr>
-                        @endforelse
+                        @endforeach
                     </tbody>
-                </table>
-
+                </x-data-table>
             </div>
         </div>
     </div>
@@ -118,8 +98,6 @@
                     </div>
 
                     <div class="modal-body">
-
-                        {{-- Role Name --}}
                         <div class="mb-3">
                             <label class="form-label fw-semibold">
                                 Role Name <span class="text-danger">*</span>
@@ -128,14 +106,12 @@
                                 required>
                         </div>
 
-                        {{-- Description --}}
                         <div class="mb-3">
                             <label class="form-label fw-semibold">
                                 Description
                             </label>
                             <textarea name="description" class="form-control" rows="3" placeholder="Optional role description"></textarea>
                         </div>
-
                     </div>
 
                     <div class="modal-footer">

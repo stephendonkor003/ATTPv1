@@ -3,62 +3,74 @@
 @section('content')
     <div class="nxl-container">
 
-        <div class="page-header d-flex justify-content-between align-items-center">
-            <h4 class="fw-bold">Procurement Submissions</h4>
+        <div class="page-header d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h4 class="fw-bold mb-1">
+                    <i class="feather-file-text text-primary me-2"></i>
+                    Procurement Submissions
+                </h4>
+                <p class="text-muted mb-0">
+                    View and manage all bid submissions
+                </p>
+            </div>
         </div>
 
-        <div class="card shadow-sm mt-3">
+        <div class="card shadow-sm border-0">
             <div class="card-body">
-
-                <table class="table table-hover align-middle">
+                <x-data-table id="submissionsTable">
                     <thead class="table-light">
                         <tr>
-                            <th>#</th>
-                            <th>Submission Code</th>
+                            <th class="ps-4">Submission Code</th>
                             <th>Procurement</th>
                             <th>Form</th>
-                            <th>Status</th>
+                            <th class="text-center">Status</th>
                             <th>Submitted At</th>
-                            <th class="text-end">Action</th>
+                            <th class="text-center" width="100">Action</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($submissions as $submission)
+                        @foreach($submissions as $submission)
                             <tr>
-                                <td>{{ $loop->iteration }}</td>
-                                <td>
+                                <td class="ps-4">
                                     <span class="fw-semibold text-primary">
                                         {{ $submission->procurement_submission_code }}
                                     </span>
                                 </td>
 
-                                <td>{{ $submission->procurement->title }}</td>
-                                <td>{{ $submission->form->name }}</td>
                                 <td>
-                                    <span class="badge bg-primary">
-                                        {{ ucfirst($submission->status) }}
+                                    <div class="fw-medium">{{ $submission->procurement->title }}</div>
+                                    <small class="text-muted">{{ $submission->procurement->reference_no ?? '—' }}</small>
+                                </td>
+
+                                <td>{{ $submission->form->name }}</td>
+
+                                <td class="text-center">
+                                    @php
+                                        $statusColors = [
+                                            'draft' => 'secondary',
+                                            'submitted' => 'primary',
+                                            'under_review' => 'info',
+                                            'approved' => 'success',
+                                            'rejected' => 'danger',
+                                        ];
+                                    @endphp
+                                    <span class="badge bg-{{ $statusColors[$submission->status] ?? 'primary' }} px-3 py-1">
+                                        {{ ucfirst(str_replace('_', ' ', $submission->status)) }}
                                     </span>
                                 </td>
-                                <td>{{ $submission->submitted_at?->format('d M Y, H:i') }}</td>
-                                <td class="text-end">
+
+                                <td>{{ $submission->submitted_at?->format('d M Y, H:i') ?? '—' }}</td>
+
+                                <td class="text-center">
                                     <a href="{{ route('procurement.submissions.show', $submission) }}"
                                         class="btn btn-sm btn-outline-primary">
-                                        View
+                                        <i class="feather-eye me-1"></i> View
                                     </a>
                                 </td>
                             </tr>
-                        @empty
-                            <tr>
-                                <td colspan="6" class="text-center text-muted">
-                                    No submissions found.
-                                </td>
-                            </tr>
-                        @endforelse
+                        @endforeach
                     </tbody>
-                </table>
-
-                {{ $submissions->links() }}
-
+                </x-data-table>
             </div>
         </div>
 
